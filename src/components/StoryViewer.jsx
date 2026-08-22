@@ -5,7 +5,7 @@ import { UserContext, StoryContext, ProfileNavContext } from "../context/context
 import { sendChatMessage } from "../utils/chatActions.js";
 import Avatar from "./Avatar.jsx";
 
-const DURATION = 7000;
+const DURATION = 15000;
 const REACTION_EMOJIS = ["❤️", "🙌", "😂", "😮", "😢", "🙏"];
 
 function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
