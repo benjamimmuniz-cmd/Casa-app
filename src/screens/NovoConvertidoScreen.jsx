@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ChevronRight, UserCheck, X } from "lucide-react";
+import { BarChart3, ChevronRight, UserCheck, X } from "lucide-react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials, fmtDateBR, collectAll } from "../utils/helpers.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import Avatar from "../components/Avatar.jsx";
+
+const CULTOS_SUGERIDOS = ["Domingo Manhã", "Domingo Noite", "Quarta-feira"];
 
 // Cadastro de novo convertido: um membro da igreja registra a pessoa que acabou
 // de se converter e escolhe, entre quem já tem conta no app, quem vai
@@ -15,11 +17,11 @@ import Avatar from "../components/Avatar.jsx";
 // pessoa já entrou nalgum grupo de estudo.
 function NovoConvertidoScreen({ onBack }) {
   const me = useContext(UserContext);
-  const [tab, setTab] = useState("cadastrar"); // cadastrar | cadastrados
+  const [tab, setTab] = useState("cadastrar"); // cadastrar | cadastrados | painel
   const [lista, setLista] = useState([]);
   const [grGroups, setGrGroups] = useState([]);
   const [fundamentosGroups, setFundamentosGroups] = useState([]);
-  const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "" });
+  const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "", culto: "" });
   const [discipulador, setDiscipulador] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [error, setError] = useState("");
@@ -62,6 +64,25 @@ function NovoConvertidoScreen({ onBack }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const aberto = lista.find(c => c.id === openId);
 
+  const porData = useMemo(() => {
+    const map = new Map();
+    lista.forEach(c => {
+      const dt = c.createdAt?.toDate?.();
+      const key = dt ? `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}` : "Sem data";
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return [...map.entries()];
+  }, [lista]);
+
+  const porCulto = useMemo(() => {
+    const map = new Map();
+    lista.forEach(c => {
+      const key = c.culto?.trim() || "Não informado";
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return [...map.entries()].sort((a, b) => b[1] - a[1]);
+  }, [lista]);
+
   const handleSubmit = async () => {
     setError("");
     if (!form.nome.trim()) { setError("Digite o nome do novo convertido."); return; }
@@ -69,12 +90,12 @@ function NovoConvertidoScreen({ onBack }) {
     setSaving(true);
     try {
       await addDoc(collection(db, "novosConvertidos"), {
-        nome: form.nome.trim(), telefone: form.telefone.trim(), nascimento: form.nascimento || "", notes: form.notes.trim(),
+        nome: form.nome.trim(), telefone: form.telefone.trim(), nascimento: form.nascimento || "", notes: form.notes.trim(), culto: form.culto.trim(),
         discipuladorUid: discipulador.uid, discipuladorNome: discipulador.nome || "Membro", discipuladorPhoto: discipulador.photo || null,
         registradoPorUid: me.uid, registradoPorNome: me.name,
         createdAt: serverTimestamp(),
       });
-      setForm({ nome: "", telefone: "", nascimento: "", notes: "" });
+      setForm({ nome: "", telefone: "", nascimento: "", notes: "", culto: "" });
       setDiscipulador(null);
     } catch (err) {
       setError("Não consegui salvar agora. Tenta de novo.");
@@ -104,8 +125,14 @@ function NovoConvertidoScreen({ onBack }) {
                 <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.telefone}</p>
               </div>
             )}
+            {aberto.culto && (
+              <div style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
+                <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Culto</p>
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.culto}</p>
+              </div>
+            )}
             {aberto.notes && (
-              <div style={aberto.telefone ? { borderTop: "1px solid #F0EAD9", paddingTop: 12 } : {}}>
+              <div style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
                 <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Observações</p>
                 <p style={{ fontFamily: "Inter", color: "#000000" }} className="text-[13px] leading-relaxed">{aberto.notes}</p>
               </div>
@@ -158,6 +185,10 @@ function NovoConvertidoScreen({ onBack }) {
           style={{ fontFamily: "Inter", background: tab === "cadastrados" ? "#000000" : "#FFFFFF", color: tab === "cadastrados" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
           Cadastrados ({lista.length})
         </button>
+        <button onClick={() => setTab("painel")} className="flex-1 py-2.5 rounded-2xl text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: tab === "painel" ? "#000000" : "#FFFFFF", color: tab === "painel" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          Painel
+        </button>
       </div>
 
       {tab === "cadastrar" && (
@@ -178,7 +209,21 @@ function NovoConvertidoScreen({ onBack }) {
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Observações <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
-        <input value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Ex: se converteu no culto de domingo..."
+        <input value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Ex: pediu oração no altar..."
+          className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Culto <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+        <div className="flex gap-2 mb-2 flex-wrap">
+          {CULTOS_SUGERIDOS.map(c => (
+            <button key={c} type="button" onClick={() => set("culto", c)}
+              className="px-3 py-1.5 rounded-full text-[11.5px] font-semibold"
+              style={{ fontFamily: "Inter", background: form.culto === c ? "#000000" : "#FFFFFF", color: form.culto === c ? "#FFFFFF" : "#4D4D4D", border: "1px solid " + (form.culto === c ? "#000000" : "#D6D6D6") }}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <input value={form.culto} onChange={e => set("culto", e.target.value)} placeholder="Ou digite: Ex: Culto de jovens"
           className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
@@ -239,6 +284,61 @@ function NovoConvertidoScreen({ onBack }) {
                 </button>
               );
             })}
+          </div>
+        )}
+      </div>
+      )}
+
+      {tab === "painel" && (
+      <div className="px-6 pb-10">
+        <div className="rounded-2xl p-4 mb-5 flex items-center gap-3" style={{ background: "#000000" }}>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.15)" }}>
+            <BarChart3 size={19} color="#FFFFFF" />
+          </div>
+          <div>
+            <p style={{ fontFamily: "Fraunces", color: "#FFFFFF", fontWeight: 600 }} className="text-[20px] leading-none">{lista.length}</p>
+            <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.7)" }} className="text-[11px] mt-1">{lista.length === 1 ? "novo convertido no total" : "novos convertidos no total"}</p>
+          </div>
+        </div>
+
+        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por culto</p>
+        {porCulto.length === 0 ? (
+          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] mb-6">Nada cadastrado ainda.</p>
+        ) : (
+          <div className="rounded-2xl p-4 mb-6 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            {porCulto.map(([culto, count]) => {
+              const max = porCulto[0][1];
+              return (
+                <div key={culto}>
+                  <div className="flex items-center justify-between mb-1">
+                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{culto}</p>
+                    <p style={{ fontFamily: "IBM Plex Mono", color: "#707070" }} className="text-[11px]">{count}</p>
+                  </div>
+                  <div className="w-full h-2 rounded-full" style={{ background: "#F2F2F2" }}>
+                    <div className="h-full rounded-full" style={{ width: `${(count / max) * 100}%`, background: "#4B7D5C" }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por data</p>
+        {porData.length === 0 ? (
+          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Nada cadastrado ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {porData.map(([data, count]) => (
+              <div key={data} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#4B7D5C1E" }}>
+                  <span style={{ fontFamily: "IBM Plex Mono", color: "#4B7D5C", fontWeight: 600 }} className="text-[10px]">{data.slice(0, 5)}</span>
+                </div>
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1">{data}</p>
+                <span className="text-[11px] px-2.5 py-1 rounded-full shrink-0" style={{ fontFamily: "IBM Plex Mono", background: "#F2F2F2", color: "#4D4D4D" }}>
+                  {count}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
