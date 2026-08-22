@@ -1,18 +1,24 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ChevronRight, UserCheck, X } from "lucide-react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, initials, fmtDateBR } from "../utils/helpers.js";
+import { colorFor, initials, fmtDateBR, collectAll } from "../utils/helpers.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import Avatar from "../components/Avatar.jsx";
 
 // Cadastro de novo convertido: um membro da igreja registra a pessoa que acabou
 // de se converter e escolhe, entre quem já tem conta no app, quem vai
 // acompanhá-la como discipulador — pra ninguém ficar sem acompanhamento.
+// A aba "Cadastrados" cruza o nome de cada um com as árvores de GR/Fundamentos
+// (por nome, já que esses grupos não usam conta de app) pra mostrar se a
+// pessoa já entrou nalgum grupo de estudo.
 function NovoConvertidoScreen({ onBack }) {
   const me = useContext(UserContext);
+  const [tab, setTab] = useState("cadastrar"); // cadastrar | cadastrados
   const [lista, setLista] = useState([]);
+  const [grGroups, setGrGroups] = useState([]);
+  const [fundamentosGroups, setFundamentosGroups] = useState([]);
   const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "" });
   const [discipulador, setDiscipulador] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -27,6 +33,31 @@ function NovoConvertidoScreen({ onBack }) {
     }, () => {});
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    const unsubGr = onSnapshot(collection(db, "grGroups"), snap => {
+      setGrGroups(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    const unsubFund = onSnapshot(collection(db, "fundamentosGroups"), snap => {
+      setFundamentosGroups(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return () => { unsubGr(); unsubFund(); };
+  }, []);
+
+  const grupoDe = useMemo(() => {
+    const norm = (s) => (s || "").trim().toLowerCase();
+    return (nome) => {
+      const alvo = norm(nome);
+      if (!alvo) return null;
+      for (const g of grGroups) {
+        if (collectAll(g.leader).some(p => norm(p.name) === alvo)) return { tipo: "GR", nomeGrupo: g.name };
+      }
+      for (const g of fundamentosGroups) {
+        if (collectAll(g.leader).some(p => norm(p.name) === alvo)) return { tipo: "Fundamentos", nomeGrupo: g.name };
+      }
+      return null;
+    };
+  }, [grGroups, fundamentosGroups]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const aberto = lista.find(c => c.id === openId);
@@ -86,6 +117,17 @@ function NovoConvertidoScreen({ onBack }) {
                 <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.discipuladorNome}</p>
               </div>
             </div>
+            <div style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
+              <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px] mb-1">Grupo de estudo</p>
+              {(() => {
+                const g = grupoDe(aberto.nome);
+                return g ? (
+                  <p style={{ fontFamily: "Inter", color: "#4B7D5C", fontWeight: 600 }} className="text-[13px]">{g.tipo} · {g.nomeGrupo}</p>
+                ) : (
+                  <p style={{ fontFamily: "Inter", color: "#B25B4A" }} className="text-[13px]">Ainda não entrou em nenhum grupo</p>
+                );
+              })()}
+            </div>
             {aberto.registradoPorNome && (
               <p style={{ fontFamily: "Inter", color: "#B0A18A", borderTop: "1px solid #F0EAD9", paddingTop: 12 }} className="text-[10.5px]">
                 Cadastrado por {aberto.registradoPorNome}
@@ -107,6 +149,18 @@ function NovoConvertidoScreen({ onBack }) {
         <p style={{ fontFamily: "Inter", color: "#8A7F6E" }} className="text-[12px] mt-1">Cadastre e escolha quem vai discipular</p>
       </div>
 
+      <div className="flex gap-2 px-6 mb-5">
+        <button onClick={() => setTab("cadastrar")} className="flex-1 py-2.5 rounded-2xl text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: tab === "cadastrar" ? "#000000" : "#FFFFFF", color: tab === "cadastrar" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          Cadastrar
+        </button>
+        <button onClick={() => setTab("cadastrados")} className="flex-1 py-2.5 rounded-2xl text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: tab === "cadastrados" ? "#000000" : "#FFFFFF", color: tab === "cadastrados" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          Cadastrados ({lista.length})
+        </button>
+      </div>
+
+      {tab === "cadastrar" && (
       <div className="px-6 mb-6">
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Nome</label>
         <input value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Nome do novo convertido"
@@ -154,34 +208,41 @@ function NovoConvertidoScreen({ onBack }) {
           {saving ? "Salvando..." : "Cadastrar"}
         </button>
       </div>
+      )}
 
+      {tab === "cadastrados" && (
       <div className="px-6 pb-10">
-        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">
-          {lista.length} {lista.length === 1 ? "cadastrado" : "cadastrados"}
-        </p>
         {lista.length === 0 ? (
           <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Ninguém cadastrado ainda.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {lista.map(c => (
-              <button key={c.id} onClick={() => setOpenId(c.id)}
-                className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
-                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.nome) }}>
-                  <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.nome)}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{c.nome}</p>
-                  <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">discipulador: {c.discipuladorNome}</p>
-                </div>
-                <ChevronRight size={16} color="#B5AC9C" />
-              </button>
-            ))}
+            {lista.map(c => {
+              const g = grupoDe(c.nome);
+              return (
+                <button key={c.id} onClick={() => setOpenId(c.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.nome) }}>
+                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.nome)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{c.nome}</p>
+                    <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">discipulador: {c.discipuladorNome}</p>
+                  </div>
+                  <span className="text-[9.5px] px-2 py-1 rounded-full shrink-0 text-center"
+                    style={{ fontFamily: "Inter", background: g ? "#4B7D5C1E" : "#B25B4A1E", color: g ? "#4B7D5C" : "#B25B4A", maxWidth: 90 }}>
+                    {g ? g.tipo : "sem grupo"}
+                  </span>
+                  <ChevronRight size={16} color="#B5AC9C" />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
+      )}
 
       {showPicker && (
         <MemberPickerSheet title="Escolher discipulador" onClose={() => setShowPicker(false)}

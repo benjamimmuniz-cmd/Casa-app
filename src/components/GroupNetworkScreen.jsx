@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
-import { ChevronRight, Copy, Link2, Trash2, X } from "lucide-react";
-import { addChildToId, collectAll, colorFor, countDescendants, findById, initials, removeNodeById, statusOf } from "../utils/helpers.js";
+import { Check, ChevronRight, Copy, Link2, Trash2, X } from "lucide-react";
+import { addChildToId, collectAll, colorFor, countDescendants, daysSinceLabel, findById, initials, removeNodeById, statusOf, todayLabel, updateNodeById } from "../utils/helpers.js";
 import { UserContext } from "../context/contexts.js";
 import VisualTree from "./VisualTree.jsx";
 import PhotoPickerField from "./PhotoPickerField.jsx";
@@ -14,7 +14,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
   const [form, setForm] = useState({ name: "", desc: "", photo: null });
   const [profileId, setProfileId] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [tab, setTab] = useState("arvore"); // arvore | membros
+  const [tab, setTab] = useState("arvore"); // arvore | membros | frequencia
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberName, setMemberName] = useState("");
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -35,7 +35,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
     const code = form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Math.random().toString(36).slice(2, 6);
     addGroup({
       name: form.name.trim(), desc: form.desc.trim() || `Novo ${itemLabel.toLowerCase()}`, color, code, photo: form.photo,
-      leader: { id: "l" + Date.now(), name: me.name || "Você", role: "Líder", daysAgo: 0, notes: "", phone: "", children: [] },
+      leader: { id: "l" + Date.now(), name: me.name || "Você", role: "Líder", daysAgo: 0, attendance: [], notes: "", phone: "", children: [] },
     });
     setForm({ name: "", desc: "", photo: null });
     setShowAdd(false);
@@ -46,6 +46,14 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
     updateTree(group.id, leader => removeNodeById(leader, profile.id));
     setConfirmRemove(false);
     setProfileId(null);
+  };
+
+  const toggleAttendanceToday = (memberId, currentAttendance) => {
+    if (!group) return;
+    const label = todayLabel();
+    const already = (currentAttendance || []).includes(label);
+    const next = already ? (currentAttendance || []).filter(d => d !== label) : [...(currentAttendance || []), label];
+    updateTree(group.id, leader => updateNodeById(leader, memberId, { attendance: next }));
   };
 
   const handleDeleteGroup = () => {
@@ -102,6 +110,10 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
             style={{ fontFamily: "Inter", background: tab === "membros" ? "#000000" : "#FFFFFF", color: tab === "membros" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             Membros
           </button>
+          <button onClick={() => setTab("frequencia")} className="flex-1 py-2 rounded-2xl text-[12px] font-semibold"
+            style={{ fontFamily: "Inter", background: tab === "frequencia" ? "#000000" : "#FFFFFF", color: tab === "frequencia" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            Frequência
+          </button>
         </div>
 
         {tab === "arvore" ? (
@@ -111,7 +123,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
               <VisualTree tree={group.leader} openProfile={(id) => { setConfirmRemove(false); setProfileId(id); }} />
             </div>
           </div>
-        ) : (
+        ) : tab === "membros" ? (
           <div className="px-6 pb-28">
             <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">
               {collectAll(group.leader).length} pessoas
@@ -119,7 +131,8 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
             <div className="flex flex-col gap-2.5">
               {collectAll(group.leader).map(p => {
                 const isLeader = p.id === group.leader.id;
-                const st = statusOf(p.daysAgo);
+                const lastAttendance = (p.attendance || [])[(p.attendance || []).length - 1];
+                const st = statusOf(daysSinceLabel(lastAttendance));
                 return (
                   <button key={p.id} onClick={() => { setConfirmRemove(false); setProfileId(p.id); }}
                     className="flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
@@ -145,6 +158,57 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
               })}
             </div>
           </div>
+        ) : (
+          <div className="px-6 pb-28">
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-1">Reunião de hoje</p>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mb-3">Toque pra marcar quem veio hoje</p>
+            <div className="flex flex-col gap-2 mb-6">
+              {collectAll(group.leader).map(p => {
+                const presentToday = (p.attendance || []).includes(todayLabel());
+                return (
+                  <button key={p.id} onClick={() => toggleAttendanceToday(p.id, p.attendance)}
+                    className="flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                    style={{ background: presentToday ? group.color + "1A" : "#FFFFFF", border: presentToday ? `1px solid ${group.color}` : "1px solid transparent", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
+                      <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[11px]">{initials(p.name)}</span>
+                    </div>
+                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1 truncate">{p.name}</p>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: presentToday ? group.color : "#F2F2F2", border: presentToday ? "none" : "1px solid #D6D6D6" }}>
+                      {presentToday && <Check size={13} color="#FFFFFF" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Quem está faltando</p>
+            <div className="flex flex-col gap-2.5">
+              {collectAll(group.leader)
+                .map(p => ({ p, days: daysSinceLabel((p.attendance || [])[(p.attendance || []).length - 1]) }))
+                .sort((a, b) => (b.days ?? 9999) - (a.days ?? 9999))
+                .map(({ p, days }) => {
+                  const st = statusOf(days);
+                  const total = (p.attendance || []).length;
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
+                        <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[11px]">{initials(p.name)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] truncate">{p.name}</p>
+                        <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">
+                          {total} {total === 1 ? "presença" : "presenças"} · {days === null ? "nunca veio" : days === 0 ? "veio hoje" : `há ${days} dia${days > 1 ? "s" : ""}`}
+                        </p>
+                      </div>
+                      <span className="text-[10px] px-2.5 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: st.color + "1E", color: st.color }}>
+                        {st.label}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         )}
 
         <button onClick={() => setShowAddMember(true)}
@@ -163,7 +227,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
               <button onClick={() => {
                 if (!memberName.trim()) return;
                 const newId = "m" + Date.now();
-                updateTree(group.id, (leader) => addChildToId(leader, leader.id, { id: newId, name: memberName.trim(), role: "Membro", daysAgo: null, notes: "", phone: "", children: [] }));
+                updateTree(group.id, (leader) => addChildToId(leader, leader.id, { id: newId, name: memberName.trim(), role: "Membro", daysAgo: null, attendance: [], notes: "", phone: "", children: [] }));
                 setMemberName(""); setShowAddMember(false);
                 setProfileId(newId);
               }}

@@ -54,6 +54,26 @@ export function statusOf(daysAgo) {
   return { label: "Atrasado", color: "#262626" };
 }
 
+// Rotulo "DD/MM" de hoje — usado em listas de presenca/frequencia (infantil, GR, fundamentos).
+export function todayLabel() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// Converte um rotulo "DD/MM" (o mais recente de uma lista de presencas) em
+// quantos dias se passaram desde entao. Assume o ano atual, e cai pro ano
+// anterior se a data cair no futuro (ex: hoje é janeiro e a marca foi em dezembro).
+export function daysSinceLabel(label) {
+  if (!label) return null;
+  const [day, month] = label.split("/").map(Number);
+  if (!day || !month) return null;
+  const now = new Date();
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let date = new Date(now.getFullYear(), month - 1, day);
+  if (date > today0) date = new Date(now.getFullYear() - 1, month - 1, day);
+  return Math.round((today0 - date) / 86400000);
+}
+
 export function computeLayout(root, levelOf) {
   const positions = {};
   let leafCounter = 0;
