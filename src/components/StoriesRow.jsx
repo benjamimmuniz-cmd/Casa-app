@@ -28,8 +28,8 @@ function StoriesRow({ onPublish, onShorts }) {
     e.target.value = "";
   };
 
-  const publishEditedStory = ({ zoom, focus, overlays }) => {
-    addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays });
+  const publishEditedStory = ({ zoom, focus, overlays, musicName, musicUrl }) => {
+    addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays, musicName, musicUrl });
     setEditingImage(null);
   };
 

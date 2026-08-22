@@ -1,10 +1,13 @@
 import React, { useRef, useState } from "react";
-import { Check, Smile, Type, X } from "lucide-react";
+import { Check, Music, Smile, Type, X } from "lucide-react";
+import MusicPickerSheet from "./MusicPickerSheet.jsx";
+import AudioPlayButton from "./AudioPlayButton.jsx";
 
 const EMOJIS = ["😀", "😂", "🙏", "❤️", "🔥", "✨", "🎉", "👏", "😍", "🙌", "💛", "⭐"];
 
 // Editor de story estilo Instagram: dá pra dar zoom/arrastar pra enquadrar a foto,
-// adicionar texto solto em cima da imagem e colar emojis — tudo arrastável.
+// adicionar texto solto em cima da imagem, colar emojis e escolher uma música —
+// tudo arrastável.
 function StoryEditor({ image, onCancel, onPublish }) {
   const frameRef = useRef(null);
   const [zoom, setZoom] = useState(1);
@@ -12,6 +15,8 @@ function StoryEditor({ image, onCancel, onPublish }) {
   const [overlays, setOverlays] = useState([]);
   const [showEmojis, setShowEmojis] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [musicTrack, setMusicTrack] = useState(null);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
   const drag = useRef(null);
 
   const updateFocusFromEvent = (e) => {
@@ -67,7 +72,7 @@ function StoryEditor({ image, onCancel, onPublish }) {
 
   const publish = () => {
     const cleanOverlays = overlays.filter(o => o.type !== "text" || o.content.trim());
-    onPublish({ zoom, focus, overlays: cleanOverlays });
+    onPublish({ zoom, focus, overlays: cleanOverlays, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
   };
 
   return (
@@ -82,8 +87,21 @@ function StoryEditor({ image, onCancel, onPublish }) {
           <button onClick={() => setShowEmojis(v => !v)} className="flex items-center justify-center w-8 h-8 rounded-full" style={{ background: showEmojis ? "#FFFFFF" : "rgba(255,255,255,0.15)" }}>
             <Smile size={16} color={showEmojis ? "#000000" : "#FFFFFF"} />
           </button>
+          <button onClick={() => setShowMusicPicker(true)} className="flex items-center justify-center w-8 h-8 rounded-full" style={{ background: musicTrack ? "#FFFFFF" : "rgba(255,255,255,0.15)" }}>
+            <Music size={16} color={musicTrack ? "#000000" : "#FFFFFF"} />
+          </button>
         </div>
       </div>
+
+      {musicTrack && (
+        <div className="px-5 pb-1 shrink-0">
+          <div className="flex items-center gap-2.5 rounded-full pl-2 pr-3 py-2 w-fit" style={{ background: "rgba(255,255,255,0.15)" }}>
+            <AudioPlayButton url={musicTrack.url} size={26} iconSize={12} bg="rgba(255,255,255,0.25)" color="#FFFFFF" />
+            <span style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[11.5px] max-w-[160px] truncate">{musicTrack.title}</span>
+            <button onClick={() => setMusicTrack(null)}><X size={13} color="rgba(255,255,255,0.7)" /></button>
+          </div>
+        </div>
+      )}
 
       <div
         ref={frameRef}
@@ -147,6 +165,10 @@ function StoryEditor({ image, onCancel, onPublish }) {
           <Check size={16} /> Concluído
         </button>
       </div>
+
+      {showMusicPicker && (
+        <MusicPickerSheet onClose={() => setShowMusicPicker(false)} onSelect={(track) => { setMusicTrack(track); setShowMusicPicker(false); }} />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Eye, Send, Trash2, X } from "lucide-react";
+import { Eye, Music, Send, Trash2, X } from "lucide-react";
 import { colorFor, timeAgo } from "../utils/helpers.js";
 import { UserContext, StoryContext, ProfileNavContext } from "../context/contexts.js";
 import { sendChatMessage } from "../utils/chatActions.js";
@@ -21,6 +21,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const pausedRef = useRef(false);
   const pausedMsRef = useRef(0);
   const pauseStartRef = useRef(0);
+  const audioRef = useRef(null);
 
   const story = stories[index];
 
@@ -28,11 +29,13 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     if (pausedRef.current) return;
     pausedRef.current = true;
     pauseStartRef.current = Date.now();
+    audioRef.current?.pause();
   };
   const resume = () => {
     if (!pausedRef.current) return;
     pausedMsRef.current += Date.now() - pauseStartRef.current;
     pausedRef.current = false;
+    audioRef.current?.play().catch(() => {});
   };
 
   useEffect(() => {
@@ -132,6 +135,18 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
         )}
         <button onClick={onClose}><X size={20} color="#FFFFFF" /></button>
       </div>
+
+      {story.musicUrl && (
+        <>
+          <audio key={story.id} ref={audioRef} src={story.musicUrl} autoPlay />
+          <div className="px-4 pb-1 flex justify-center">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: "rgba(0,0,0,0.35)" }}>
+              <Music size={11} color="#FFFFFF" />
+              <span style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[11px] max-w-[180px] truncate">{story.musicName || "Música"}</span>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex-1 relative flex items-center justify-center px-6 overflow-hidden">
         {story.image ? (
