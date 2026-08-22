@@ -64,14 +64,28 @@ function NovoConvertidoScreen({ onBack }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const aberto = lista.find(c => c.id === openId);
 
-  const porData = useMemo(() => {
-    const map = new Map();
+  const porMes = useMemo(() => {
+    const counts = new Map();
+    let minDate = null;
     lista.forEach(c => {
       const dt = c.createdAt?.toDate?.();
-      const key = dt ? `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}` : "Sem data";
-      map.set(key, (map.get(key) || 0) + 1);
+      if (!dt) return;
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+      if (!minDate || dt < minDate) minDate = dt;
     });
-    return [...map.entries()];
+    if (!minDate) return [];
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth(), 1);
+    const months = [];
+    let cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    while (cursor <= end) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+      const label = cursor.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }).replace(".", "");
+      months.push({ key, label, count: counts.get(key) || 0 });
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+    return months;
   }, [lista]);
 
   const porCulto = useMemo(() => {
@@ -301,6 +315,53 @@ function NovoConvertidoScreen({ onBack }) {
           </div>
         </div>
 
+        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por mês</p>
+        {porMes.length === 0 ? (
+          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] mb-6">Nada cadastrado ainda.</p>
+        ) : (() => {
+          const max = Math.max(1, ...porMes.map(m => m.count));
+          const barW = 26, step = 50, padTop = 22, padBottom = 22, plotH = 120;
+          const w = Math.max(porMes.length * step + 20, 280);
+          const h = padTop + plotH + padBottom;
+          const x = (i) => 10 + i * step + step / 2;
+          const y = (count) => padTop + plotH - (count / max) * plotH;
+          const linePoints = porMes.map((m, i) => `${x(i)},${y(m.count)}`).join(" ");
+          return (
+            <div className="rounded-2xl p-4 mb-6" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "#4B7D5C" }} />
+                  <span style={{ fontFamily: "Inter", color: "#707070" }} className="text-[10.5px]">Convertidos no mês</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#26482F" }} />
+                  <span style={{ fontFamily: "Inter", color: "#707070" }} className="text-[10.5px]">Tendência</span>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <svg width={w} height={h} style={{ minWidth: w }}>
+                  {[0, 0.5, 1].map(f => (
+                    <line key={f} x1={0} x2={w} y1={padTop + plotH * f} y2={padTop + plotH * f} stroke="#F0EAD9" strokeWidth={1} />
+                  ))}
+                  {porMes.map((m, i) => (
+                    <rect key={m.key} x={x(i) - barW / 2} y={y(m.count)} width={barW} height={Math.max(2, padTop + plotH - y(m.count))} rx={4} fill="#4B7D5C" opacity={0.85} />
+                  ))}
+                  <polyline points={linePoints} fill="none" stroke="#26482F" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                  {porMes.map((m, i) => (
+                    <circle key={m.key} cx={x(i)} cy={y(m.count)} r={3.5} fill="#26482F" />
+                  ))}
+                  {porMes.map((m, i) => (
+                    <text key={m.key} x={x(i)} y={h - 4} textAnchor="middle" fontSize={9.5} fontFamily="Inter" fill="#9E9E9E">{m.label}</text>
+                  ))}
+                  {porMes.map((m, i) => (
+                    <text key={m.key} x={x(i)} y={y(m.count) - 8} textAnchor="middle" fontSize={10} fontFamily="IBM Plex Mono" fontWeight={600} fill="#26482F">{m.count}</text>
+                  ))}
+                </svg>
+              </div>
+            </div>
+          );
+        })()}
+
         <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por culto</p>
         {porCulto.length === 0 ? (
           <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] mb-6">Nada cadastrado ainda.</p>
@@ -323,24 +384,6 @@ function NovoConvertidoScreen({ onBack }) {
           </div>
         )}
 
-        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por data</p>
-        {porData.length === 0 ? (
-          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Nada cadastrado ainda.</p>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {porData.map(([data, count]) => (
-              <div key={data} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#4B7D5C1E" }}>
-                  <span style={{ fontFamily: "IBM Plex Mono", color: "#4B7D5C", fontWeight: 600 }} className="text-[10px]">{data.slice(0, 5)}</span>
-                </div>
-                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1">{data}</p>
-                <span className="text-[11px] px-2.5 py-1 rounded-full shrink-0" style={{ fontFamily: "IBM Plex Mono", background: "#F2F2F2", color: "#4D4D4D" }}>
-                  {count}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
       )}
 
