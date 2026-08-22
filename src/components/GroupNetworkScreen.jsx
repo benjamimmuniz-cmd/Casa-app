@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Check, ChevronRight, Copy, Link2, Trash2, X } from "lucide-react";
-import { addChildToId, collectAll, colorFor, countDescendants, daysSinceLabel, findById, initials, removeNodeById, statusOf, todayLabel, updateNodeById } from "../utils/helpers.js";
+import { addChildToId, collectAll, colorFor, countDescendants, daysSinceLabel, findById, initials, labelFromISO, removeNodeById, statusOf, todayISO, updateNodeById } from "../utils/helpers.js";
 import { UserContext } from "../context/contexts.js";
 import VisualTree from "./VisualTree.jsx";
 import PhotoPickerField from "./PhotoPickerField.jsx";
@@ -20,6 +20,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false);
   const [historyDate, setHistoryDate] = useState(null);
+  const [attendanceISO, setAttendanceISO] = useState(todayISO());
 
   const group = groups.find(g => g.id === openId);
   const profile = group && profileId ? findById(group.leader, profileId) : null;
@@ -49,9 +50,9 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
     setProfileId(null);
   };
 
-  const toggleAttendanceToday = (memberId, currentAttendance) => {
+  const toggleAttendanceForSelectedDate = (memberId, currentAttendance) => {
     if (!group) return;
-    const label = todayLabel();
+    const label = labelFromISO(attendanceISO);
     const already = (currentAttendance || []).includes(label);
     const next = already ? (currentAttendance || []).filter(d => d !== label) : [...(currentAttendance || []), label];
     updateTree(group.id, leader => updateNodeById(leader, memberId, { attendance: next }));
@@ -165,22 +166,28 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
           </div>
         ) : tab === "frequencia" ? (
           <div className="px-6 pb-28">
-            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-1">Reunião de hoje</p>
-            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mb-3">Toque pra marcar quem veio hoje</p>
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-1">Marcar presença de uma reunião</p>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mb-3">Escolha a data — pode ser hoje ou uma reunião passada que ficou sem marcar</p>
+            <input type="date" value={attendanceISO} max={todayISO()} onChange={e => setAttendanceISO(e.target.value || todayISO())}
+              className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+              style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-2">
+              Quem veio em {labelFromISO(attendanceISO)}{attendanceISO === todayISO() ? " (hoje)" : ""}
+            </p>
             <div className="flex flex-col gap-2 mb-6">
               {collectAll(group.leader).map(p => {
-                const presentToday = (p.attendance || []).includes(todayLabel());
+                const presentThisDay = (p.attendance || []).includes(labelFromISO(attendanceISO));
                 return (
-                  <button key={p.id} onClick={() => toggleAttendanceToday(p.id, p.attendance)}
+                  <button key={p.id} onClick={() => toggleAttendanceForSelectedDate(p.id, p.attendance)}
                     className="flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
-                    style={{ background: presentToday ? group.color + "1A" : "#FFFFFF", border: presentToday ? `1px solid ${group.color}` : "1px solid transparent", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                    style={{ background: presentThisDay ? group.color + "1A" : "#FFFFFF", border: presentThisDay ? `1px solid ${group.color}` : "1px solid transparent", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
                     <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
                       <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[11px]">{initials(p.name)}</span>
                     </div>
                     <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1 truncate">{p.name}</p>
                     <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: presentToday ? group.color : "#F2F2F2", border: presentToday ? "none" : "1px solid #D6D6D6" }}>
-                      {presentToday && <Check size={13} color="#FFFFFF" />}
+                      style={{ background: presentThisDay ? group.color : "#F2F2F2", border: presentThisDay ? "none" : "1px solid #D6D6D6" }}>
+                      {presentThisDay && <Check size={13} color="#FFFFFF" />}
                     </div>
                   </button>
                 );

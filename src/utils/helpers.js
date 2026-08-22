@@ -60,6 +60,20 @@ export function todayLabel() {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Converte uma data ISO "YYYY-MM-DD" (a que vem de <input type="date">) pro
+// mesmo formato "DD/MM" usado nas listas de presenca — pra dar pra marcar
+// frequencia de qualquer dia, nao só hoje.
+export function labelFromISO(iso) {
+  if (!iso) return todayLabel();
+  const [, month, day] = iso.split("-");
+  return `${day}/${month}`;
+}
+
+export function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // Converte um rotulo "DD/MM" (o mais recente de uma lista de presencas) em
 // quantos dias se passaram desde entao. Assume o ano atual, e cai pro ano
 // anterior se a data cair no futuro (ex: hoje é janeiro e a marca foi em dezembro).
