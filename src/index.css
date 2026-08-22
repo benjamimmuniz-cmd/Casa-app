@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-bg: #F2F2F2;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #F2F2F2;
+  --c-text: #000000;
+  --c-text-2: #4D4D4D;
+  --c-muted: #707070;
+  --c-faint: #9E9E9E;
+  --c-border: #D6D6D6;
+  --c-divider: #E8E8E8;
+  --c-accent: #000000;
+  --c-accent-2: #2B2B2B;
+  --c-active-bg: #00000014;
+  --c-shadow: rgba(0, 0, 0, 0.06);
+  --c-shadow-strong: rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] {
+  --c-bg: #0B0E16;
+  --c-surface: #171C2A;
+  --c-surface-2: #10141F;
+  --c-text: #F1F3F9;
+  --c-text-2: #C7CEDD;
+  --c-muted: #8D96AC;
+  --c-faint: #5C6584;
+  --c-border: #262E42;
+  --c-divider: #232C44;
+  --c-accent: #3E5FBF;
+  --c-accent-2: #6E93F2;
+  --c-active-bg: #6e93f224;
+  --c-shadow: rgba(0, 0, 0, 0.35);
+  --c-shadow-strong: rgba(0, 0, 0, 0.45);
+}
+
+body, button {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Barra de rolagem sempre visível (ajuda quem usa mouse no computador) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.28);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+@keyframes likeBurst {
+  0% { transform: scale(0.5); opacity: 0; }
+  30% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.like-burst {
+  animation: likeBurst 700ms ease-out;
+}
