@@ -1,18 +1,17 @@
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase.js";
 
-const MAX_VIDEO_MB = 60;
-
-// Sobe um video pro Firebase Storage (fotos/audio continuam como base64 no
-// Firestore — video e grande demais pra isso, precisa de um lugar proprio).
-// onProgress recebe um numero de 0 a 1.
-export function uploadVideo(file, path, onProgress) {
+// Sobe midia pro Firebase Storage em vez de guardar como base64 dentro do
+// documento do Firestore. Isso evita que o Firestore reenvie a foto/audio/video
+// inteiro de novo toda vez que o post recebe uma curtida ou comentario — só o
+// link (uma URL curtinha) fica no documento.
+function uploadBlob(blob, path, maxMB, onProgress) {
   return new Promise((resolve, reject) => {
-    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-      reject(new Error(`Vídeo muito grande — o máximo é ${MAX_VIDEO_MB}MB.`));
+    if (blob.size > maxMB * 1024 * 1024) {
+      reject(new Error(`Arquivo muito grande — o máximo é ${maxMB}MB.`));
       return;
     }
-    const task = uploadBytesResumable(ref(storage, path), file);
+    const task = uploadBytesResumable(ref(storage, path), blob);
     task.on("state_changed",
       (snap) => onProgress?.(snap.bytesTransferred / snap.totalBytes),
       (err) => reject(err),
@@ -24,4 +23,22 @@ export function uploadVideo(file, path, onProgress) {
         }
       });
   });
+}
+
+export function dataUrlToBlob(dataUrl) {
+  return fetch(dataUrl).then(res => res.blob());
+}
+
+export function uploadVideo(file, path, onProgress) {
+  return uploadBlob(file, path, 60, onProgress);
+}
+
+export async function uploadImageDataUrl(dataUrl, path, onProgress) {
+  const blob = await dataUrlToBlob(dataUrl);
+  return uploadBlob(blob, path, 10, onProgress);
+}
+
+export async function uploadAudioDataUrl(dataUrl, path, onProgress) {
+  const blob = await dataUrlToBlob(dataUrl);
+  return uploadBlob(blob, path, 15, onProgress);
 }

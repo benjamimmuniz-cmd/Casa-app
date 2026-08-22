@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext, createContext } from "react";
+import React, { useState, useEffect, useContext, useRef, createContext } from "react";
 import {
   Bookmark,
+  Camera,
   Crop,
   Home,
   ImageIcon,
@@ -20,7 +21,7 @@ import Avatar from "../components/Avatar.jsx";
 import { FeedContext, UserContext, ConnectionsContext, ProfileNavContext } from "../context/contexts.js";
 import { KIND_LABELS, ME_FEED } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
-import { uploadVideo } from "../utils/mediaUpload.js";
+import { uploadVideo, uploadImageDataUrl } from "../utils/mediaUpload.js";
 import { visiblePosts } from "../utils/helpers.js";
 import { sendChatMessage } from "../utils/chatActions.js";
 import AudioPlayButton from "../components/AudioPlayButton.jsx";
@@ -53,6 +54,9 @@ function FeedScreen({ onBack }) {
   const [openComments, setOpenComments] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [showPhotoSource, setShowPhotoSource] = useState(false);
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handlePhotoPick = (e) => {
     const files = Array.from(e.target.files || []);
@@ -108,8 +112,20 @@ function FeedScreen({ onBack }) {
         return;
       }
     }
+    let uploadedImages = images;
+    if (images.length) {
+      try {
+        setUploadProgress(0);
+        uploadedImages = await Promise.all(images.map((img, i) => uploadImageDataUrl(img, `feed-images/${meUid}/${Date.now()}-${i}.jpg`)));
+      } catch (err) {
+        setVideoError(err.message || "Não consegui enviar as fotos. Tenta de novo.");
+        setPublishing(false);
+        setUploadProgress(null);
+        return;
+      }
+    }
     const imagePositionStrings = imagePositions.map(p => `${p.x}% ${p.y}%`);
-    await addPost({ author: ME_FEED, text: text.trim(), images, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
+    await addPost({ author: ME_FEED, text: text.trim(), images: uploadedImages, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
     setText("");
     setImages([]);
     setImagePositions([]);
@@ -215,10 +231,9 @@ function FeedScreen({ onBack }) {
                 </button>
               </div>
             ))}
-            <label className="shrink-0 rounded-xl flex items-center justify-center cursor-pointer" style={{ width: 84, height: 84, background: "var(--c-surface-2)", border: "1px dashed var(--c-border)" }}>
+            <button onClick={() => setShowPhotoSource(true)} className="shrink-0 rounded-xl flex items-center justify-center cursor-pointer" style={{ width: 84, height: 84, background: "var(--c-surface-2)", border: "1px dashed var(--c-border)" }}>
               <ImageIcon size={18} color="var(--c-faint)" />
-              <input type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
-            </label>
+            </button>
           </div>
         )}
         {videoPreview && (
@@ -246,14 +261,15 @@ function FeedScreen({ onBack }) {
         )}
         <div className="flex items-center justify-between mt-3">
           <div className="flex items-center gap-4">
-            <label className="cursor-pointer">
+            <button onClick={() => setShowPhotoSource(true)}>
               <ImageIcon size={19} color="var(--c-muted)" />
-              <input type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
-            </label>
+            </button>
             <label className="cursor-pointer">
               <Video size={19} color="var(--c-muted)" />
               <input type="file" accept="video/*" onChange={handleVideoPick} className="hidden" />
             </label>
+            <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoPick} className="hidden" />
             <button onClick={() => setShowMusicPicker(true)}>
               <Music2 size={19} color="var(--c-muted)" />
             </button>
@@ -268,6 +284,28 @@ function FeedScreen({ onBack }) {
 
       {showMusicPicker && (
         <MusicPickerSheet onClose={() => setShowMusicPicker(false)} onSelect={(track) => { setMusicTrack(track); setShowMusicPicker(false); }} />
+      )}
+
+      {showPhotoSource && (
+        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowPhotoSource(false)}>
+          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Adicionar foto</p>
+            <button onClick={() => { setShowPhotoSource(false); cameraInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <Camera size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Tirar foto</p>
+            </button>
+            <button onClick={() => { setShowPhotoSource(false); galleryInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <ImageIcon size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Escolher da galeria</p>
+            </button>
+          </div>
+        </div>
       )}
 
       {shareSheetPost && (

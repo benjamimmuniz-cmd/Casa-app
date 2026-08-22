@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import {
+  Check,
   ChevronRight,
   Pencil,
   Phone,
@@ -10,7 +11,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { addChildToId, colorFor, countDescendants, findById, flattenTree, initials, levelColor, pathToId, removeNodeById, statusOf, updateNodeById } from "../utils/helpers.js";
+import { addChildToId, collectAll, colorFor, countDescendants, daysSinceLabel, findById, flattenTree, initials, labelFromISO, levelColor, pathToId, removeNodeById, statusOf, todayISO, updateNodeById } from "../utils/helpers.js";
 import { LEVELS } from "../data/constants.js";
 import TreeRow from "../components/TreeRow.jsx";
 import VisualTree from "../components/VisualTree.jsx";
@@ -31,13 +32,15 @@ function DiscipuladoScreen({ onBack }) {
   const [form, setForm] = useState({ name: "", role: "", nivel: "Líderes", photo: null });
   const [editingRoot, setEditingRoot] = useState(false);
   const [rootDraft, setRootDraft] = useState({ name: "", role: "" });
+  const [attendanceISO, setAttendanceISO] = useState(todayISO());
+  const [historyDate, setHistoryDate] = useState(null);
 
   useEffect(() => {
     const unsub = onSnapshot(TREE_DOC, snap => {
       if (snap.exists()) {
         setTree(snap.data().tree);
       } else {
-        const root = { id: "you", name: me.name || "Você", role: me.profissao || "Membro", nivel: "Pastor", phone: "", daysAgo: 0, notes: "", children: [] };
+        const root = { id: "you", name: me.name || "Você", role: me.profissao || "Membro", nivel: "Pastor", phone: "", daysAgo: 0, attendance: [], notes: "", children: [] };
         setDoc(TREE_DOC, { tree: root }).catch(err => console.error("TREE_INIT_ERR", err.code, err.message));
       }
     }, () => {});
@@ -84,6 +87,13 @@ function DiscipuladoScreen({ onBack }) {
     setEditingRoot(false);
   };
 
+  const toggleAttendanceForSelectedDate = (memberId, currentAttendance) => {
+    const label = labelFromISO(attendanceISO);
+    const already = (currentAttendance || []).includes(label);
+    const next = already ? (currentAttendance || []).filter(d => d !== label) : [...(currentAttendance || []), label];
+    mutateTree(prev => updateNodeById(prev, memberId, { attendance: next }));
+  };
+
   const removeMember = () => {
     if (!profile || !tree || profile.id === tree.id) return;
     mutateTree(prev => removeNodeById(prev, profile.id));
@@ -101,7 +111,7 @@ function DiscipuladoScreen({ onBack }) {
 
   const handleAdd = () => {
     if (!form.name.trim() || !showAddFor) return;
-    const newChild = { id: "n" + Date.now(), name: form.name.trim(), role: form.role.trim() || form.nivel, nivel: form.nivel, phone: "", daysAgo: null, notes: "", photo: form.photo, children: [] };
+    const newChild = { id: "n" + Date.now(), name: form.name.trim(), role: form.role.trim() || form.nivel, nivel: form.nivel, phone: "", daysAgo: null, attendance: [], notes: "", photo: form.photo, children: [] };
     mutateTree(prev => addChildToId(prev, showAddFor, newChild));
     setExpanded(prev => new Set([...prev, showAddFor]));
     setForm({ name: "", role: "", nivel: "Líderes", photo: null });
@@ -153,6 +163,14 @@ function DiscipuladoScreen({ onBack }) {
           style={{ fontFamily: "Inter", background: viewMode === "arvore" ? "#000000" : "#FFFFFF", color: viewMode === "arvore" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
           Árvore
         </button>
+        <button onClick={() => setViewMode("frequencia")} className="flex-1 py-2 rounded-2xl text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: viewMode === "frequencia" ? "#000000" : "#FFFFFF", color: viewMode === "frequencia" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          Frequência
+        </button>
+        <button onClick={() => setViewMode("historico")} className="flex-1 py-2 rounded-2xl text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: viewMode === "historico" ? "#000000" : "#FFFFFF", color: viewMode === "historico" ? "#FFFFFF" : "#4D4D4D", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          Histórico
+        </button>
       </div>
 
       {viewMode === "arvore" ? (
@@ -179,6 +197,103 @@ function DiscipuladoScreen({ onBack }) {
               </div>
             ))}
           </div>
+        </div>
+      ) : viewMode === "frequencia" ? (
+        <div className="px-6 pb-28">
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-1">Marcar presença de uma reunião</p>
+          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mb-3">Escolha a data — pode ser hoje ou uma reunião passada</p>
+          <input type="date" value={attendanceISO} max={todayISO()} onChange={e => setAttendanceISO(e.target.value || todayISO())}
+            className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-2">
+            Quem veio em {labelFromISO(attendanceISO)}{attendanceISO === todayISO() ? " (hoje)" : ""}
+          </p>
+          <div className="flex flex-col gap-2 mb-6">
+            {collectAll(tree).map(p => {
+              const presentThisDay = (p.attendance || []).includes(labelFromISO(attendanceISO));
+              return (
+                <button key={p.id} onClick={() => toggleAttendanceForSelectedDate(p.id, p.attendance)}
+                  className="flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: presentThisDay ? "#0000000F" : "#FFFFFF", border: presentThisDay ? "1px solid #000000" : "1px solid transparent", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
+                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[11px]">{initials(p.name)}</span>
+                  </div>
+                  <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1 truncate">{p.name}</p>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: presentThisDay ? "#000000" : "#F2F2F2", border: presentThisDay ? "none" : "1px solid #D6D6D6" }}>
+                    {presentThisDay && <Check size={13} color="#FFFFFF" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Quem está faltando</p>
+          <div className="flex flex-col gap-2.5">
+            {collectAll(tree)
+              .map(p => ({ p, days: daysSinceLabel((p.attendance || [])[(p.attendance || []).length - 1]) }))
+              .sort((a, b) => (b.days ?? 9999) - (a.days ?? 9999))
+              .map(({ p, days }) => {
+                const st = statusOf(days);
+                const total = (p.attendance || []).length;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
+                      <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[11px]">{initials(p.name)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] truncate">{p.name}</p>
+                      <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">
+                        {total} {total === 1 ? "presença" : "presenças"} · {days === null ? "nunca veio" : days === 0 ? "veio hoje" : `há ${days} dia${days > 1 ? "s" : ""}`}
+                      </p>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: st.color + "1E", color: st.color }}>
+                      {st.label}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      ) : viewMode === "historico" ? (
+        <div className="px-6 pb-28">
+          {(() => {
+            const membros = collectAll(tree);
+            const datesSet = new Set();
+            membros.forEach(p => (p.attendance || []).forEach(d => datesSet.add(d)));
+            const dates = [...datesSet].sort((a, b) => daysSinceLabel(a) - daysSinceLabel(b));
+            if (dates.length === 0) {
+              return (
+                <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Nenhuma reunião registrada ainda — marque presença na aba Frequência.</p>
+                </div>
+              );
+            }
+            return (
+              <>
+                <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">{dates.length} {dates.length === 1 ? "reunião registrada" : "reuniões registradas"}</p>
+                <div className="flex flex-col gap-2.5">
+                  {dates.map(d => {
+                    const foram = membros.filter(p => (p.attendance || []).includes(d));
+                    return (
+                      <button key={d} onClick={() => setHistoryDate(d)}
+                        className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                        style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                          <span style={{ fontFamily: "IBM Plex Mono", color: "#000000", fontWeight: 600 }} className="text-[12px]">{d}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{foram.length} foram · {membros.length - foram.length} faltaram</p>
+                          <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">de {membros.length} pessoas</p>
+                        </div>
+                        <ChevronRight size={15} color="#9E9E9E" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
         </div>
       ) : searchResults ? (
         <div className="px-6 pb-28">
@@ -406,6 +521,52 @@ function DiscipuladoScreen({ onBack }) {
           </div>
         </div>
       )}
+
+      {historyDate && (() => {
+        const membros = collectAll(tree);
+        const foram = membros.filter(p => (p.attendance || []).includes(historyDate));
+        const faltaram = membros.filter(p => !(p.attendance || []).includes(historyDate));
+        return (
+          <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setHistoryDate(null)}>
+            <div className="w-full rounded-t-3xl p-6" style={{ background: "#F2F2F2", maxHeight: "80%", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px]">Reunião de {historyDate}</p>
+                <button onClick={() => setHistoryDate(null)}><X size={18} color="#9E9E9E" /></button>
+              </div>
+              <div className="overflow-y-auto">
+                <p style={{ fontFamily: "Inter", color: "#4B7D5C" }} className="text-[11px] font-semibold uppercase tracking-wide mb-2">Foram ({foram.length})</p>
+                <div className="flex flex-col gap-1.5 mb-4">
+                  {foram.length === 0 ? (
+                    <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px] mb-2">Ninguém marcado.</p>
+                  ) : foram.map(p => (
+                    <div key={p.id} className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: "#FFFFFF" }}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id) }}>
+                        <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[9.5px]">{initials(p.name)}</span>
+                      </div>
+                      <p style={{ fontFamily: "Inter", color: "#000000" }} className="text-[12.5px] flex-1 truncate">{p.name}</p>
+                      <Check size={14} color="#4B7D5C" />
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontFamily: "Inter", color: "#B25B4A" }} className="text-[11px] font-semibold uppercase tracking-wide mb-2">Faltaram ({faltaram.length})</p>
+                <div className="flex flex-col gap-1.5">
+                  {faltaram.length === 0 ? (
+                    <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Ninguém — todo mundo veio!</p>
+                  ) : faltaram.map(p => (
+                    <div key={p.id} className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: "#FFFFFF" }}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(p.id), opacity: 0.5 }}>
+                        <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[9.5px]">{initials(p.name)}</span>
+                      </div>
+                      <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12.5px] flex-1 truncate">{p.name}</p>
+                      <X size={14} color="#B25B4A" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

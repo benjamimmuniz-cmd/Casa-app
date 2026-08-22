@@ -1,11 +1,11 @@
 import React, { useContext, useRef, useState } from "react";
-import { Clapperboard, CircleDot, Film, Plus, SquarePen, X } from "lucide-react";
+import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, SquarePen, X } from "lucide-react";
 import { StoryContext, UserContext, ConnectionsContext } from "../context/contexts.js";
 import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
 import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
-import { uploadVideo } from "../utils/mediaUpload.js";
+import { uploadVideo, uploadImageDataUrl } from "../utils/mediaUpload.js";
 import { friendUidsOf } from "../utils/helpers.js";
 
 function StoriesRow({ onPublish, onShorts }) {
@@ -17,12 +17,14 @@ function StoriesRow({ onPublish, onShorts }) {
   const stories = allStories.filter(s => !s.authorUid || s.authorUid === meUser.uid || friends.has(s.authorUid));
   const [viewerGroup, setViewerGroup] = useState(null);
   const [showChoice, setShowChoice] = useState(false);
+  const [showPhotoSource, setShowPhotoSource] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
   const [videoError, setVideoError] = useState("");
   const [videoProgress, setVideoProgress] = useState(null);
   const storyPhotoInputRef = useRef(null);
+  const storyCameraInputRef = useRef(null);
   const storyVideoInputRef = useRef(null);
 
   const handleStoryImagePick = (e) => {
@@ -34,9 +36,15 @@ function StoriesRow({ onPublish, onShorts }) {
     e.target.value = "";
   };
 
-  const publishEditedStory = ({ zoom, focus, overlays, musicName, musicUrl }) => {
-    addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays, musicName, musicUrl });
+  const publishEditedStory = async ({ zoom, focus, overlays, musicName, musicUrl }) => {
+    const localImage = editingImage;
     setEditingImage(null);
+    try {
+      const url = await uploadImageDataUrl(localImage, `story-images/${meUser.uid}/${Date.now()}.jpg`);
+      addStory({ author: me, image: url, text: "", zoom, focus, overlays, musicName, musicUrl });
+    } catch (err) {
+      console.error("STORY_IMAGE_UPLOAD_ERR", err.message);
+    }
   };
 
   const handleStoryVideoPick = (e) => {
@@ -131,7 +139,7 @@ function StoriesRow({ onPublish, onShorts }) {
         <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowChoice(false)}>
           <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">O que você quer fazer?</p>
-            <button onClick={() => { setShowChoice(false); storyPhotoInputRef.current?.click(); }}
+            <button onClick={() => { setShowChoice(false); setShowPhotoSource(true); }}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#8A4B6D1E" }}>
                 <CircleDot size={18} color="#8A4B6D" />
@@ -178,6 +186,29 @@ function StoriesRow({ onPublish, onShorts }) {
       )}
 
       <input ref={storyPhotoInputRef} type="file" accept="image/*" onChange={handleStoryImagePick} className="hidden" />
+      <input ref={storyCameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleStoryImagePick} className="hidden" />
+
+      {showPhotoSource && (
+        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowPhotoSource(false)}>
+          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Foto do story</p>
+            <button onClick={() => { setShowPhotoSource(false); storyCameraInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <Camera size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Tirar foto</p>
+            </button>
+            <button onClick={() => { setShowPhotoSource(false); storyPhotoInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <ImageIcon size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Escolher da galeria</p>
+            </button>
+          </div>
+        </div>
+      )}
       <input ref={storyVideoInputRef} type="file" accept="video/*" onChange={handleStoryVideoPick} className="hidden" />
 
       {viewerGroup && (
