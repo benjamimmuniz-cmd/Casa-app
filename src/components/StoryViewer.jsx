@@ -5,7 +5,7 @@ import { UserContext, StoryContext, ProfileNavContext } from "../context/context
 import { sendChatMessage } from "../utils/chatActions.js";
 import Avatar from "./Avatar.jsx";
 
-const DURATION = 5000;
+const DURATION = 7000;
 const REACTION_EMOJIS = ["❤️", "🙌", "😂", "😮", "😢", "🙏"];
 
 function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
@@ -22,6 +22,8 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const pausedMsRef = useRef(0);
   const pauseStartRef = useRef(0);
   const audioRef = useRef(null);
+  const videoRef = useRef(null);
+  const durationRef = useRef(DURATION);
 
   const story = stories[index];
 
@@ -30,12 +32,14 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     pausedRef.current = true;
     pauseStartRef.current = Date.now();
     audioRef.current?.pause();
+    videoRef.current?.pause();
   };
   const resume = () => {
     if (!pausedRef.current) return;
     pausedMsRef.current += Date.now() - pauseStartRef.current;
     pausedRef.current = false;
     audioRef.current?.play().catch(() => {});
+    videoRef.current?.play().catch(() => {});
   };
 
   useEffect(() => {
@@ -45,11 +49,12 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     setShowViewers(false);
     pausedMsRef.current = 0;
     pausedRef.current = false;
+    durationRef.current = DURATION;
     const start = Date.now();
     const tick = setInterval(() => {
       if (pausedRef.current) return;
       const elapsed = Date.now() - start - pausedMsRef.current;
-      const pct = Math.min(100, (elapsed / DURATION) * 100);
+      const pct = Math.min(100, (elapsed / durationRef.current) * 100);
       setProgress(pct);
       if (pct >= 100) {
         clearInterval(tick);
@@ -149,7 +154,11 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
       )}
 
       <div className="flex-1 relative flex items-center justify-center px-6 overflow-hidden">
-        {story.image ? (
+        {story.video ? (
+          <video key={story.id} ref={videoRef} src={story.video} className="absolute inset-0 w-full h-full object-cover"
+            autoPlay playsInline
+            onLoadedMetadata={(e) => { if (e.target.duration) durationRef.current = e.target.duration * 1000; }} />
+        ) : story.image ? (
           <img src={story.image} alt="" className="absolute inset-0 w-full h-full object-cover"
             style={{
               objectPosition: `${story.focus?.x ?? 50}% ${story.focus?.y ?? 50}%`,

@@ -1,10 +1,11 @@
 import React, { useContext, useRef, useState } from "react";
-import { Clapperboard, CircleDot, Plus, SquarePen } from "lucide-react";
+import { Clapperboard, CircleDot, Film, Plus, SquarePen, X } from "lucide-react";
 import { StoryContext, UserContext, ConnectionsContext } from "../context/contexts.js";
 import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
 import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
+import { uploadVideo } from "../utils/mediaUpload.js";
 import { friendUidsOf } from "../utils/helpers.js";
 
 function StoriesRow({ onPublish, onShorts }) {
@@ -17,7 +18,12 @@ function StoriesRow({ onPublish, onShorts }) {
   const [viewerGroup, setViewerGroup] = useState(null);
   const [showChoice, setShowChoice] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [videoError, setVideoError] = useState("");
+  const [videoProgress, setVideoProgress] = useState(null);
   const storyPhotoInputRef = useRef(null);
+  const storyVideoInputRef = useRef(null);
 
   const handleStoryImagePick = (e) => {
     const file = e.target.files?.[0];
@@ -31,6 +37,37 @@ function StoriesRow({ onPublish, onShorts }) {
   const publishEditedStory = ({ zoom, focus, overlays, musicName, musicUrl }) => {
     addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays, musicName, musicUrl });
     setEditingImage(null);
+  };
+
+  const handleStoryVideoPick = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setVideoError("");
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const cancelVideoStory = () => {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+    setVideoError("");
+    setVideoProgress(null);
+  };
+
+  const publishVideoStory = async () => {
+    if (!videoFile) return;
+    setVideoError("");
+    try {
+      setVideoProgress(0);
+      const url = await uploadVideo(videoFile, `story-videos/${meUser.uid}/${Date.now()}-${videoFile.name}`, setVideoProgress);
+      addStory({ author: me, video: url, text: "" });
+      cancelVideoStory();
+    } catch (err) {
+      setVideoError(err.message || "Não consegui enviar o vídeo. Tenta de novo.");
+      setVideoProgress(null);
+    }
   };
 
   const myStories = stories.filter(s => s.author === me);
@@ -104,6 +141,16 @@ function StoriesRow({ onPublish, onShorts }) {
                 <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Aparece no topo, em bolinha</p>
               </div>
             </button>
+            <button onClick={() => { setShowChoice(false); storyVideoInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#5C6B451E" }}>
+                <Film size={18} color="#5C6B45" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Story em vídeo</p>
+                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Um vídeo curto, some em 24h</p>
+              </div>
+            </button>
             <button onClick={() => { setShowChoice(false); onPublish ? onPublish() : null; }}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
@@ -131,6 +178,7 @@ function StoriesRow({ onPublish, onShorts }) {
       )}
 
       <input ref={storyPhotoInputRef} type="file" accept="image/*" onChange={handleStoryImagePick} className="hidden" />
+      <input ref={storyVideoInputRef} type="file" accept="video/*" onChange={handleStoryVideoPick} className="hidden" />
 
       {viewerGroup && (
         <StoryViewer stories={viewerGroup} startIndex={0} onClose={() => setViewerGroup(null)} />
@@ -138,6 +186,29 @@ function StoriesRow({ onPublish, onShorts }) {
 
       {editingImage && (
         <StoryEditor image={editingImage} onCancel={() => setEditingImage(null)} onPublish={publishEditedStory} />
+      )}
+
+      {videoPreview && (
+        <div className="absolute inset-0 z-50 flex flex-col" style={{ background: "#000000" }}>
+          <div className="flex items-center justify-between px-5 pt-6 pb-3">
+            <button onClick={cancelVideoStory}><X size={22} color="#FFFFFF" /></button>
+            <p style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[13px] font-semibold">Story em vídeo</p>
+            <div style={{ width: 22 }} />
+          </div>
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
+            <video src={videoPreview} className="max-w-full max-h-full" controls playsInline />
+          </div>
+          {videoError && (
+            <p style={{ fontFamily: "Inter", color: "#FF8A73" }} className="text-[12px] text-center px-5 mb-2">{videoError}</p>
+          )}
+          <div className="px-5 pb-8 pt-2">
+            <button onClick={publishVideoStory} disabled={videoProgress !== null}
+              className="w-full py-4 rounded-full font-semibold text-[15px] active:scale-[0.98] transition-transform"
+              style={{ background: "#FFFFFF", color: "#000000", fontFamily: "Inter" }}>
+              {videoProgress !== null ? `Enviando ${Math.round(videoProgress * 100)}%...` : "Publicar story"}
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

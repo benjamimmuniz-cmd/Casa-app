@@ -10,6 +10,7 @@ import {
   Send,
   Share2,
   Trash2,
+  Video,
   X
 } from "lucide-react";
 import PostCarousel from "../components/PostCarousel.jsx";
@@ -19,6 +20,7 @@ import Avatar from "../components/Avatar.jsx";
 import { FeedContext, UserContext, ConnectionsContext, ProfileNavContext } from "../context/contexts.js";
 import { KIND_LABELS, ME_FEED } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
+import { uploadVideo } from "../utils/mediaUpload.js";
 import { visiblePosts } from "../utils/helpers.js";
 import { sendChatMessage } from "../utils/chatActions.js";
 import AudioPlayButton from "../components/AudioPlayButton.jsx";
@@ -42,6 +44,10 @@ function FeedScreen({ onBack }) {
   const [images, setImages] = useState([]);
   const [imagePositions, setImagePositions] = useState([]);
   const [framingIndex, setFramingIndex] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [videoError, setVideoError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [musicTrack, setMusicTrack] = useState(null);
   const [showMusicPicker, setShowMusicPicker] = useState(false);
   const [openComments, setOpenComments] = useState(null);
@@ -51,6 +57,7 @@ function FeedScreen({ onBack }) {
   const handlePhotoPick = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    removeVideo();
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = async () => {
@@ -68,16 +75,48 @@ function FeedScreen({ onBack }) {
     setImagePositions(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleVideoPick = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setVideoError("");
+    setImages([]);
+    setImagePositions([]);
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const removeVideo = () => {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+    setVideoError("");
+  };
+
   const publish = async () => {
-    if (!text.trim() && !images.length && !musicTrack) return;
+    if (!text.trim() && !images.length && !videoFile && !musicTrack) return;
     setPublishing(true);
+    let videoUrl = null;
+    if (videoFile) {
+      try {
+        setUploadProgress(0);
+        videoUrl = await uploadVideo(videoFile, `feed-videos/${meUid}/${Date.now()}-${videoFile.name}`, setUploadProgress);
+      } catch (err) {
+        setVideoError(err.message || "Não consegui enviar o vídeo. Tenta de novo.");
+        setPublishing(false);
+        setUploadProgress(null);
+        return;
+      }
+    }
     const imagePositionStrings = imagePositions.map(p => `${p.x}% ${p.y}%`);
-    await addPost({ author: ME_FEED, text: text.trim(), images, imagePositions: imagePositionStrings, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
+    await addPost({ author: ME_FEED, text: text.trim(), images, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
     setText("");
     setImages([]);
     setImagePositions([]);
+    removeVideo();
     setMusicTrack(null);
     setPublishing(false);
+    setUploadProgress(null);
   };
 
   const toggleSave = (postId) => ctxToggleSave(postId, ME_FEED);
@@ -182,6 +221,22 @@ function FeedScreen({ onBack }) {
             </label>
           </div>
         )}
+        {videoPreview && (
+          <div className="relative mt-2 rounded-xl overflow-hidden" style={{ width: 120, height: 120 }}>
+            <video src={videoPreview} className="w-full h-full object-cover" muted playsInline />
+            <button onClick={removeVideo} className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
+              <X size={11} color="#F2F2F2" />
+            </button>
+            {uploadProgress !== null && (
+              <div className="absolute inset-x-0 bottom-0 h-1" style={{ background: "rgba(0,0,0,0.3)" }}>
+                <div className="h-full" style={{ width: `${Math.round(uploadProgress * 100)}%`, background: "var(--c-accent)" }} />
+              </div>
+            )}
+          </div>
+        )}
+        {videoError && (
+          <p style={{ fontFamily: "Inter", color: "#B25B4A" }} className="text-[11.5px] mt-1.5">{videoError}</p>
+        )}
         {musicTrack && (
           <div className="flex items-center gap-2.5 mt-2 px-3 py-2 rounded-xl" style={{ background: "var(--c-surface-2)" }}>
             <AudioPlayButton url={musicTrack.url} size={30} iconSize={13} bg="#0000000F" color="var(--c-text)" />
@@ -195,14 +250,18 @@ function FeedScreen({ onBack }) {
               <ImageIcon size={19} color="var(--c-muted)" />
               <input type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
             </label>
+            <label className="cursor-pointer">
+              <Video size={19} color="var(--c-muted)" />
+              <input type="file" accept="video/*" onChange={handleVideoPick} className="hidden" />
+            </label>
             <button onClick={() => setShowMusicPicker(true)}>
               <Music2 size={19} color="var(--c-muted)" />
             </button>
           </div>
-          <button onClick={publish} disabled={publishing || (!text.trim() && !images.length && !musicTrack)}
+          <button onClick={publish} disabled={publishing || (!text.trim() && !images.length && !videoFile && !musicTrack)}
             className="px-5 py-2 rounded-full text-[12px] font-semibold"
-            style={{ fontFamily: "Inter", background: (text.trim() || images.length || musicTrack) ? "var(--c-accent)" : "var(--c-surface-2)", color: (text.trim() || images.length || musicTrack) ? "#FFFFFF" : "var(--c-faint)" }}>
-            {publishing ? "Publicando..." : "Publicar"}
+            style={{ fontFamily: "Inter", background: (text.trim() || images.length || videoFile || musicTrack) ? "var(--c-accent)" : "var(--c-surface-2)", color: (text.trim() || images.length || videoFile || musicTrack) ? "#FFFFFF" : "var(--c-faint)" }}>
+            {publishing ? (uploadProgress !== null ? `Enviando ${Math.round(uploadProgress * 100)}%...` : "Publicando...") : "Publicar"}
           </button>
         </div>
       </div>

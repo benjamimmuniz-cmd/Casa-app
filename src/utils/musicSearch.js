@@ -14,7 +14,7 @@ async function fetchWithTimeout(url, ms) {
 export async function searchMusic(query) {
   const term = query.trim();
   if (!term) return [];
-  const url = `https://itunes.apple.com/search?media=music&limit=25&term=${encodeURIComponent(term)}`;
+  const url = `https://itunes.apple.com/search?media=music&limit=25&country=BR&term=${encodeURIComponent(term)}`;
   // A API da Apple as vezes falha por instabilidade passageira — tenta de novo
   // uma vez antes de desistir, pra não mostrar erro por causa de um soluço.
   let res;
