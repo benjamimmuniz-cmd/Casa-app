@@ -1,3 +1,20 @@
 .vercel
 node_modules
 dist
+
+# Android (gerado, recriado com "npx cap sync")
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/captures
+android/.externalNativeBuild
+android/.cxx
+
+# iOS (gerado, recriado com "npx cap sync")
+ios/App/Pods
+ios/App/App.xcworkspace/xcuserdata
+ios/App/build
+ios/.build
+
+.DS_Store

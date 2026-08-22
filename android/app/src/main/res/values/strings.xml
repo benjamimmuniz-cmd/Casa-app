@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Igreja do Nazareno A Casa</string>
+    <string name="title_activity_main">Igreja do Nazareno A Casa</string>
+    <string name="package_name">br.org.nazareno.acasa</string>
+    <string name="custom_url_scheme">br.org.nazareno.acasa</string>
+</resources>
