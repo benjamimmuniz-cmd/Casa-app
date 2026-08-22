@@ -30,6 +30,7 @@ import {
   UserPlus,
   UserCheck,
   Clapperboard,
+  Cake,
 } from "lucide-react";
 
 export const FONTS = `
@@ -63,11 +64,12 @@ export const TILES = [
   { id: "gr", label: "GR", icon: UsersRound, color: "#3B7D8A" },
   { id: "fundamentos", label: "Fundamentos", icon: BookOpenCheck, color: "#6D5C8A" },
   { id: "amigos", label: "Amigos", icon: UserPlus, color: "#4B7D5C" },
+  { id: "aniversariantes", label: "Aniversariantes", icon: Cake, color: "#D9A441" },
 ];
 
 export const MENU_GROUPS = [
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
-  { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos"] },
+  { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
   { label: "Sobre a Casa", ids: ["localizacao"] },
@@ -83,7 +85,7 @@ export const TAB_LABELS = {
   discipulado: "Discipulado", ministerios: "Ministérios", store: "Casa Store", cantina: "Casa Cantina", feed: "Feed", chat: "Chat", calendario: "Calendário", enquetes: "Enquetes",
   evangelismo: "Evangelismo", sounovo: "Sou Novo", novoconvertido: "Novo Convertido", transmissao: "Transmissão", shorts: "Shorts",
   ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração",
-  gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos",
+  gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos", aniversariantes: "Aniversariantes",
 };
 
 export const TAB_DESCRIPTIONS = {
@@ -111,6 +113,7 @@ export const TAB_DESCRIPTIONS = {
   gr: "Seus GRs (Grupos de Relacionamentos) — crie um GR, convide pessoas por link e acompanhe a rede de cada grupo.",
   fundamentos: "Turmas de Fundamentos da fé — cadastre alunos e acompanhe quem já passou pelo discipulado inicial.",
   amigos: "Conecte-se com outros membros da igreja — envie pedidos de amizade e aceite os que você receber.",
+  aniversariantes: "Veja quem faz aniversário este mês (ou navegue pra outros meses) e não deixe ninguém sem parabéns.",
 };
 
 export const GR_COLORS = ["#3B7D8A", "#2B6B76", "#5A9BA6", "#1E5A64", "#4D8A94"];

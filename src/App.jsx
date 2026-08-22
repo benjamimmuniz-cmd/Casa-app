@@ -32,6 +32,7 @@ import MinisteriosScreen from "./screens/MinisteriosScreen.jsx";
 import PerfilScreen from "./screens/PerfilScreen.jsx";
 import SouNovoScreen from "./screens/SouNovoScreen.jsx";
 import NovoConvertidoScreen from "./screens/NovoConvertidoScreen.jsx";
+import AniversariantesScreen from "./screens/AniversariantesScreen.jsx";
 import StoreScreen from "./screens/StoreScreen.jsx";
 import TransmissaoScreen from "./screens/TransmissaoScreen.jsx";
 import ShortsScreen from "./screens/ShortsScreen.jsx";
@@ -466,6 +467,8 @@ function App() {
               <AmigosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "amigos-solicitacoes" ? (
               <AmigosScreen initialTab="solicitacoes" onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "aniversariantes" || (tab === "aniversariantes" && !openTile) ? (
+              <AniversariantesScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "notificacoes" ? (
               <NotificationsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "admin" ? (
