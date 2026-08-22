@@ -28,6 +28,7 @@ import {
   Trophy,
   Crown,
   UserPlus,
+  UserCheck,
   Clapperboard,
 } from "lucide-react";
 
@@ -52,6 +53,7 @@ export const TILES = [
   { id: "enquetes", label: "Enquetes", icon: Vote, color: "#454545" },
   { id: "evangelismo", label: "Evangelismo", icon: Compass, color: "#454545" },
   { id: "sounovo", label: "Sou Novo", icon: Handshake, color: "#5C6B45" },
+  { id: "novoconvertido", label: "Novo Convertido", icon: UserCheck, color: "#4B7D5C" },
   { id: "transmissao", label: "Transmissão", icon: Radio, color: "#B33B3B" },
   { id: "shorts", label: "Shorts", icon: Clapperboard, color: "#2B2B2B" },
   { id: "ofertas", label: "Generosidade e Dízimos", icon: HandCoins, color: "#8A6D3B" },
@@ -72,14 +74,14 @@ export const MENU_GROUPS = [
   { label: "Loja", ids: ["store", "cantina"] },
   { label: "Organização", ids: ["calendario", "enquetes"] },
   { label: "Missão", ids: ["evangelismo"] },
-  { label: "Boas-vindas", ids: ["sounovo"] },
+  { label: "Boas-vindas", ids: ["sounovo", "novoconvertido"] },
   { label: "Crianças", ids: ["infantil"] },
 ];
 
 export const TAB_LABELS = {
   biblia: "Bíblia", plano: "Plano de Leitura", estudo: "Estudos", infantil: "Área Infantil",
   discipulado: "Discipulado", ministerios: "Ministérios", store: "Casa Store", cantina: "Casa Cantina", feed: "Feed", chat: "Chat", calendario: "Calendário", enquetes: "Enquetes",
-  evangelismo: "Evangelismo", sounovo: "Sou Novo", transmissao: "Transmissão", shorts: "Shorts",
+  evangelismo: "Evangelismo", sounovo: "Sou Novo", novoconvertido: "Novo Convertido", transmissao: "Transmissão", shorts: "Shorts",
   ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração",
   gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos",
 };
@@ -99,6 +101,7 @@ export const TAB_DESCRIPTIONS = {
   enquetes: "Líderes criam enquetes de participação (data, horário, quem pode ir) e acompanham em tempo real quem confirmou.",
   evangelismo: "Cadastre famílias visitadas, organize eventos de evangelismo com escala de voluntários e registre doações recebidas.",
   sounovo: "Chegou agora na Casa? Se apresente pra gente e conte um pouco da sua caminhada — é o primeiro passo pra te conhecermos de verdade.",
+  novoconvertido: "Cadastre um novo convertido e escolha, entre os membros com conta no app, quem vai ser o discipulador responsável por acompanhá-lo.",
   transmissao: "Assista ao culto ao vivo direto do YouTube, sempre que a igreja estiver transmitindo.",
   shorts: "Vídeos curtos e verticais da igreja — mensagens rápidas, bastidores e testemunhos, um atrás do outro.",
   ofertas: "Contribua com sua generosidade ou dízimo direto pelo Pix, com QR Code ou chave copia-e-cola.",

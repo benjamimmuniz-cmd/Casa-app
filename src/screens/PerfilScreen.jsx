@@ -23,6 +23,8 @@ function PerfilScreen({ onBack, onLogout }) {
   const [nameDraft, setNameDraft] = useState(user.name);
   const [editingBio, setEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState(user.bio);
+  const [editingProfissao, setEditingProfissao] = useState(false);
+  const [profissaoDraft, setProfissaoDraft] = useState(user.profissao);
 
   const saveName = () => {
     const trimmed = nameDraft.trim();
@@ -33,6 +35,11 @@ function PerfilScreen({ onBack, onLogout }) {
   const saveBio = () => {
     user.setBio(bioDraft.trim());
     setEditingBio(false);
+  };
+
+  const saveProfissao = () => {
+    user.setProfissao(profissaoDraft.trim());
+    setEditingProfissao(false);
   };
 
   const handlePhotoPick = (e) => {
@@ -165,9 +172,25 @@ function PerfilScreen({ onBack, onLogout }) {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#5A5A5A1E" }}>
               <Tag size={15} color="#5A5A5A" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Profissão</p>
-              <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">{user.profissao || "Não informada"}</p>
+              {editingProfissao ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input autoFocus value={profissaoDraft} onChange={e => setProfissaoDraft(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && saveProfissao()}
+                    placeholder="Ex: Advogada, Eletricista..."
+                    className="flex-1 min-w-0 outline-none px-2.5 py-1.5 rounded-lg text-[13px]"
+                    style={{ fontFamily: "Inter", background: "var(--c-bg)", color: "var(--c-text)", border: "1px solid var(--c-border)" }} />
+                  <button onClick={saveProfissao} className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--c-accent)" }}>
+                    <Check size={12} color="#FFFFFF" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setProfissaoDraft(user.profissao); setEditingProfissao(true); }} className="flex items-center gap-1.5">
+                  <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">{user.profissao || "Não informada"}</p>
+                  <Pencil size={11} color="var(--c-faint)" />
+                </button>
+              )}
             </div>
           </div>
         </div>

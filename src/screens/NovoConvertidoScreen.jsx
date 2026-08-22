@@ -1,0 +1,194 @@
+import React, { useContext, useEffect, useState } from "react";
+import { ChevronRight, UserCheck, X } from "lucide-react";
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase.js";
+import { UserContext } from "../context/contexts.js";
+import { colorFor, initials, fmtDateBR } from "../utils/helpers.js";
+import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
+import Avatar from "../components/Avatar.jsx";
+
+// Cadastro de novo convertido: um membro da igreja registra a pessoa que acabou
+// de se converter e escolhe, entre quem já tem conta no app, quem vai
+// acompanhá-la como discipulador — pra ninguém ficar sem acompanhamento.
+function NovoConvertidoScreen({ onBack }) {
+  const me = useContext(UserContext);
+  const [lista, setLista] = useState([]);
+  const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "" });
+  const [discipulador, setDiscipulador] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [openId, setOpenId] = useState(null);
+
+  useEffect(() => {
+    const q = query(collection(db, "novosConvertidos"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, snap => {
+      setLista(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return () => unsub();
+  }, []);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const aberto = lista.find(c => c.id === openId);
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!form.nome.trim()) { setError("Digite o nome do novo convertido."); return; }
+    if (!discipulador) { setError("Escolha um discipulador pra acompanhar a pessoa."); return; }
+    setSaving(true);
+    try {
+      await addDoc(collection(db, "novosConvertidos"), {
+        nome: form.nome.trim(), telefone: form.telefone.trim(), nascimento: form.nascimento || "", notes: form.notes.trim(),
+        discipuladorUid: discipulador.uid, discipuladorNome: discipulador.nome || "Membro", discipuladorPhoto: discipulador.photo || null,
+        registradoPorUid: me.uid, registradoPorNome: me.name,
+        createdAt: serverTimestamp(),
+      });
+      setForm({ nome: "", telefone: "", nascimento: "", notes: "" });
+      setDiscipulador(null);
+    } catch (err) {
+      setError("Não consegui salvar agora. Tenta de novo.");
+      console.error("NOVOCONVERTIDO_ADD_ERR", err.code, err.message);
+    }
+    setSaving(false);
+  };
+
+  if (aberto) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#F2F2F2" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Novo Convertido</button>
+        </div>
+        <div className="flex flex-col items-center px-6 mt-3 mb-6">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-3" style={{ background: colorFor(aberto.nome) }}>
+            <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[22px]">{initials(aberto.nome)}</span>
+          </div>
+          <h1 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[19px]">{aberto.nome}</h1>
+          {aberto.nascimento && <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12.5px] mt-1">{fmtDateBR(aberto.nascimento)}</p>}
+        </div>
+        <div className="px-6 mb-5">
+          <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            {aberto.telefone && (
+              <div>
+                <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Telefone</p>
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.telefone}</p>
+              </div>
+            )}
+            {aberto.notes && (
+              <div style={aberto.telefone ? { borderTop: "1px solid #F0EAD9", paddingTop: 12 } : {}}>
+                <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Observações</p>
+                <p style={{ fontFamily: "Inter", color: "#000000" }} className="text-[13px] leading-relaxed">{aberto.notes}</p>
+              </div>
+            )}
+            <div style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
+              <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px] mb-2">Discipulador responsável</p>
+              <div className="flex items-center gap-2.5">
+                <Avatar name={aberto.discipuladorNome} uid={aberto.discipuladorUid} photo={aberto.discipuladorPhoto} size={34} fontSize={11} />
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.discipuladorNome}</p>
+              </div>
+            </div>
+            {aberto.registradoPorNome && (
+              <p style={{ fontFamily: "Inter", color: "#B0A18A", borderTop: "1px solid #F0EAD9", paddingTop: 12 }} className="text-[10.5px]">
+                Cadastrado por {aberto.registradoPorNome}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ background: "#F2F2F2" }}>
+      <div className="px-6 pt-6 pb-2">
+        <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Início</button>
+      </div>
+      <div className="px-6 mt-1 mb-5">
+        <h1 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[22px]">Novo Convertido</h1>
+        <p style={{ fontFamily: "Inter", color: "#8A7F6E" }} className="text-[12px] mt-1">Cadastre e escolha quem vai discipular</p>
+      </div>
+
+      <div className="px-6 mb-6">
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Nome</label>
+        <input value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Nome do novo convertido"
+          className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Telefone / WhatsApp <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+        <input value={form.telefone} onChange={e => set("telefone", e.target.value)} placeholder="(11) 90000-0000"
+          className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Data de nascimento <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+        <input type="date" value={form.nascimento} onChange={e => set("nascimento", e.target.value)}
+          className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Observações <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+        <input value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Ex: se converteu no culto de domingo..."
+          className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Discipulador responsável</label>
+        {discipulador ? (
+          <button onClick={() => setShowPicker(true)} className="w-full flex items-center gap-3 p-3 rounded-xl mb-4 text-left"
+            style={{ background: "#FFFFFF", border: "1px solid #D6D6D6" }}>
+            <Avatar name={discipulador.nome} uid={discipulador.uid} photo={discipulador.photo} size={32} fontSize={11} />
+            <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1">{discipulador.nome}</p>
+            <button onClick={(e) => { e.stopPropagation(); setDiscipulador(null); }}><X size={14} color="#9E9E9E" /></button>
+          </button>
+        ) : (
+          <button onClick={() => setShowPicker(true)}
+            className="w-full flex items-center gap-3 p-3.5 rounded-xl mb-4 text-left" style={{ background: "#FFFFFF", border: "1px dashed #D6D6D6" }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#4B7D5C1E" }}>
+              <UserCheck size={16} color="#4B7D5C" />
+            </div>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[13px]">Escolher entre quem tem conta no app</p>
+          </button>
+        )}
+
+        {error && <p style={{ fontFamily: "Inter", color: "#B25B4A" }} className="text-[12px] mb-4 text-center">{error}</p>}
+
+        <button onClick={handleSubmit} disabled={saving}
+          className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
+          style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
+          {saving ? "Salvando..." : "Cadastrar"}
+        </button>
+      </div>
+
+      <div className="px-6 pb-10">
+        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">
+          {lista.length} {lista.length === 1 ? "cadastrado" : "cadastrados"}
+        </p>
+        {lista.length === 0 ? (
+          <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Ninguém cadastrado ainda.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {lista.map(c => (
+              <button key={c.id} onClick={() => setOpenId(c.id)}
+                className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.nome) }}>
+                  <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.nome)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{c.nome}</p>
+                  <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">discipulador: {c.discipuladorNome}</p>
+                </div>
+                <ChevronRight size={16} color="#B5AC9C" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showPicker && (
+        <MemberPickerSheet title="Escolher discipulador" onClose={() => setShowPicker(false)}
+          onPick={(u) => { setDiscipulador(u); setShowPicker(false); }} />
+      )}
+    </div>
+  );
+}
+
+export default NovoConvertidoScreen;

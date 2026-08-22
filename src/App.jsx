@@ -31,6 +31,7 @@ import Intro from "./screens/Intro.jsx";
 import MinisteriosScreen from "./screens/MinisteriosScreen.jsx";
 import PerfilScreen from "./screens/PerfilScreen.jsx";
 import SouNovoScreen from "./screens/SouNovoScreen.jsx";
+import NovoConvertidoScreen from "./screens/NovoConvertidoScreen.jsx";
 import StoreScreen from "./screens/StoreScreen.jsx";
 import TransmissaoScreen from "./screens/TransmissaoScreen.jsx";
 import ShortsScreen from "./screens/ShortsScreen.jsx";
@@ -378,6 +379,14 @@ function App() {
     }
   };
 
+  const updateUserProfissao = (profissao) => {
+    setCurrentUser(prev => prev ? { ...prev, profissao } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { profissao, role: currentUser.role || "member" })
+        .catch(err => console.error("PROFISSAO_SAVE_ERR", err.code, err.message));
+    }
+  };
+
   const handleLogout = () => {
     signOut(auth);
     setTab("inicio");
@@ -395,7 +404,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
@@ -435,6 +444,8 @@ function App() {
               <EvangelismoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "sounovo" || (tab === "sounovo" && !openTile) ? (
               <SouNovoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "novoconvertido" || (tab === "novoconvertido" && !openTile) ? (
+              <NovoConvertidoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "transmissao" || (tab === "transmissao" && !openTile) ? (
               <TransmissaoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "shorts" || (tab === "shorts" && !openTile) ? (
