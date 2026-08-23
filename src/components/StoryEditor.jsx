@@ -8,7 +8,7 @@ const EMOJIS = ["😀", "😂", "🙏", "❤️", "🔥", "✨", "🎉", "👏",
 // Editor de story estilo Instagram: dá pra dar zoom/arrastar pra enquadrar a foto,
 // adicionar texto solto em cima da imagem, colar emojis e escolher uma música —
 // tudo arrastável.
-function StoryEditor({ image, onCancel, onPublish }) {
+function StoryEditor({ image, onCancel, onPublish, publishing, publishError }) {
   const frameRef = useRef(null);
   const [zoom, setZoom] = useState(1);
   const [focus, setFocus] = useState({ x: 50, y: 50 });
@@ -78,7 +78,7 @@ function StoryEditor({ image, onCancel, onPublish }) {
   return (
     <div className="absolute inset-0 z-50 flex flex-col" style={{ background: "#000000" }}>
       <div className="flex items-center justify-between px-5 pt-6 pb-3">
-        <button onClick={onCancel}><X size={22} color="#FFFFFF" /></button>
+        <button onClick={onCancel} disabled={publishing}><X size={22} color={publishing ? "rgba(255,255,255,0.4)" : "#FFFFFF"} /></button>
         <div className="flex items-center gap-3">
           <button onClick={addText} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }}>
             <Type size={14} color="#FFFFFF" />
@@ -159,10 +159,13 @@ function StoryEditor({ image, onCancel, onPublish }) {
       </div>
 
       <div className="px-5 pb-8 shrink-0">
-        <button onClick={publish}
+        {publishError && (
+          <p style={{ fontFamily: "Inter", color: "#FF8A73" }} className="text-[12px] text-center mb-2">{publishError}</p>
+        )}
+        <button onClick={publish} disabled={publishing}
           className="w-full py-4 rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-          style={{ background: "#FFFFFF", color: "#000000", fontFamily: "Inter" }}>
-          <Check size={16} /> Concluído
+          style={{ background: publishing ? "rgba(255,255,255,0.6)" : "#FFFFFF", color: "#000000", fontFamily: "Inter" }}>
+          {publishing ? "Publicando..." : (<><Check size={16} /> Concluído</>)}
         </button>
       </div>
 

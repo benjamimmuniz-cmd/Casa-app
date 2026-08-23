@@ -24,6 +24,7 @@ function StoriesRow({ onPublish, onShorts }) {
   const [videoError, setVideoError] = useState("");
   const [videoProgress, setVideoProgress] = useState(null);
   const [photoStoryError, setPhotoStoryError] = useState("");
+  const [photoStoryPublishing, setPhotoStoryPublishing] = useState(false);
   const storyPhotoInputRef = useRef(null);
   const storyCameraInputRef = useRef(null);
   const storyVideoInputRef = useRef(null);
@@ -38,16 +39,17 @@ function StoriesRow({ onPublish, onShorts }) {
   };
 
   const publishEditedStory = async ({ zoom, focus, overlays, musicName, musicUrl }) => {
-    const localImage = editingImage;
-    setEditingImage(null);
+    setPhotoStoryError("");
+    setPhotoStoryPublishing(true);
     try {
-      const url = await uploadImageDataUrl(localImage, `story-images/${meUser.uid}/${Date.now()}.jpg`);
+      const url = await uploadImageDataUrl(editingImage, `story-images/${meUser.uid}/${Date.now()}.jpg`);
       await addStory({ author: me, image: url, text: "", zoom, focus, overlays, musicName, musicUrl });
+      setEditingImage(null);
     } catch (err) {
       console.error("STORY_IMAGE_UPLOAD_ERR", err.message);
       setPhotoStoryError(err.message || "Não consegui publicar o story. Tenta de novo.");
-      setTimeout(() => setPhotoStoryError(""), 4000);
     }
+    setPhotoStoryPublishing(false);
   };
 
   const handleStoryVideoPick = (e) => {
@@ -219,7 +221,8 @@ function StoriesRow({ onPublish, onShorts }) {
       )}
 
       {editingImage && (
-        <StoryEditor image={editingImage} onCancel={() => setEditingImage(null)} onPublish={publishEditedStory} />
+        <StoryEditor image={editingImage} onCancel={() => setEditingImage(null)} onPublish={publishEditedStory}
+          publishing={photoStoryPublishing} publishError={photoStoryError} />
       )}
 
       {videoPreview && (
@@ -242,12 +245,6 @@ function StoriesRow({ onPublish, onShorts }) {
               {videoProgress !== null ? `Enviando ${Math.round(videoProgress * 100)}%...` : "Publicar story"}
             </button>
           </div>
-        </div>
-      )}
-
-      {photoStoryError && (
-        <div className="absolute top-4 left-4 right-4 z-50 rounded-2xl p-3.5 text-center" style={{ background: "#B33B3B", boxShadow: "0 4px 14px rgba(0,0,0,0.25)" }}>
-          <p style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[12.5px]">{photoStoryError}</p>
         </div>
       )}
     </>
