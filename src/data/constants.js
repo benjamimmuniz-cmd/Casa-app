@@ -217,25 +217,6 @@ export const ME_FEED = "Benjamim";
 
 export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista" };
 
-export const INITIAL_PRAYERS = [
-  {
-    id: "pr1", author: "Carla Mendes", time: "há 3h",
-    text: "Peço oração pela recuperação da minha mãe, que está internada. Que Deus toque nos médicos e traga cura.",
-    prayingBy: ["Pastor Rodolfo", "Juliana Alves"],
-  },
-  {
-    id: "pr2", author: "Bruno Lima", time: "há 1 dia",
-    text: "Estou em processo de entrevistas de emprego, peço sabedoria e que a vontade de Deus prevaleça.",
-    prayingBy: ["Ana Paula"],
-  },
-  {
-    id: "pr3", author: "Sofia Ramos", time: "há 2 dias",
-    text: "Oração pela minha família, por reconciliação e paz no lar.",
-    prayingBy: [],
-  },
-];
-
-
 export const INITIAL_SHORTS = [];
 
 export const INITIAL_DEVOCIONAIS = [

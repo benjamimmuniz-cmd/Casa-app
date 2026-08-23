@@ -16,36 +16,40 @@ import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
 import AuthScreen from "./screens/AuthScreen.jsx";
-import BibliaScreen from "./screens/BibliaScreen.jsx";
-import CalendarioScreen from "./screens/CalendarioScreen.jsx";
-import CantinaScreen from "./screens/CantinaScreen.jsx";
-import ChatScreen from "./screens/ChatScreen.jsx";
-import DiscipuladoScreen from "./screens/DiscipuladoScreen.jsx";
-import EnquetesScreen from "./screens/EnquetesScreen.jsx";
-import EstudosScreen from "./screens/EstudosScreen.jsx";
-import EvangelismoScreen from "./screens/EvangelismoScreen.jsx";
-import FeedScreen from "./screens/FeedScreen.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
-import InfantilScreen from "./screens/InfantilScreen.jsx";
 import Intro from "./screens/Intro.jsx";
-import MinisteriosScreen from "./screens/MinisteriosScreen.jsx";
-import PerfilScreen from "./screens/PerfilScreen.jsx";
-import SouNovoScreen from "./screens/SouNovoScreen.jsx";
-import NovoConvertidoScreen from "./screens/NovoConvertidoScreen.jsx";
-import AniversariantesScreen from "./screens/AniversariantesScreen.jsx";
-import StoreScreen from "./screens/StoreScreen.jsx";
-import TransmissaoScreen from "./screens/TransmissaoScreen.jsx";
-import ShortsScreen from "./screens/ShortsScreen.jsx";
-import OfertasDizimosScreen from "./screens/OfertasDizimosScreen.jsx";
-import DoacoesScreen from "./screens/DoacoesScreen.jsx";
-import LocalizacaoScreen from "./screens/LocalizacaoScreen.jsx";
-import OracaoScreen from "./screens/OracaoScreen.jsx";
-import GRScreen from "./screens/GRScreen.jsx";
-import FundamentosScreen from "./screens/FundamentosScreen.jsx";
-import AmigosScreen from "./screens/AmigosScreen.jsx";
-import NotificationsScreen from "./screens/NotificationsScreen.jsx";
-import AdminScreen from "./screens/AdminScreen.jsx";
-import PersonProfileScreen from "./screens/PersonProfileScreen.jsx";
+
+// Todas as outras telas só carregam quando a pessoa realmente abre aquele
+// menu — em vez de tudo vir junto no primeiro carregamento do app, o que
+// deixava a entrada bem mais lenta.
+const BibliaScreen = React.lazy(() => import("./screens/BibliaScreen.jsx"));
+const CalendarioScreen = React.lazy(() => import("./screens/CalendarioScreen.jsx"));
+const CantinaScreen = React.lazy(() => import("./screens/CantinaScreen.jsx"));
+const ChatScreen = React.lazy(() => import("./screens/ChatScreen.jsx"));
+const DiscipuladoScreen = React.lazy(() => import("./screens/DiscipuladoScreen.jsx"));
+const EnquetesScreen = React.lazy(() => import("./screens/EnquetesScreen.jsx"));
+const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
+const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
+const FeedScreen = React.lazy(() => import("./screens/FeedScreen.jsx"));
+const InfantilScreen = React.lazy(() => import("./screens/InfantilScreen.jsx"));
+const MinisteriosScreen = React.lazy(() => import("./screens/MinisteriosScreen.jsx"));
+const PerfilScreen = React.lazy(() => import("./screens/PerfilScreen.jsx"));
+const SouNovoScreen = React.lazy(() => import("./screens/SouNovoScreen.jsx"));
+const NovoConvertidoScreen = React.lazy(() => import("./screens/NovoConvertidoScreen.jsx"));
+const AniversariantesScreen = React.lazy(() => import("./screens/AniversariantesScreen.jsx"));
+const StoreScreen = React.lazy(() => import("./screens/StoreScreen.jsx"));
+const TransmissaoScreen = React.lazy(() => import("./screens/TransmissaoScreen.jsx"));
+const ShortsScreen = React.lazy(() => import("./screens/ShortsScreen.jsx"));
+const OfertasDizimosScreen = React.lazy(() => import("./screens/OfertasDizimosScreen.jsx"));
+const DoacoesScreen = React.lazy(() => import("./screens/DoacoesScreen.jsx"));
+const LocalizacaoScreen = React.lazy(() => import("./screens/LocalizacaoScreen.jsx"));
+const OracaoScreen = React.lazy(() => import("./screens/OracaoScreen.jsx"));
+const GRScreen = React.lazy(() => import("./screens/GRScreen.jsx"));
+const FundamentosScreen = React.lazy(() => import("./screens/FundamentosScreen.jsx"));
+const AmigosScreen = React.lazy(() => import("./screens/AmigosScreen.jsx"));
+const NotificationsScreen = React.lazy(() => import("./screens/NotificationsScreen.jsx"));
+const AdminScreen = React.lazy(() => import("./screens/AdminScreen.jsx"));
+const PersonProfileScreen = React.lazy(() => import("./screens/PersonProfileScreen.jsx"));
 
 function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
@@ -417,6 +421,7 @@ function App() {
           <LiveContext.Provider value={{ liveActive, setLiveActive }}>
           <ThemeContext.Provider value={{ theme, setTheme }}>
           <div className="flex flex-col h-full">
+            <React.Suspense fallback={<div className="flex-1" style={{ background: "var(--c-bg)" }} />}>
             {openTile === "biblia" || (tab === "biblia" && !openTile) ? (
               <BibliaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "plano" || (tab === "plano" && !openTile) ? (
@@ -484,6 +489,7 @@ function App() {
             ) : (
               <StubScreen tabId={tab} onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             )}
+            </React.Suspense>
             <div className="flex items-stretch py-2 px-1" style={{ background: "var(--c-surface)", borderTop: "1px solid var(--c-divider)" }}>
               {navItems.map(n => {
                 const active = tab === n.id && !openTile;

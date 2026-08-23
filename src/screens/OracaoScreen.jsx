@@ -1,35 +1,52 @@
-import React, { useState, useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { HandHeart, Lock, Globe } from "lucide-react";
+import { collection, addDoc, doc, updateDoc, onSnapshot, orderBy, query, where, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, initials } from "../utils/helpers.js";
-import { INITIAL_PRAYERS } from "../data/constants.js";
+import { colorFor, initials, timeAgo } from "../utils/helpers.js";
 
 function OracaoScreen({ onBack }) {
-  const me = useContext(UserContext).name || "Você";
-  const [prayers, setPrayers] = useState(INITIAL_PRAYERS);
+  const me = useContext(UserContext);
+  const meName = me.name || "Você";
+  const [prayers, setPrayers] = useState([]);
   const [text, setText] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [confirmation, setConfirmation] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const submit = () => {
-    if (!text.trim()) return;
-    if (isPublic) {
-      setPrayers(prev => [{ id: "pr" + Date.now(), author: me, time: "agora", text: text.trim(), prayingBy: [] }, ...prev]);
-      setConfirmation("Seu pedido foi publicado no mural. 🙏");
-    } else {
-      setConfirmation("Pedido enviado só pra liderança da igreja, em sigilo.");
+  useEffect(() => {
+    const q = query(collection(db, "oracoes"), where("isPublic", "==", true), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, snap => {
+      setPrayers(snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, ...data, time: timeAgo(data.createdAt) };
+      }));
+    }, () => {});
+    return () => unsub();
+  }, []);
+
+  const submit = async () => {
+    if (!text.trim() || sending) return;
+    setSending(true);
+    try {
+      await addDoc(collection(db, "oracoes"), {
+        author: meName, authorUid: me.uid, text: text.trim(), isPublic, prayingBy: [], createdAt: serverTimestamp(),
+      });
+      setConfirmation(isPublic ? "Seu pedido foi publicado no mural. 🙏" : "Pedido enviado só pra liderança da igreja, em sigilo.");
+      setText("");
+      setIsPublic(false);
+    } catch (err) {
+      console.error("PRAYER_ADD_ERR", err.code, err.message);
+      setConfirmation("Não consegui enviar agora. Tenta de novo.");
     }
-    setText("");
-    setIsPublic(false);
+    setSending(false);
     setTimeout(() => setConfirmation(""), 3000);
   };
 
-  const togglePray = (id) => {
-    setPrayers(prev => prev.map(p => {
-      if (p.id !== id) return p;
-      const praying = p.prayingBy.includes(me);
-      return { ...p, prayingBy: praying ? p.prayingBy.filter(n => n !== me) : [...p.prayingBy, me] };
-    }));
+  const togglePray = (p) => {
+    const praying = (p.prayingBy || []).includes(meName);
+    updateDoc(doc(db, "oracoes", p.id), { prayingBy: praying ? arrayRemove(meName) : arrayUnion(meName) })
+      .catch(err => console.error("PRAYER_PRAY_ERR", err.code, err.message));
   };
 
   return (
@@ -65,10 +82,10 @@ function OracaoScreen({ onBack }) {
           </button>
         </div>
 
-        <button onClick={submit} disabled={!text.trim()}
+        <button onClick={submit} disabled={!text.trim() || sending}
           className="w-full mt-3 py-3 rounded-full font-semibold text-[13.5px] active:scale-[0.98] transition-transform"
           style={{ fontFamily: "Inter", background: text.trim() ? "#000000" : "#E3E3E3", color: text.trim() ? "#FFFFFF" : "#9E9E9E" }}>
-          Enviar pedido
+          {sending ? "Enviando..." : "Enviar pedido"}
         </button>
 
         {confirmation && (
@@ -81,8 +98,12 @@ function OracaoScreen({ onBack }) {
       </div>
 
       <div className="px-6 pb-10 flex flex-col gap-3">
-        {prayers.map(p => {
-          const praying = p.prayingBy.includes(me);
+        {prayers.length === 0 ? (
+          <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Nenhum pedido público ainda.</p>
+          </div>
+        ) : prayers.map(p => {
+          const praying = (p.prayingBy || []).includes(meName);
           return (
             <div key={p.id} className="rounded-2xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div className="flex items-center gap-2.5 mb-2.5">
@@ -95,10 +116,10 @@ function OracaoScreen({ onBack }) {
                 </div>
               </div>
               <p style={{ fontFamily: "Fraunces", color: "#000000" }} className="text-[14.5px] leading-snug mb-3">{p.text}</p>
-              <button onClick={() => togglePray(p.id)}
+              <button onClick={() => togglePray(p)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold"
                 style={{ fontFamily: "Inter", background: praying ? "#8A4B6D" : "#F2F2F2", color: praying ? "#FFFFFF" : "#4D4D4D" }}>
-                🙏 {praying ? "Orando" : "Orar por isso"} {p.prayingBy.length > 0 && `· ${p.prayingBy.length}`}
+                🙏 {praying ? "Orando" : "Orar por isso"} {(p.prayingBy || []).length > 0 && `· ${p.prayingBy.length}`}
               </button>
             </div>
           );
