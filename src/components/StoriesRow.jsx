@@ -5,7 +5,7 @@ import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
 import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
-import { uploadVideo, uploadImageDataUrl } from "../utils/mediaUpload.js";
+import { uploadVideo } from "../utils/mediaUpload.js";
 import { friendUidsOf } from "../utils/helpers.js";
 
 function StoriesRow({ onPublish, onShorts }) {
@@ -38,15 +38,16 @@ function StoriesRow({ onPublish, onShorts }) {
     e.target.value = "";
   };
 
+  // Foto do story volta a ir direto como base64 (sem Storage) ate o
+  // Storage/Blaze estar configurado — assim continua funcionando sem depender disso.
   const publishEditedStory = async ({ zoom, focus, overlays, musicName, musicUrl }) => {
     setPhotoStoryError("");
     setPhotoStoryPublishing(true);
     try {
-      const url = await uploadImageDataUrl(editingImage, `story-images/${meUser.uid}/${Date.now()}.jpg`);
-      await addStory({ author: me, image: url, text: "", zoom, focus, overlays, musicName, musicUrl });
+      await addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays, musicName, musicUrl });
       setEditingImage(null);
     } catch (err) {
-      console.error("STORY_IMAGE_UPLOAD_ERR", err.message);
+      console.error("STORY_PUBLISH_ERR", err.message);
       setPhotoStoryError(err.message || "Não consegui publicar o story. Tenta de novo.");
     }
     setPhotoStoryPublishing(false);

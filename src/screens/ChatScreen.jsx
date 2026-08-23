@@ -8,7 +8,6 @@ import { sendChatMessage, markChatRead, setTyping, deleteChatMessage } from "../
 import { addMembersToGroup, createGroupChat, removeMemberFromGroup, sendGroupMessage, updateGroupPhoto } from "../utils/groupChatActions.js";
 import { getChatId } from "../utils/chatId.js";
 import { compressImage } from "../utils/imageCompress.js";
-import { uploadImageDataUrl, uploadAudioDataUrl } from "../utils/mediaUpload.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import MultiMemberPickerSheet from "../components/MultiMemberPickerSheet.jsx";
 import ImageLightbox from "../components/ImageLightbox.jsx";
@@ -254,15 +253,16 @@ function ChatScreen({ onBack }) {
     }, 2500);
   };
 
+  // Audio e foto do chat voltam a ir direto como base64 (sem Storage) ate o
+  // Storage/Blaze estar configurado — assim continua funcionando sem depender disso.
   const sendAudio = async (audioDataUrl, duration) => {
     if (!openChat) return;
     setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", audio: audioDataUrl, audioDuration: duration, createdAt: null }]);
     try {
-      const url = await uploadAudioDataUrl(audioDataUrl, `chat-audio/${me.uid}/${Date.now()}.webm`);
       if (openChat.type === "group") {
-        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", audio: url });
+        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", audio: audioDataUrl });
       } else {
-        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", audio: url });
+        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", audio: audioDataUrl });
       }
     } catch (err) {
       console.error("SEND_AUDIO_ERR", err.code, err.message);
@@ -278,11 +278,10 @@ function ChatScreen({ onBack }) {
       const image = await compressImage(reader.result);
       setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", image, createdAt: null }]);
       try {
-        const url = await uploadImageDataUrl(image, `chat-images/${me.uid}/${Date.now()}.jpg`);
         if (openChat.type === "group") {
-          await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", image: url });
+          await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", image });
         } else {
-          await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", image: url });
+          await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", image });
         }
       } catch (err) {
         console.error("SEND_IMG_ERR", err.code, err.message);

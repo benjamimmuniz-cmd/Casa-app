@@ -21,7 +21,7 @@ import Avatar from "../components/Avatar.jsx";
 import { FeedContext, UserContext, ConnectionsContext, ProfileNavContext } from "../context/contexts.js";
 import { KIND_LABELS, ME_FEED } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
-import { uploadVideo, uploadImageDataUrl } from "../utils/mediaUpload.js";
+import { uploadVideo } from "../utils/mediaUpload.js";
 import { visiblePosts } from "../utils/helpers.js";
 import { sendChatMessage } from "../utils/chatActions.js";
 import AudioPlayButton from "../components/AudioPlayButton.jsx";
@@ -112,18 +112,9 @@ function FeedScreen({ onBack }) {
         return;
       }
     }
-    let uploadedImages = images;
-    if (images.length) {
-      try {
-        setUploadProgress(0);
-        uploadedImages = await Promise.all(images.map((img, i) => uploadImageDataUrl(img, `feed-images/${meUid}/${Date.now()}-${i}.jpg`)));
-      } catch (err) {
-        setVideoError(err.message || "Não consegui enviar as fotos. Tenta de novo.");
-        setPublishing(false);
-        setUploadProgress(null);
-        return;
-      }
-    }
+    // Foto volta a ir direto como base64 (sem Storage) ate o Storage/Blaze
+    // estar configurado — assim continua funcionando sem depender disso.
+    const uploadedImages = images;
     const imagePositionStrings = imagePositions.map(p => `${p.x}% ${p.y}%`);
     try {
       await addPost({ author: ME_FEED, text: text.trim(), images: uploadedImages, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
