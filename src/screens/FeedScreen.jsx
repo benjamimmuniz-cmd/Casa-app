@@ -125,7 +125,15 @@ function FeedScreen({ onBack }) {
       }
     }
     const imagePositionStrings = imagePositions.map(p => `${p.x}% ${p.y}%`);
-    await addPost({ author: ME_FEED, text: text.trim(), images: uploadedImages, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
+    try {
+      await addPost({ author: ME_FEED, text: text.trim(), images: uploadedImages, imagePositions: imagePositionStrings, video: videoUrl, musicName: musicTrack?.title || "", musicUrl: musicTrack?.url || null });
+    } catch (err) {
+      console.error("POST_PUBLISH_ERR", err.code, err.message);
+      setVideoError("Não consegui publicar agora. Tenta de novo.");
+      setPublishing(false);
+      setUploadProgress(null);
+      return;
+    }
     setText("");
     setImages([]);
     setImagePositions([]);

@@ -42,7 +42,7 @@ function StoriesRow({ onPublish, onShorts }) {
     setEditingImage(null);
     try {
       const url = await uploadImageDataUrl(localImage, `story-images/${meUser.uid}/${Date.now()}.jpg`);
-      addStory({ author: me, image: url, text: "", zoom, focus, overlays, musicName, musicUrl });
+      await addStory({ author: me, image: url, text: "", zoom, focus, overlays, musicName, musicUrl });
     } catch (err) {
       console.error("STORY_IMAGE_UPLOAD_ERR", err.message);
       setPhotoStoryError(err.message || "Não consegui publicar o story. Tenta de novo.");
@@ -73,7 +73,7 @@ function StoriesRow({ onPublish, onShorts }) {
     try {
       setVideoProgress(0);
       const url = await uploadVideo(videoFile, `story-videos/${meUser.uid}/${Date.now()}-${videoFile.name}`, setVideoProgress);
-      addStory({ author: me, video: url, text: "" });
+      await addStory({ author: me, video: url, text: "" });
       cancelVideoStory();
     } catch (err) {
       setVideoError(err.message || "Não consegui enviar o vídeo. Tenta de novo.");

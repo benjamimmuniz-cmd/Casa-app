@@ -136,6 +136,7 @@ function App() {
     } catch (err) {
       setStories(prev => prev.filter(s => s.id !== optimisticId));
       console.error("STORY_PUBLISH_ERR", err.code, err.message);
+      throw err;
     }
   };
   const markStoryViewed = (story) => {
