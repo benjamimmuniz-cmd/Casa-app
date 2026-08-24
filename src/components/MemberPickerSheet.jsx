@@ -7,14 +7,15 @@ import { colorFor, initials } from "../utils/helpers.js";
 
 // Bottom sheet reutilizável pra escolher um membro cadastrado — usado pra iniciar
 // conversas no Chat e pra encaminhar posts do Feed.
-function MemberPickerSheet({ title, onClose, onPick }) {
+function MemberPickerSheet({ title, onClose, onPick, excludeSelf = true }) {
   const me = useContext(UserContext);
   const [members, setMembers] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     getDocs(collection(db, "users")).then(snap => {
-      setMembers(snap.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.uid !== me.uid));
+      const list = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      setMembers(excludeSelf ? list.filter(u => u.uid !== me.uid) : list);
     }).catch(err => {
       console.error("MEMBER_PICKER_ERR", err.code, err.message);
       setError(err.message);

@@ -262,10 +262,11 @@ function NovoConvertidoScreen({ onBack }) {
           className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
-        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Culto <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
-        <input value={form.culto} onChange={e => set("culto", e.target.value)} placeholder="Ex: Culto de jovens"
-          className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Em qual culto foi a conversão? <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+        <input value={form.culto} onChange={e => set("culto", e.target.value)} placeholder="Ex: Culto de jovens, Culto de domingo à noite..."
+          className="w-full px-4 py-3 rounded-xl mb-1 outline-none text-[13px]"
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+        <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] mb-4">Isso é diferente das observações — é só o nome do culto, pra alimentar o gráfico do Painel.</p>
 
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Discipulador responsável</label>
         {discipulador ? (
@@ -418,7 +419,7 @@ function NovoConvertidoScreen({ onBack }) {
       )}
 
       {showPicker && (
-        <MemberPickerSheet title="Escolher discipulador" onClose={() => setShowPicker(false)}
+        <MemberPickerSheet title="Escolher discipulador" excludeSelf={false} onClose={() => setShowPicker(false)}
           onPick={(u) => { setDiscipulador(u); setShowPicker(false); }} />
       )}
     </div>
