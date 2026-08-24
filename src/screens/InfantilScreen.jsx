@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
+  Award,
   Baby,
   BookOpen,
+  Check,
   ChevronRight,
   Heart,
   Keyboard,
+  Lock,
   Palette,
   PartyPopper,
   PenLine,
   RotateCcw,
   Sparkles,
   Users,
+  X,
 } from "lucide-react";
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
@@ -20,6 +24,7 @@ import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
 import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
 import { HANGMAN_WORDS, VERSE_FILLS } from "../data/kidsGames.js";
+import { BADGES, badgeProgress, groupIdForAge } from "../data/kidsBadges.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 import HangmanGame from "../components/HangmanGame.jsx";
 import VerseFillGame from "../components/VerseFillGame.jsx";
@@ -28,6 +33,7 @@ const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5
 const TABS = [
   { id: "historias", label: "Histórias", icon: BookOpen },
   { id: "atividades", label: "Atividades", icon: Palette },
+  { id: "conquistas", label: "Conquistas", icon: Award },
   { id: "frequencia", label: "Frequência", icon: Users },
 ];
 
@@ -46,6 +52,8 @@ function InfantilScreen({ onBack }) {
   const [activeCrayon, setActiveCrayon] = useState(CRAYONS[0]);
   const [openHangmanId, setOpenHangmanId] = useState(null);
   const [openVerseFillId, setOpenVerseFillId] = useState(null);
+  const [selectedChildId, setSelectedChildId] = useState(null);
+  const [openBadge, setOpenBadge] = useState(null);
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);
   const todayStory = todaysStoryFor(group.id);
@@ -73,6 +81,11 @@ function InfantilScreen({ onBack }) {
     }, () => {});
     return () => unsub();
   }, [me.uid]);
+
+  useEffect(() => {
+    if (children.length === 0) { setSelectedChildId(null); return; }
+    if (!children.some(c => c.id === selectedChildId)) setSelectedChildId(children[0].id);
+  }, [children]);
 
   useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); }, [activeGroup]);
 
@@ -123,6 +136,25 @@ function InfantilScreen({ onBack }) {
       .catch(err => console.error("KID_ATTEND_ERR", err.code, err.message));
   };
 
+  const selectedChild = children.find(c => c.id === selectedChildId);
+
+  const markStoryReadFor = (childId, storyId) => {
+    updateDoc(doc(db, "kids", childId), { storiesRead: arrayUnion(storyId) })
+      .catch(err => console.error("KID_STORY_READ_ERR", err.code, err.message));
+  };
+
+  const recordHangmanWin = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { hangmanWins: increment(1) })
+      .catch(err => console.error("KID_HANGMAN_WIN_ERR", err.code, err.message));
+  };
+
+  const recordVerseCorrect = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { versesCorrect: increment(1) })
+      .catch(err => console.error("KID_VERSE_CORRECT_ERR", err.code, err.message));
+  };
+
   if (openColoringPage) {
     const fills = coloringFills[openColoringPage.id] || {};
     return (
@@ -165,7 +197,7 @@ function InfantilScreen({ onBack }) {
           <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">{openHangman.emoji} Jogo da Forca</p>
         </div>
         <div className="px-6 pb-8">
-          <HangmanGame item={openHangman} color={group.color} />
+          <HangmanGame item={openHangman} color={group.color} onWin={recordHangmanWin} />
         </div>
       </div>
     );
@@ -181,7 +213,7 @@ function InfantilScreen({ onBack }) {
           <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">📖 Complete o Versículo</p>
         </div>
         <div className="px-6 pb-8">
-          <VerseFillGame item={openVerseFill} color={group.color} />
+          <VerseFillGame item={openVerseFill} color={group.color} onCorrect={recordVerseCorrect} />
         </div>
       </div>
     );
@@ -287,6 +319,28 @@ function InfantilScreen({ onBack }) {
               <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] leading-snug">{openStory.moral}</p>
             </div>
           </div>
+
+          {children.length > 0 && (
+            <div className="rounded-2xl p-3.5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+              <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[10.5px] mb-2">Marcar como lida pra:</p>
+              <div className="flex flex-wrap gap-2">
+                {children.map(c => {
+                  const read = (c.storiesRead || []).includes(openStory.id);
+                  return (
+                    <button key={c.id} onClick={() => { setSelectedChildId(c.id); if (!read) markStoryReadFor(c.id, openStory.id); }}
+                      className="flex items-center gap-1.5 pl-1 pr-3 py-1 rounded-full"
+                      style={{ background: read ? "#2FA8A01E" : "#FFF8EE" }}>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                        <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontSize: 9, fontWeight: 700 }}>{initials(c.name)}</span>
+                      </div>
+                      <span style={{ fontFamily: "Inter", color: read ? "#1D7A72" : "#3A2E22", fontWeight: 600 }} className="text-[11.5px]">{c.name}</span>
+                      {read && <Check size={12} color="#1D7A72" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -449,6 +503,21 @@ function InfantilScreen({ onBack }) {
 
       {activeTab === "atividades" && group.id !== "p" && (
         <div className="px-6 mb-8">
+          {children.length > 0 && (
+            <div className="rounded-2xl p-3 mb-5 flex items-center gap-2 overflow-x-auto" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+              <span style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[10.5px] shrink-0">Jogando como:</span>
+              {children.map(c => (
+                <button key={c.id} onClick={() => setSelectedChildId(c.id)}
+                  className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full shrink-0"
+                  style={{ background: selectedChildId === c.id ? `${group.color}1E` : "#FFF8EE" }}>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontSize: 8, fontWeight: 700 }}>{initials(c.name)}</span>
+                  </div>
+                  <span style={{ fontFamily: "Inter", color: selectedChildId === c.id ? group.color : "#9A8B76", fontWeight: 600 }} className="text-[11px]">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2 mb-3">
             <Keyboard size={14} color={group.color} />
             <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Jogo da forca</p>
@@ -497,6 +566,56 @@ function InfantilScreen({ onBack }) {
                   <ChevronRight size={16} color="#D8CBB4" />
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "conquistas" && (
+        <div className="px-6 mb-8">
+          {children.length === 0 ? (
+            <div className="rounded-2xl p-5 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <Award size={22} color="#D8CBB4" className="mx-auto mb-2" />
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Cadastre uma criança na aba Frequência pra começar a colecionar medalhas.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {children.map(c => {
+                const childGroupId = groupIdForAge(c.age);
+                const totalGroupStories = BIBLE_STORIES.filter(s => s.groupId === childGroupId).length;
+                const badges = BADGES.filter(b => childGroupId !== "p" || (b.of !== "hangman" && b.of !== "verses"));
+                const unlockedCount = badges.filter(b => badgeProgress(b, c, totalGroupStories).unlocked).length;
+                return (
+                  <div key={c.id} className="rounded-3xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
+                    <div className="flex items-center gap-3 mb-4">
+                      {c.childPhoto ? (
+                        <img src={c.childPhoto} alt={c.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                          <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.name)}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
+                        <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">{unlockedCount} de {badges.length} medalhas</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2.5">
+                      {badges.map(b => {
+                        const { unlocked } = badgeProgress(b, c, totalGroupStories);
+                        return (
+                          <button key={b.id} onClick={() => setOpenBadge({ child: c, badge: b })}
+                            className="flex flex-col items-center gap-1 py-2.5 rounded-2xl active:scale-[0.95] transition-transform"
+                            style={{ background: unlocked ? `${group.color}14` : "#FFF8EE" }}>
+                            <span style={{ fontSize: 22, opacity: unlocked ? 1 : 0.25, filter: unlocked ? "none" : "grayscale(1)" }}>{b.emoji}</span>
+                            {!unlocked && <Lock size={9} color="#D8CBB4" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -599,6 +718,35 @@ function InfantilScreen({ onBack }) {
           </div>
         </div>
       )}
+
+      {openBadge && (() => {
+        const childGroupId = groupIdForAge(openBadge.child.age);
+        const totalGroupStories = BIBLE_STORIES.filter(s => s.groupId === childGroupId).length;
+        const { value, need, unlocked } = badgeProgress(openBadge.badge, openBadge.child, totalGroupStories);
+        return (
+          <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setOpenBadge(null)}>
+            <div className="w-full rounded-t-3xl p-6" style={{ background: "#FFF8EE" }} onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: unlocked ? `${group.color}1E` : "#F0E8D8" }}>
+                  <span style={{ fontSize: 32, opacity: unlocked ? 1 : 0.3, filter: unlocked ? "none" : "grayscale(1)" }}>{openBadge.badge.emoji}</span>
+                </div>
+                <button onClick={() => setOpenBadge(null)}><X size={18} color="#B0A18A" /></button>
+              </div>
+              <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[17px] mb-1">{openBadge.badge.label}</p>
+              <p style={{ fontFamily: "Inter", color: "#6B6255" }} className="text-[12.5px] mb-4">{openBadge.badge.desc}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "#F0E8D8" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, (value / need) * 100)}%`, background: unlocked ? "#2FA8A0" : group.color }} />
+                </div>
+                <span style={{ fontFamily: "IBM Plex Mono", color: "#6B6255" }} className="text-[11px] shrink-0">{Math.min(value, need)}/{need}</span>
+              </div>
+              <p style={{ fontFamily: "Inter", color: unlocked ? "#1D7A72" : "#B0A18A" }} className="text-[12px] mt-3 text-center font-semibold">
+                {unlocked ? `Conquistada por ${openBadge.child.name}! 🎉` : `${openBadge.child.name} ainda não conquistou essa medalha.`}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

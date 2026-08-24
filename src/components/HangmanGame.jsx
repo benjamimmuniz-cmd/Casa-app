@@ -9,7 +9,7 @@ const normalize = (s) => s.normalize("NFD").replace(DIACRITICS, "").toUpperCase(
 // Jogo da forca com palavras/temas bíblicos — pensado pra 6-12 anos, que já
 // acham a folha de colorir muito infantil. Vidas em coraçãozinho em vez do
 // bonequinho da forca clássica.
-function HangmanGame({ item, color }) {
+function HangmanGame({ item, color, onWin }) {
   const target = normalize(item.word);
   const [guessed, setGuessed] = useState([]);
   const [showHint, setShowHint] = useState(false);
@@ -24,7 +24,9 @@ function HangmanGame({ item, color }) {
 
   const guess = (letter) => {
     if (over || guessed.includes(letter)) return;
-    setGuessed(prev => [...prev, letter]);
+    const next = [...guessed, letter];
+    setGuessed(next);
+    if (target.split("").every(ch => next.includes(ch))) onWin && onWin();
   };
 
   return (

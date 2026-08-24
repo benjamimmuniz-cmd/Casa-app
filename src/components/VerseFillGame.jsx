@@ -3,11 +3,17 @@ import { RotateCcw } from "lucide-react";
 
 // Completar o versículo: escolher a palavra certa entre 3 opções — pensado
 // pra 6-12 anos, ensina e testa memorização sem ser uma folha de colorir.
-function VerseFillGame({ item, color }) {
+function VerseFillGame({ item, color, onCorrect }) {
   const [picked, setPicked] = useState(null);
   useEffect(() => { setPicked(null); }, [item.id]);
   const showResult = picked !== null;
   const isCorrectPick = picked === item.blank;
+
+  const pick = (opt) => {
+    if (picked !== null) return;
+    setPicked(opt);
+    if (opt === item.blank) onCorrect && onCorrect();
+  };
 
   return (
     <div>
@@ -24,7 +30,7 @@ function VerseFillGame({ item, color }) {
           const bg = !showResult ? "#FFFFFF" : isCorrect ? "#2FA8A01E" : isPicked ? "#FF7A591E" : "#FFFFFF";
           const border = !showResult ? "1px solid transparent" : isCorrect ? "1px solid #2FA8A0" : isPicked ? "1px solid #FF7A59" : "1px solid transparent";
           return (
-            <button key={i} onClick={() => picked === null && setPicked(opt)}
+            <button key={i} onClick={() => pick(opt)}
               className="text-left px-4 py-3 rounded-xl text-[13px] font-semibold flex items-center justify-between"
               style={{ fontFamily: "Inter", background: bg, border, boxShadow: "0 1px 3px rgba(180,140,80,0.1)", color: "#3A2E22" }}>
               {opt}
