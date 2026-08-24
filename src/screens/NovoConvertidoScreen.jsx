@@ -1,13 +1,12 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { BarChart3, ChevronRight, UserCheck, X } from "lucide-react";
+import { BarChart3, Camera, ChevronRight, UserCheck, X } from "lucide-react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, initials, fmtDateBR, collectAll } from "../utils/helpers.js";
+import { colorFor, initials, fmtDateBR, collectAll, todayISO } from "../utils/helpers.js";
+import { compressImage } from "../utils/imageCompress.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import Avatar from "../components/Avatar.jsx";
-
-const CULTOS_SUGERIDOS = ["Domingo Manhã", "Domingo Noite", "Quarta-feira"];
 
 // Cadastro de novo convertido: um membro da igreja registra a pessoa que acabou
 // de se converter e escolhe, entre quem já tem conta no app, quem vai
@@ -21,7 +20,7 @@ function NovoConvertidoScreen({ onBack }) {
   const [lista, setLista] = useState([]);
   const [grGroups, setGrGroups] = useState([]);
   const [fundamentosGroups, setFundamentosGroups] = useState([]);
-  const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "", culto: "" });
+  const [form, setForm] = useState({ nome: "", telefone: "", nascimento: "", notes: "", culto: "", dataConversao: todayISO(), foto: null });
   const [discipulador, setDiscipulador] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
   const [error, setError] = useState("");
@@ -64,11 +63,20 @@ function NovoConvertidoScreen({ onBack }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const aberto = lista.find(c => c.id === openId);
 
+  const handleFotoPick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => compressImage(reader.result, 800, 0.72).then(img => set("foto", img));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const porMes = useMemo(() => {
     const counts = new Map();
     let minDate = null;
     lista.forEach(c => {
-      const dt = c.createdAt?.toDate?.();
+      const dt = c.dataConversao ? new Date(c.dataConversao + "T12:00:00") : c.createdAt?.toDate?.();
       if (!dt) return;
       const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
       counts.set(key, (counts.get(key) || 0) + 1);
@@ -105,11 +113,12 @@ function NovoConvertidoScreen({ onBack }) {
     try {
       await addDoc(collection(db, "novosConvertidos"), {
         nome: form.nome.trim(), telefone: form.telefone.trim(), nascimento: form.nascimento || "", notes: form.notes.trim(), culto: form.culto.trim(),
+        dataConversao: form.dataConversao || "", foto: form.foto || null,
         discipuladorUid: discipulador.uid, discipuladorNome: discipulador.nome || "Membro", discipuladorPhoto: discipulador.photo || null,
         registradoPorUid: me.uid, registradoPorNome: me.name,
         createdAt: serverTimestamp(),
       });
-      setForm({ nome: "", telefone: "", nascimento: "", notes: "", culto: "" });
+      setForm({ nome: "", telefone: "", nascimento: "", notes: "", culto: "", dataConversao: todayISO(), foto: null });
       setDiscipulador(null);
     } catch (err) {
       setError("Não consegui salvar agora. Tenta de novo.");
@@ -125,16 +134,26 @@ function NovoConvertidoScreen({ onBack }) {
           <button onClick={() => setOpenId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Novo Convertido</button>
         </div>
         <div className="flex flex-col items-center px-6 mt-3 mb-6">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-3" style={{ background: colorFor(aberto.nome) }}>
-            <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[22px]">{initials(aberto.nome)}</span>
-          </div>
+          {aberto.foto ? (
+            <img src={aberto.foto} alt={aberto.nome} className="w-20 h-20 rounded-full object-cover mb-3" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} />
+          ) : (
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-3" style={{ background: colorFor(aberto.nome) }}>
+              <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[22px]">{initials(aberto.nome)}</span>
+            </div>
+          )}
           <h1 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[19px]">{aberto.nome}</h1>
           {aberto.nascimento && <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12.5px] mt-1">{fmtDateBR(aberto.nascimento)}</p>}
         </div>
         <div className="px-6 mb-5">
           <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-            {aberto.telefone && (
+            {aberto.dataConversao && (
               <div>
+                <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Data da conversão</p>
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{fmtDateBR(aberto.dataConversao)}</p>
+              </div>
+            )}
+            {aberto.telefone && (
+              <div style={aberto.dataConversao ? { borderTop: "1px solid #F0EAD9", paddingTop: 12 } : undefined}>
                 <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Telefone</p>
                 <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{aberto.telefone}</p>
               </div>
@@ -207,6 +226,17 @@ function NovoConvertidoScreen({ onBack }) {
 
       {tab === "cadastrar" && (
       <div className="px-6 mb-6">
+        <label className="flex items-center gap-3 mb-4 cursor-pointer">
+          <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
+            {form.foto ? <img src={form.foto} alt="Prévia" className="w-full h-full object-cover" /> : <Camera size={20} color="#9E9E9E" />}
+          </div>
+          <div>
+            <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{form.foto ? "Trocar foto" : "Adicionar foto"}</p>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">Opcional</p>
+          </div>
+          <input type="file" accept="image/*" onChange={handleFotoPick} className="hidden" />
+        </label>
+
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Nome</label>
         <input value={form.nome} onChange={e => set("nome", e.target.value)} placeholder="Nome do novo convertido"
           className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
@@ -214,6 +244,11 @@ function NovoConvertidoScreen({ onBack }) {
 
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Telefone / WhatsApp <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
         <input value={form.telefone} onChange={e => set("telefone", e.target.value)} placeholder="(11) 90000-0000"
+          className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+          style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+        <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Data da conversão</label>
+        <input type="date" value={form.dataConversao} onChange={e => set("dataConversao", e.target.value)}
           className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
@@ -228,16 +263,7 @@ function NovoConvertidoScreen({ onBack }) {
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
         <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Culto <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
-        <div className="flex gap-2 mb-2 flex-wrap">
-          {CULTOS_SUGERIDOS.map(c => (
-            <button key={c} type="button" onClick={() => set("culto", c)}
-              className="px-3 py-1.5 rounded-full text-[11.5px] font-semibold"
-              style={{ fontFamily: "Inter", background: form.culto === c ? "#000000" : "#FFFFFF", color: form.culto === c ? "#FFFFFF" : "#4D4D4D", border: "1px solid " + (form.culto === c ? "#000000" : "#D6D6D6") }}>
-              {c}
-            </button>
-          ))}
-        </div>
-        <input value={form.culto} onChange={e => set("culto", e.target.value)} placeholder="Ou digite: Ex: Culto de jovens"
+        <input value={form.culto} onChange={e => set("culto", e.target.value)} placeholder="Ex: Culto de jovens"
           className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
           style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
@@ -283,9 +309,13 @@ function NovoConvertidoScreen({ onBack }) {
                 <button key={c.id} onClick={() => setOpenId(c.id)}
                   className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
                   style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.nome) }}>
-                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.nome)}</span>
-                  </div>
+                  {c.foto ? (
+                    <img src={c.foto} alt={c.nome} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.nome) }}>
+                      <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.nome)}</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{c.nome}</p>
                     <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">discipulador: {c.discipuladorNome}</p>
