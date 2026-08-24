@@ -2,15 +2,17 @@ import React, { useContext, useEffect, useState } from "react";
 import { BookOpen, ChevronRight, Play, Plus, Search, Trash2, X } from "lucide-react";
 import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { UserContext } from "../context/contexts.js";
+import { UserContext, FeedContext, ProfileNavContext } from "../context/contexts.js";
 import { fmtDateBR } from "../utils/helpers.js";
 import { extractYoutubeId, youtubeThumbUrl, youtubeWatchEmbedUrl } from "../utils/youtube.js";
 
 // Biblioteca de mensagens/pregacoes: igual o Shorts (cola o link do YouTube),
 // mas em formato de lista pesquisavel, feita pra assistir de proposito, nao
-// rolar rapido.
-function MensagensScreen({ onBack }) {
+// rolar rapido. Ao adicionar, pode avisar todo mundo no Feed tambem — quem
+// tocar no post cai direto na mensagem aqui.
+function MensagensScreen({ mensagemId, onBack }) {
   const me = useContext(UserContext);
+  const { addPost } = useContext(FeedContext);
   const [mensagens, setMensagens] = useState([]);
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState(null);
@@ -19,6 +21,7 @@ function MensagensScreen({ onBack }) {
   const [newTitle, setNewTitle] = useState("");
   const [newSpeaker, setNewSpeaker] = useState("");
   const [newDate, setNewDate] = useState("");
+  const [announceInFeed, setAnnounceInFeed] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -31,6 +34,8 @@ function MensagensScreen({ onBack }) {
     return () => unsub();
   }, []);
 
+  useEffect(() => { if (mensagemId) setOpenId(mensagemId); }, [mensagemId]);
+
   const videoId = extractYoutubeId(newUrl.trim());
   const filtered = search.trim()
     ? mensagens.filter(m => (m.title || "").toLowerCase().includes(search.trim().toLowerCase()) || (m.speaker || "").toLowerCase().includes(search.trim().toLowerCase()))
@@ -42,12 +47,22 @@ function MensagensScreen({ onBack }) {
     setPublishing(true);
     setError("");
     try {
-      await addDoc(collection(db, "mensagens"), {
-        title: newTitle.trim(), speaker: newSpeaker.trim(), date: newDate || "",
+      const title = newTitle.trim();
+      const speaker = newSpeaker.trim();
+      const docRef = await addDoc(collection(db, "mensagens"), {
+        title, speaker, date: newDate || "",
         videoId, sourceUrl: newUrl.trim(),
         addedByUid: me.uid, addedByName: me.name,
         createdAt: serverTimestamp(),
       });
+      if (announceInFeed) {
+        const detalhes = [speaker && `pregação de ${speaker}`, newDate && fmtDateBR(newDate)].filter(Boolean).join(" · ");
+        addPost({
+          author: me.name, authorUid: me.uid,
+          text: `🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`,
+          image: youtubeThumbUrl(videoId), kind: "mensagem", mensagemId: docRef.id,
+        }).catch(err => console.error("MENSAGEM_FEED_POST_ERR", err.code, err.message));
+      }
       setNewUrl(""); setNewTitle(""); setNewSpeaker(""); setNewDate("");
       setShowAdd(false);
     } catch (err) {
@@ -198,6 +213,15 @@ function MensagensScreen({ onBack }) {
             <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
               className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+            <label className="flex items-center gap-3 mb-4 cursor-pointer rounded-2xl p-3.5" style={{ background: "#FFFFFF", border: "1px solid #D6D6D6" }}>
+              <input type="checkbox" checked={announceInFeed} onChange={e => setAnnounceInFeed(e.target.checked)}
+                className="w-4 h-4 rounded shrink-0" style={{ accentColor: "#000000" }} />
+              <span>
+                <span style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] block">Avisar no Feed</span>
+                <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] block mt-0.5">Publica um post avisando que a mensagem já tá disponível, com link direto pra cá.</span>
+              </span>
+            </label>
 
             {error && <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[12px] mb-3 text-center">{error}</p>}
 

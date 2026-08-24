@@ -67,11 +67,11 @@ function App() {
     return () => unsub();
   }, []);
 
-  const addFeedPost = async ({ author, authorUid, text, image, images, imagePositions, video, musicName, musicUrl, kind }) => {
+  const addFeedPost = async ({ author, authorUid, text, image, images, imagePositions, video, musicName, musicUrl, kind, mensagemId }) => {
     const imgs = images && images.length ? images : (image ? [image] : []);
     await addDoc(collection(db, "posts"), {
       author, authorUid: authorUid || currentUser?.uid || null, text: text || "", image: imgs[0] || null, images: imgs, imagePositions: imagePositions || [], video: video || null,
-      musicName: musicName || "", musicUrl: musicUrl || null, kind: kind || null, likes: [], comments: [], saved: [],
+      musicName: musicName || "", musicUrl: musicUrl || null, kind: kind || null, mensagemId: mensagemId || null, likes: [], comments: [], saved: [],
       createdAt: serverTimestamp(),
     });
   };
@@ -325,6 +325,8 @@ function App() {
   const [openTile, setOpenTile] = useState(null);
   const [viewingProfileUid, setViewingProfileUid] = useState(null);
   const openProfile = (uid) => { if (!uid) return; setViewingProfileUid(uid); setOpenTile("profile"); };
+  const [viewingMensagemId, setViewingMensagemId] = useState(null);
+  const openMensagem = (id) => { if (!id) return; setViewingMensagemId(id); setOpenTile("mensagens"); };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
@@ -413,7 +415,7 @@ function App() {
         ) : (
           <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
-          <ProfileNavContext.Provider value={{ openProfile }}>
+          <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
           <StoryContext.Provider value={{ stories, viewedIds: viewedStoryIds, addStory, markViewed: markStoryViewed, reactToStory, deleteStory }}>
           <ShortsContext.Provider value={{ shorts, addShort, toggleLike: toggleShortLike, likeOnly: likeShortOnly, toggleSave: toggleShortSave, addComment: addShortComment, deleteShort }}>
@@ -459,7 +461,7 @@ function App() {
             ) : openTile === "shorts" || (tab === "shorts" && !openTile) ? (
               <ShortsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "mensagens" || (tab === "mensagens" && !openTile) ? (
-              <MensagensScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+              <MensagensScreen mensagemId={viewingMensagemId} onBack={() => { setOpenTile(null); setTab("inicio"); setViewingMensagemId(null); }} />
             ) : openTile === "ofertas" || (tab === "ofertas" && !openTile) ? (
               <OfertasDizimosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "doacoes" || (tab === "doacoes" && !openTile) ? (

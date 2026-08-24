@@ -218,7 +218,7 @@ export const CANTINA_WHATSAPP = "5511999999999";
 
 export const ME_FEED = "Benjamim";
 
-export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista" };
+export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista", mensagem: "🎙️ Mensagem" };
 
 export const INITIAL_SHORTS = [];
 

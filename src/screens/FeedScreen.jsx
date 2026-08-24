@@ -35,7 +35,7 @@ function FeedScreen({ onBack }) {
   const meUid = meUser.uid;
   const { posts: allPosts, addPost, toggleLike: ctxToggleLike, likePost: ctxLikePost, toggleSave: ctxToggleSave, addComment: ctxAddComment, deletePost } = useContext(FeedContext);
   const { connections } = useContext(ConnectionsContext);
-  const { openProfile } = useContext(ProfileNavContext);
+  const { openProfile, openMensagem } = useContext(ProfileNavContext);
   const posts = visiblePosts(allPosts, meUid, connections);
   const goToProfile = (e, authorUid) => {
     e.stopPropagation();
@@ -182,11 +182,12 @@ function FeedScreen({ onBack }) {
 
   // dblclick não é confiável em toque de celular — detecta 2 toques manualmente
   const lastTapRef = React.useRef({});
-  const handleTap = (postId) => {
+  const handleTap = (post) => {
+    if (post.kind === "mensagem" && post.mensagemId) { openMensagem(post.mensagemId); return; }
     const now = Date.now();
-    const last = lastTapRef.current[postId] || 0;
-    lastTapRef.current[postId] = now;
-    if (now - last < 300) likePost(postId);
+    const last = lastTapRef.current[post.id] || 0;
+    lastTapRef.current[post.id] = now;
+    if (now - last < 300) likePost(post.id);
   };
 
   const addComment = (postId) => {
@@ -394,7 +395,7 @@ function FeedScreen({ onBack }) {
           const postImages = p.images && p.images.length ? p.images : (p.image ? [p.image] : []);
           if (postImages.length || p.video) {
             return (
-              <div key={p.id} onClick={() => handleTap(p.id)} className="rounded-[28px] overflow-hidden relative" style={{ height: 480, boxShadow: "0 10px 28px rgba(0,0,0,0.18)" }}>
+              <div key={p.id} onClick={() => handleTap(p)} className="rounded-[28px] overflow-hidden relative" style={{ height: 480, boxShadow: "0 10px 28px rgba(0,0,0,0.18)" }}>
                 {burstId === p.id && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                     <Home size={90} className="like-burst" color="#F2F2F2" fill="#F2F2F2" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }} />
@@ -466,7 +467,7 @@ function FeedScreen({ onBack }) {
           }
           if (p.musicName) {
             return (
-              <div key={p.id} onClick={() => handleTap(p.id)} className="rounded-[28px] p-5 relative" style={{ background: "#000000" }}>
+              <div key={p.id} onClick={() => handleTap(p)} className="rounded-[28px] p-5 relative" style={{ background: "#000000" }}>
                 {burstId === p.id && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                     <Home size={90} className="like-burst" color="#F2F2F2" fill="#F2F2F2" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }} />
@@ -517,7 +518,7 @@ function FeedScreen({ onBack }) {
             );
           }
           return (
-            <div key={p.id} onClick={() => handleTap(p.id)} className="rounded-[28px] p-5 relative" style={{ background: "var(--c-surface)", boxShadow: "0 6px 20px var(--c-shadow-strong)" }}>
+            <div key={p.id} onClick={() => handleTap(p)} className="rounded-[28px] p-5 relative" style={{ background: "var(--c-surface)", boxShadow: "0 6px 20px var(--c-shadow-strong)" }}>
               {burstId === p.id && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <Home size={90} className="like-burst" color="var(--c-accent-2)" fill="var(--c-accent-2)" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.2))" }} />
