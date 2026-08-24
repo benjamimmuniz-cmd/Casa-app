@@ -32,6 +32,7 @@ import {
   Clapperboard,
   Cake,
   Film,
+  ClipboardList,
 } from "lucide-react";
 
 export const FONTS = `
@@ -53,6 +54,7 @@ export const TILES = [
   { id: "cantina", label: "Casa Cantina", icon: Tag, color: "#2B2B2B" },
   { id: "calendario", label: "Eventos", icon: CalendarDays, color: "#262626" },
   { id: "enquetes", label: "Enquetes", icon: Vote, color: "#454545" },
+  { id: "escala", label: "Escala", icon: ClipboardList, color: "#3B6D5C" },
   { id: "evangelismo", label: "Evangelismo", icon: Compass, color: "#454545" },
   { id: "sounovo", label: "Sou Novo", icon: Handshake, color: "#5C6B45" },
   { id: "novoconvertido", label: "Novo Convertido", icon: UserCheck, color: "#4B7D5C" },
@@ -76,7 +78,7 @@ export const MENU_GROUPS = [
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
   { label: "Sobre a Casa", ids: ["localizacao"] },
   { label: "Loja", ids: ["store", "cantina"] },
-  { label: "Organização", ids: ["calendario", "enquetes"] },
+  { label: "Organização", ids: ["calendario", "enquetes", "escala"] },
   { label: "Missão", ids: ["evangelismo"] },
   { label: "Boas-vindas", ids: ["sounovo", "novoconvertido"] },
   { label: "Crianças", ids: ["infantil"] },
@@ -88,6 +90,7 @@ export const TAB_LABELS = {
   evangelismo: "Evangelismo", sounovo: "Sou Novo", novoconvertido: "Novo Convertido", transmissao: "Transmissão", shorts: "Shorts", mensagens: "Mensagens",
   ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração",
   gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos", aniversariantes: "Aniversariantes",
+  escala: "Escala de Voluntários",
 };
 
 export const TAB_DESCRIPTIONS = {
@@ -117,6 +120,7 @@ export const TAB_DESCRIPTIONS = {
   amigos: "Conecte-se com outros membros da igreja — envie pedidos de amizade e aceite os que você receber.",
   aniversariantes: "Veja quem faz aniversário este mês (ou navegue pra outros meses) e não deixe ninguém sem parabéns.",
   mensagens: "Biblioteca de pregações e cultos passados — cole o link do YouTube e reveja quando quiser.",
+  escala: "Organize quem serve em cada culto — som, mídia, recepção, Kids — e cada voluntário vê sua própria escala.",
 };
 
 export const GR_COLORS = ["#3B7D8A", "#2B6B76", "#5A9BA6", "#1E5A64", "#4D8A94"];
@@ -241,43 +245,10 @@ export const CATEGORIES = [
   { id: "especial", label: "Especial", color: "#454545" },
 ];
 
-export const INITIAL_EVENTS = [
-  { id: "e1", days: [{ day: 16, time: "19:00" }], title: "Culto de Celebração", location: "Templo principal", category: "culto", reminder: true, author: "Pastor Rodolfo", signupEnabled: false, signups: [] },
-  { id: "e2", days: [{ day: 18, time: "20:00" }], title: "Reunião de Líderes", location: "Sala 2", category: "reuniao", reminder: true, author: "Pastor Rodolfo", signupEnabled: false, signups: [] },
-  { id: "e3", days: [{ day: 22, time: "09:00" }], title: "Evangelismo no Parque", location: "Parque da Cidade", category: "evangelismo", reminder: false, author: "Pastor Rodolfo", signupEnabled: true, signups: [
-    { name: "Carla Mendes", phone: "(11) 98765-4321" },
-    { name: "Bruno Lima", phone: "(11) 97654-3210" },
-  ] },
-  { id: "e4", days: [{ day: 21, time: "19:00" }, { day: 22, time: "18:00" }, { day: 23, time: "18:00" }], title: "Retiro de Jovens", location: "Chácara Bethel", category: "especial", reminder: true, author: "Pastor Rodolfo", signupEnabled: true, signups: [] },
-  { id: "e5", days: [{ day: 30, time: "10:00" }], title: "Batismo nas águas", location: "Templo principal", category: "especial", reminder: true, author: "Pastor Rodolfo", signupEnabled: true, signups: [] },
-];
-
 export const VOTE_OPTIONS = [
   { id: "sim", label: "Posso participar", color: "#5A5A5A" },
   { id: "talvez", label: "Talvez", color: "#9E9E9E" },
   { id: "nao", label: "Não posso", color: "#262626" },
-];
-
-export const ME = "Benjamim";
-
-export const INITIAL_POLLS = [
-  {
-    id: "p1", title: "Evangelismo no Parque", date: "22/08", time: "09:00",
-    votes: [
-      { name: "Carla Mendes", option: "sim" },
-      { name: "Rafael Souza", option: "sim" },
-      { name: "Juliana Alves", option: "nao" },
-      { name: "Bruno Lima", option: "talvez" },
-      { name: "Ana Paula", option: "sim" },
-    ],
-  },
-  {
-    id: "p2", title: "Retiro de Jovens", date: "05/09", time: "08:00",
-    votes: [
-      { name: "Felipe Torres", option: "sim" },
-      { name: "Bruno Lima", option: "sim" },
-    ],
-  },
 ];
 
 export const EVANG_DOACAO_TIPOS = [

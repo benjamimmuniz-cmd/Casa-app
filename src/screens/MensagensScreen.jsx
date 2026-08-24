@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { BookOpen, ChevronRight, Play, Plus, Search, Trash2, X } from "lucide-react";
-import { collection, addDoc, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext, FeedContext, ProfileNavContext } from "../context/contexts.js";
 import { fmtDateBR } from "../utils/helpers.js";
 import { extractYoutubeId, youtubeThumbUrl, youtubeWatchEmbedUrl } from "../utils/youtube.js";
+import { broadcastNotification } from "../utils/notifyAll.js";
 
 // Biblioteca de mensagens/pregacoes: igual o Shorts (cola o link do YouTube),
 // mas em formato de lista pesquisavel, feita pra assistir de proposito, nao
@@ -63,17 +64,8 @@ function MensagensScreen({ mensagemId, onBack }) {
           image: youtubeThumbUrl(videoId), kind: "mensagem", mensagemId: docRef.id,
         }).catch(err => console.error("MENSAGEM_FEED_POST_ERR", err.code, err.message));
 
-        getDocs(collection(db, "users")).then(snap => {
-          const texto = `🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`;
-          snap.docs.forEach(d => {
-            if (d.id === me.uid) return;
-            const u = d.data();
-            if (u.notificacoesAtivas === false) return;
-            addDoc(collection(db, "notifications"), {
-              toUid: d.id, text: texto, read: false, createdAt: serverTimestamp(),
-            }).catch(() => {});
-          });
-        }).catch(err => console.error("MENSAGEM_BROADCAST_ERR", err.code, err.message));
+        broadcastNotification(`🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`, { excludeUid: me.uid })
+          .catch(err => console.error("MENSAGEM_BROADCAST_ERR", err.code, err.message));
       }
       setNewUrl(""); setNewTitle(""); setNewSpeaker(""); setNewDate("");
       setShowAdd(false);

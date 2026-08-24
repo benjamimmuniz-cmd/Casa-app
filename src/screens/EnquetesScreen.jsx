@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, createContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   CalendarDays,
   Check,
@@ -6,52 +6,76 @@ import {
   Clock,
   Users
 } from "lucide-react";
+import { collection, addDoc, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { FeedContext, UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
-import { INITIAL_POLLS, ME, VOTE_OPTIONS } from "../data/constants.js";
+import { broadcastNotification } from "../utils/notifyAll.js";
+import { VOTE_OPTIONS } from "../data/constants.js";
 
 function EnquetesScreen({ onBack }) {
-  const ME = useContext(UserContext).name || "Você";
+  const me = useContext(UserContext);
+  const meName = me.name || "Você";
   const { addPost } = useContext(FeedContext);
-  const [polls, setPolls] = useState(INITIAL_POLLS);
+  const [polls, setPolls] = useState([]);
   const [openPollId, setOpenPollId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: "", date: "", time: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const q = query(collection(db, "enquetes"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, snap => {
+      setPolls(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return () => unsub();
+  }, []);
 
   const poll = polls.find(p => p.id === openPollId);
 
   const vote = (pollId, optionId) => {
-    setPolls(prev => prev.map(p => {
-      if (p.id !== pollId) return p;
-      const others = p.votes.filter(v => v.name !== ME);
-      return { ...p, votes: [...others, { name: ME, option: optionId }] };
-    }));
+    const p = polls.find(x => x.id === pollId);
+    if (!p) return;
+    const newVotes = [...(p.votes || []).filter(v => v.uid !== me.uid), { uid: me.uid, name: meName, option: optionId }];
+    updateDoc(doc(db, "enquetes", pollId), { votes: newVotes }).catch(err => console.error("ENQUETE_VOTE_ERR", err.code, err.message));
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     setFormError("");
     if (!form.title.trim()) { setFormError("Digite o título da enquete."); return; }
-    setPolls(prev => [{ id: "poll" + Date.now(), title: form.title.trim(), date: form.date.trim() || "—", time: form.time.trim() || "—", votes: [] }, ...prev]);
-    if (postToFeed) {
-      addPost({
-        author: ME,
-        text: `Nova enquete: ${form.title.trim()}${form.date.trim() ? ` — ${form.date.trim()}` : ""}${form.time.trim() ? ` às ${form.time.trim()}` : ""}. Vá em Enquetes e diga se você pode participar!`,
-        kind: "enquete",
+    if (saving) return;
+    setSaving(true);
+    try {
+      const title = form.title.trim();
+      await addDoc(collection(db, "enquetes"), {
+        title, date: form.date.trim() || "—", time: form.time.trim() || "—", votes: [],
+        authorUid: me.uid, authorName: meName, createdAt: serverTimestamp(),
       });
+      if (postToFeed) {
+        const texto = `🗳️ Nova enquete: ${title}${form.date.trim() ? ` — ${form.date.trim()}` : ""}${form.time.trim() ? ` às ${form.time.trim()}` : ""}. Vá em Enquetes e diga se você pode participar!`;
+        addPost({ author: meName, authorUid: me.uid, text: texto, kind: "enquete" })
+          .catch(err => console.error("ENQUETE_FEED_POST_ERR", err.code, err.message));
+        broadcastNotification(texto, { excludeUid: me.uid })
+          .catch(err => console.error("ENQUETE_BROADCAST_ERR", err.code, err.message));
+      }
+      setForm({ title: "", date: "", time: "" });
+      setShowAdd(false);
+    } catch (err) {
+      console.error("ENQUETE_ADD_ERR", err.code, err.message);
+      setFormError("Não consegui salvar agora. Tenta de novo.");
     }
-    setForm({ title: "", date: "", time: "" });
-    setShowAdd(false);
+    setSaving(false);
   };
 
-  const counts = (p) => VOTE_OPTIONS.map(o => ({ ...o, count: p.votes.filter(v => v.option === o.id).length }));
+  const counts = (p) => VOTE_OPTIONS.map(o => ({ ...o, count: (p.votes || []).filter(v => v.option === o.id).length }));
 
   if (poll) {
     const c = counts(poll);
-    const total = poll.votes.length || 1;
-    const myVote = poll.votes.find(v => v.name === ME)?.option;
-    const confirmados = poll.votes.filter(v => v.option === "sim");
+    const total = (poll.votes || []).length || 1;
+    const myVote = (poll.votes || []).find(v => v.uid === me.uid)?.option;
+    const confirmados = (poll.votes || []).filter(v => v.option === "sim");
 
     return (
       <div className="flex-1 overflow-y-auto" style={{ background: "#F2F2F2" }}>
@@ -90,7 +114,7 @@ function EnquetesScreen({ onBack }) {
         </div>
 
         <div className="px-6 mt-6">
-          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Resultado · {poll.votes.length} respostas</p>
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Resultado · {(poll.votes || []).length} respostas</p>
           <div className="flex w-full h-2.5 rounded-full overflow-hidden mb-3" style={{ background: "#E3E3E3" }}>
             {c.map(o => o.count > 0 && (
               <div key={o.id} style={{ width: `${(o.count / total) * 100}%`, background: o.color }} />
@@ -116,7 +140,7 @@ function EnquetesScreen({ onBack }) {
           ) : (
             <div className="flex flex-wrap gap-2">
               {confirmados.map(v => (
-                <div key={v.name} className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full" style={{ background: "#5A5A5A1E" }}>
+                <div key={v.uid} className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full" style={{ background: "#5A5A5A1E" }}>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: colorFor(v.name) }}>
                     <span style={{ fontFamily: "Inter", color: "#F2F2F2", fontSize: 9, fontWeight: 700 }}>{initials(v.name)}</span>
                   </div>
@@ -143,9 +167,13 @@ function EnquetesScreen({ onBack }) {
       </div>
 
       <div className="px-6 pb-28 flex flex-col gap-3">
-        {polls.map(p => {
+        {polls.length === 0 ? (
+          <div className="rounded-2xl py-8 text-center" style={{ background: "#FFFFFF", border: "1px dashed #D6D6D6" }}>
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Nenhuma enquete ativa ainda.</p>
+          </div>
+        ) : polls.map(p => {
           const c = counts(p);
-          const total = p.votes.length || 1;
+          const total = (p.votes || []).length || 1;
           return (
             <button key={p.id} onClick={() => setOpenPollId(p.id)}
               className="rounded-2xl p-4 text-left active:scale-[0.98] transition-transform"
@@ -169,7 +197,7 @@ function EnquetesScreen({ onBack }) {
               </div>
               <div className="flex items-center gap-1">
                 <Users size={11} color="#707070" />
-                <span style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">{p.votes.length} responderam</span>
+                <span style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">{(p.votes || []).length} responderam</span>
               </div>
             </button>
           );
@@ -201,15 +229,15 @@ function EnquetesScreen({ onBack }) {
             <label className="flex items-center gap-2.5 mb-4 cursor-pointer">
               <input type="checkbox" checked={postToFeed} onChange={e => setPostToFeed(e.target.checked)}
                 className="w-4 h-4 rounded" style={{ accentColor: "#000000" }} />
-              <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[12px]">Publicar essa enquete no Feed também</span>
+              <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[12px]">Publicar no Feed e notificar todo mundo</span>
             </label>
             {formError && (
               <p style={{ fontFamily: "Inter", color: "#B25B4A" }} className="text-[12px] mb-4 text-center">{formError}</p>
             )}
-            <button onClick={handleAdd}
+            <button onClick={handleAdd} disabled={saving}
               className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
-              style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
-              Criar enquete
+              style={{ background: saving ? "#E3E3E3" : "#000000", color: saving ? "#9E9E9E" : "#FFFFFF", fontFamily: "Inter" }}>
+              {saving ? "Criando..." : "Criar enquete"}
             </button>
           </div>
         </div>
