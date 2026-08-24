@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronRight,
   Heart,
+  Palette,
   PartyPopper,
   RotateCcw,
   Sparkles,
@@ -14,27 +15,38 @@ import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
 import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
-import { todaysStoryFor } from "../data/kidsActivities.js";
+import { BIBLE_STORIES, BIBLE_QUIZZES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
+const TABS = [
+  { id: "historias", label: "Histórias", icon: BookOpen },
+  { id: "atividades", label: "Atividades", icon: Palette },
+  { id: "frequencia", label: "Frequência", icon: Users },
+];
 
 function InfantilScreen({ onBack }) {
   const me = useContext(UserContext);
   const [activeGroup, setActiveGroup] = useState(0);
+  const [activeTab, setActiveTab] = useState("historias");
   const [children, setChildren] = useState([]);
   const [showAddChild, setShowAddChild] = useState(false);
   const [openChildId, setOpenChildId] = useState(null);
   const [childForm, setChildForm] = useState({ name: "", age: "", diet: "", childPhoto: null, parentsPhoto: null });
   const [childFormError, setChildFormError] = useState("");
+  const [openStoryId, setOpenStoryId] = useState(null);
   const [quizPick, setQuizPick] = useState(null);
   const [coloringFills, setColoringFills] = useState({});
   const [openColoringId, setOpenColoringId] = useState(null);
   const [activeCrayon, setActiveCrayon] = useState(CRAYONS[0]);
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);
-  const activity = todaysStoryFor(group.id);
+  const todayStory = todaysStoryFor(group.id);
+  const groupStories = BIBLE_STORIES.filter(s => s.groupId === group.id);
+  const openStory = openStoryId
+    ? { ...groupStories.find(s => s.id === openStoryId), quiz: BIBLE_QUIZZES.find(q => q.id === openStoryId) }
+    : null;
   const coloringPages = COLORING_PAGES.filter(p => p.groupIds.includes(group.id));
   const openColoringPage = COLORING_PAGES.find(p => p.id === openColoringId);
 
@@ -54,7 +66,8 @@ function InfantilScreen({ onBack }) {
     return () => unsub();
   }, [me.uid]);
 
-  useEffect(() => { setQuizPick(null); }, [activeGroup]);
+  useEffect(() => { setOpenStoryId(null); }, [activeGroup]);
+  useEffect(() => { setQuizPick(null); }, [openStoryId]);
 
   const todayLabel = () => {
     const d = new Date();
@@ -140,7 +153,7 @@ function InfantilScreen({ onBack }) {
     return (
       <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
         <div className="px-6 pt-6 pb-2">
-          <button onClick={() => setOpenChildId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Área Infantil</button>
+          <button onClick={() => setOpenChildId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Frequência</button>
         </div>
 
         <div className="flex flex-col items-center px-6 mt-3 mb-5">
@@ -212,6 +225,64 @@ function InfantilScreen({ onBack }) {
     );
   }
 
+  if (openStory) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenStoryId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Histórias</button>
+        </div>
+        <div className="px-6 mt-2 mb-5">
+          <div className="rounded-3xl p-5 mb-3" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)", border: `2px solid ${group.color}33` }}>
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E`, fontSize: 30 }}>
+                {openStory.emoji}
+              </div>
+              <div>
+                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[16px] leading-tight">{openStory.title}</p>
+                <p style={{ fontFamily: "IBM Plex Mono", color: group.color }} className="text-[10px] mt-1">{openStory.verse}</p>
+              </div>
+            </div>
+            <p style={{ fontFamily: "Inter", color: "#5A5045" }} className="text-[13px] leading-relaxed mb-3">{openStory.text}</p>
+            <div className="rounded-2xl p-3 flex items-start gap-2" style={{ background: `${group.color}14` }}>
+              <PartyPopper size={15} color={group.color} className="shrink-0 mt-0.5" />
+              <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] leading-snug">{openStory.moral}</p>
+            </div>
+          </div>
+
+          {openStory.quiz && (
+            <div className="rounded-3xl p-5" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)" }}>
+              <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 700 }} className="text-[12px] mb-3">🎯 Quiz: {openStory.quiz.question}</p>
+              <div className="flex flex-col gap-2">
+                {openStory.quiz.options.map((opt, i) => {
+                  const picked = quizPick === i;
+                  const isCorrect = i === openStory.quiz.correct;
+                  const showResult = quizPick !== null;
+                  const bg = !showResult ? "#FFF8EE" : isCorrect ? "#2FA8A01E" : picked ? "#FF7A591E" : "#FFF8EE";
+                  const border = !showResult ? "1px solid #F0E4CF" : isCorrect ? "1px solid #2FA8A0" : picked ? "1px solid #FF7A59" : "1px solid #F0E4CF";
+                  const textColor = showResult && isCorrect ? "#1D7A72" : showResult && picked ? "#C24C33" : "#3A2E22";
+                  return (
+                    <button key={i} onClick={() => quizPick === null && setQuizPick(i)}
+                      className="text-left px-4 py-3 rounded-xl text-[12.5px] flex items-center justify-between"
+                      style={{ fontFamily: "Inter", background: bg, border, color: textColor, fontWeight: showResult && (isCorrect || picked) ? 600 : 400 }}>
+                      {opt}
+                      {showResult && isCorrect && <span>✓</span>}
+                      {showResult && picked && !isCorrect && <span>✗</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {quizPick !== null && (
+                <p style={{ fontFamily: "Inter", color: quizPick === openStory.quiz.correct ? "#1D7A72" : "#8A7F6E" }} className="text-[12px] mt-3 text-center">
+                  {quizPick === openStory.quiz.correct ? "Show de bola, acertou! 🎉" : "Quase! A resposta certa tá marcada com ✓"}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
       <div className="px-6 pt-6 pb-2">
@@ -223,7 +294,7 @@ function InfantilScreen({ onBack }) {
         <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[12px] mt-1">Histórias, atividades e o desenvolvimento do seu filho na igreja</p>
       </div>
 
-      <div className="flex gap-2 px-6 mb-5">
+      <div className="flex gap-2 px-6 mb-4">
         {AGE_GROUPS.map((g, i) => (
           <button key={g.id} onClick={() => setActiveGroup(i)}
             className="flex-1 py-2.5 rounded-2xl text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5"
@@ -247,150 +318,172 @@ function InfantilScreen({ onBack }) {
         </p>
       </div>
 
-      {activity && (
-        <div className="px-6 mb-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={14} color={group.color} />
-            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Atividade de hoje</p>
-          </div>
-          <div className="rounded-3xl p-5 mb-3" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)", border: `2px solid ${group.color}33` }}>
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E`, fontSize: 30 }}>
-                {activity.emoji}
-              </div>
-              <div>
-                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[16px] leading-tight">{activity.title}</p>
-                <p style={{ fontFamily: "IBM Plex Mono", color: group.color }} className="text-[10px] mt-1">{activity.verse}</p>
-              </div>
-            </div>
-            <p style={{ fontFamily: "Inter", color: "#5A5045" }} className="text-[13px] leading-relaxed mb-3">{activity.text}</p>
-            <div className="rounded-2xl p-3 flex items-start gap-2" style={{ background: `${group.color}14` }}>
-              <PartyPopper size={15} color={group.color} className="shrink-0 mt-0.5" />
-              <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] leading-snug">{activity.moral}</p>
-            </div>
-          </div>
+      <div className="flex gap-2 px-6 mb-5">
+        {TABS.map(t => {
+          const Icon = t.icon;
+          const active = activeTab === t.id;
+          return (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className="flex-1 py-2.5 rounded-2xl text-[11.5px] font-semibold flex items-center justify-center gap-1.5"
+              style={{
+                fontFamily: "Inter",
+                background: active ? "#3A2E22" : "#FFFFFF",
+                color: active ? "#FFFFFF" : "#6B6255",
+                boxShadow: "0 1px 3px rgba(180,140,80,0.08)",
+              }}>
+              <Icon size={13} />{t.label}
+            </button>
+          );
+        })}
+      </div>
 
-          {activity.quiz && (
-            <div className="rounded-3xl p-5" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)" }}>
-              <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 700 }} className="text-[12px] mb-3">🎯 Quiz: {activity.quiz.question}</p>
-              <div className="flex flex-col gap-2">
-                {activity.quiz.options.map((opt, i) => {
-                  const picked = quizPick === i;
-                  const isCorrect = i === activity.quiz.correct;
-                  const showResult = quizPick !== null;
-                  const bg = !showResult ? "#FFF8EE" : isCorrect ? "#2FA8A01E" : picked ? "#FF7A591E" : "#FFF8EE";
-                  const border = !showResult ? "1px solid #F0E4CF" : isCorrect ? "1px solid #2FA8A0" : picked ? "1px solid #FF7A59" : "1px solid #F0E4CF";
-                  const textColor = showResult && isCorrect ? "#1D7A72" : showResult && picked ? "#C24C33" : "#3A2E22";
-                  return (
-                    <button key={i} onClick={() => quizPick === null && setQuizPick(i)}
-                      className="text-left px-4 py-3 rounded-xl text-[12.5px] flex items-center justify-between"
-                      style={{ fontFamily: "Inter", background: bg, border, color: textColor, fontWeight: showResult && (isCorrect || picked) ? 600 : 400 }}>
-                      {opt}
-                      {showResult && isCorrect && <span>✓</span>}
-                      {showResult && picked && !isCorrect && <span>✗</span>}
-                    </button>
-                  );
-                })}
+      {activeTab === "historias" && (
+        <div className="px-6 mb-8">
+          {todayStory && (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={14} color={group.color} />
+                <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">História de hoje</p>
               </div>
-              {quizPick !== null && (
-                <p style={{ fontFamily: "Inter", color: quizPick === activity.quiz.correct ? "#1D7A72" : "#8A7F6E" }} className="text-[12px] mt-3 text-center">
-                  {quizPick === activity.quiz.correct ? "Show de bola, acertou! 🎉" : "Quase! A resposta certa tá marcada com ✓"}
-                </p>
-              )}
+              <button onClick={() => setOpenStoryId(todayStory.id)} className="w-full text-left rounded-3xl p-4 mb-6 flex items-center gap-3 active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)", border: `2px solid ${group.color}33` }}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E`, fontSize: 28 }}>
+                  {todayStory.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[15px] leading-tight">{todayStory.title}</p>
+                  <p style={{ fontFamily: "IBM Plex Mono", color: group.color }} className="text-[10px] mt-1">{todayStory.verse}</p>
+                </div>
+                <ChevronRight size={16} color="#D8CBB4" />
+              </button>
+            </>
+          )}
+
+          <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px] mb-3">Todas as histórias · {group.label}</p>
+          {groupStories.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma história cadastrada pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {groupStories.map(s => (
+                <button key={s.id} onClick={() => setOpenStoryId(s.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E`, fontSize: 20 }}>
+                    {s.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{s.title}</p>
+                    <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">{s.verse}</p>
+                  </div>
+                  <ChevronRight size={16} color="#D8CBB4" />
+                </button>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      <div className="px-6 mb-5">
-        <div className="flex items-center justify-between mb-3">
-          <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Meus filhos cadastrados</p>
-          <button onClick={() => setShowAddChild(true)} className="text-[12px] flex items-center gap-1" style={{ fontFamily: "Inter", color: group.color, fontWeight: 700 }}>
-            + Cadastrar
-          </button>
-        </div>
-        {children.length === 0 ? (
-          <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
-            <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma criança cadastrada ainda</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {children.map(c => (
-              <button key={c.id} onClick={() => setOpenChildId(c.id)}
-                className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
-                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
-                {c.childPhoto ? (
-                  <img src={c.childPhoto} alt={c.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
-                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.name)}</span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
-                  <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">
-                    {c.age} anos · {c.attendance.length} {c.attendance.length === 1 ? "presença" : "presenças"}
-                  </p>
-                </div>
-                {c.diet && (
-                  <span className="text-[9.5px] px-2 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: "#FF7A591E", color: "#FF7A59" }}>
-                    restrição
-                  </span>
-                )}
-                <ChevronRight size={16} color="#D8CBB4" />
-              </button>
-            ))}
-          </div>
-        )}
-        <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] mt-2">
-          O cadastro é feito só uma vez por criança. Toque em um nome para ver detalhes e frequência.
-        </p>
-      </div>
+      {activeTab === "atividades" && (
+        <div className="px-6 mb-8">
+          {coloringPages.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center mb-5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma atividade pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <span style={{ fontSize: 14 }}>🖍️</span>
+                <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Pra colorir agora, direto no app</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {coloringPages.map(p => (
+                  <button key={p.id} onClick={() => setOpenColoringId(p.id)}
+                    className="rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                    style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                    <div className="rounded-xl mb-2 overflow-hidden" style={{ background: "#FFF8EE", aspectRatio: "1 / 1" }}>
+                      <ColoringCanvas page={p} fills={coloringFills[p.id] || {}} interactive={false} />
+                    </div>
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px]">{p.emoji} {p.title}</p>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
-      {coloringPages.length > 0 && (
-        <div className="px-6 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span style={{ fontSize: 14 }}>🖍️</span>
-            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Pra colorir agora, direto no app</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {coloringPages.map(p => (
-              <button key={p.id} onClick={() => setOpenColoringId(p.id)}
-                className="rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
-                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
-                <div className="rounded-xl mb-2 overflow-hidden" style={{ background: "#FFF8EE", aspectRatio: "1 / 1" }}>
-                  <ColoringCanvas page={p} fills={coloringFills[p.id] || {}} interactive={false} />
-                </div>
-                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px]">{p.emoji} {p.title}</p>
-              </button>
-            ))}
+          <div className="rounded-3xl p-4" style={{ background: "linear-gradient(135deg, #7C6CE8, #5A4BC7)" }}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.2)" }}>
+                <BookOpen size={19} color="#FFFFFF" />
+              </div>
+              <div>
+                <p style={{ fontFamily: "Fraunces", color: "#FFFFFF", fontWeight: 600 }} className="text-[14px]">Prefere imprimir?</p>
+                <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.75)" }} className="text-[11px] mt-0.5">60 páginas em PDF: colorir, ligar pontos e mais</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <a href={ATIVIDADES_PDF} target="_blank" rel="noopener noreferrer"
+                className="flex-1 py-2.5 rounded-full text-center text-[12px] font-semibold"
+                style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#5A4BC7" }}>
+                Abrir PDF
+              </a>
+              <a href={ATIVIDADES_PDF} download="atividades-biblicas-infantis.pdf"
+                className="flex-1 py-2.5 rounded-full text-center text-[12px] font-semibold"
+                style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.15)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.35)" }}>
+                Baixar
+              </a>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="mx-6 rounded-3xl p-4 mb-8" style={{ background: "linear-gradient(135deg, #7C6CE8, #5A4BC7)" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.2)" }}>
-            <BookOpen size={19} color="#FFFFFF" />
+      {activeTab === "frequencia" && (
+        <div className="px-6 mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Meus filhos cadastrados</p>
+            <button onClick={() => setShowAddChild(true)} className="text-[12px] flex items-center gap-1" style={{ fontFamily: "Inter", color: group.color, fontWeight: 700 }}>
+              + Cadastrar
+            </button>
           </div>
-          <div>
-            <p style={{ fontFamily: "Fraunces", color: "#FFFFFF", fontWeight: 600 }} className="text-[14px]">Prefere imprimir?</p>
-            <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.75)" }} className="text-[11px] mt-0.5">60 páginas em PDF: colorir, ligar pontos e mais</p>
-          </div>
+          {children.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma criança cadastrada ainda</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {children.map(c => (
+                <button key={c.id} onClick={() => setOpenChildId(c.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+                  {c.childPhoto ? (
+                    <img src={c.childPhoto} alt={c.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                      <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.name)}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
+                    <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">
+                      {c.age} anos · {c.attendance.length} {c.attendance.length === 1 ? "presença" : "presenças"}
+                    </p>
+                  </div>
+                  {c.diet && (
+                    <span className="text-[9.5px] px-2 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: "#FF7A591E", color: "#FF7A59" }}>
+                      restrição
+                    </span>
+                  )}
+                  <ChevronRight size={16} color="#D8CBB4" />
+                </button>
+              ))}
+            </div>
+          )}
+          <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] mt-2">
+            O cadastro é feito só uma vez por criança. Toque em um nome para ver detalhes e frequência.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <a href={ATIVIDADES_PDF} target="_blank" rel="noopener noreferrer"
-            className="flex-1 py-2.5 rounded-full text-center text-[12px] font-semibold"
-            style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#5A4BC7" }}>
-            Abrir PDF
-          </a>
-          <a href={ATIVIDADES_PDF} download="atividades-biblicas-infantis.pdf"
-            className="flex-1 py-2.5 rounded-full text-center text-[12px] font-semibold"
-            style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.15)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.35)" }}>
-            Baixar
-          </a>
-        </div>
-      </div>
+      )}
 
       {showAddChild && (
         <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowAddChild(false)}>
