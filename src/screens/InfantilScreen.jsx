@@ -15,7 +15,7 @@ import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
 import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
-import { BIBLE_STORIES, BIBLE_QUIZZES, todaysStoryFor } from "../data/kidsActivities.js";
+import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 
@@ -36,7 +36,6 @@ function InfantilScreen({ onBack }) {
   const [childForm, setChildForm] = useState({ name: "", age: "", diet: "", childPhoto: null, parentsPhoto: null });
   const [childFormError, setChildFormError] = useState("");
   const [openStoryId, setOpenStoryId] = useState(null);
-  const [quizPick, setQuizPick] = useState(null);
   const [coloringFills, setColoringFills] = useState({});
   const [openColoringId, setOpenColoringId] = useState(null);
   const [activeCrayon, setActiveCrayon] = useState(CRAYONS[0]);
@@ -44,9 +43,7 @@ function InfantilScreen({ onBack }) {
   const openChild = children.find(c => c.id === openChildId);
   const todayStory = todaysStoryFor(group.id);
   const groupStories = BIBLE_STORIES.filter(s => s.groupId === group.id);
-  const openStory = openStoryId
-    ? { ...groupStories.find(s => s.id === openStoryId), quiz: BIBLE_QUIZZES.find(q => q.id === openStoryId) }
-    : null;
+  const openStory = openStoryId ? groupStories.find(s => s.id === openStoryId) : null;
   const coloringPages = COLORING_PAGES.filter(p => p.groupIds.includes(group.id));
   const openColoringPage = COLORING_PAGES.find(p => p.id === openColoringId);
 
@@ -67,7 +64,6 @@ function InfantilScreen({ onBack }) {
   }, [me.uid]);
 
   useEffect(() => { setOpenStoryId(null); }, [activeGroup]);
-  useEffect(() => { setQuizPick(null); }, [openStoryId]);
 
   const todayLabel = () => {
     const d = new Date();
@@ -248,36 +244,6 @@ function InfantilScreen({ onBack }) {
               <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] leading-snug">{openStory.moral}</p>
             </div>
           </div>
-
-          {openStory.quiz && (
-            <div className="rounded-3xl p-5" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(180,140,80,0.12)" }}>
-              <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 700 }} className="text-[12px] mb-3">🎯 Quiz: {openStory.quiz.question}</p>
-              <div className="flex flex-col gap-2">
-                {openStory.quiz.options.map((opt, i) => {
-                  const picked = quizPick === i;
-                  const isCorrect = i === openStory.quiz.correct;
-                  const showResult = quizPick !== null;
-                  const bg = !showResult ? "#FFF8EE" : isCorrect ? "#2FA8A01E" : picked ? "#FF7A591E" : "#FFF8EE";
-                  const border = !showResult ? "1px solid #F0E4CF" : isCorrect ? "1px solid #2FA8A0" : picked ? "1px solid #FF7A59" : "1px solid #F0E4CF";
-                  const textColor = showResult && isCorrect ? "#1D7A72" : showResult && picked ? "#C24C33" : "#3A2E22";
-                  return (
-                    <button key={i} onClick={() => quizPick === null && setQuizPick(i)}
-                      className="text-left px-4 py-3 rounded-xl text-[12.5px] flex items-center justify-between"
-                      style={{ fontFamily: "Inter", background: bg, border, color: textColor, fontWeight: showResult && (isCorrect || picked) ? 600 : 400 }}>
-                      {opt}
-                      {showResult && isCorrect && <span>✓</span>}
-                      {showResult && picked && !isCorrect && <span>✗</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              {quizPick !== null && (
-                <p style={{ fontFamily: "Inter", color: quizPick === openStory.quiz.correct ? "#1D7A72" : "#8A7F6E" }} className="text-[12px] mt-3 text-center">
-                  {quizPick === openStory.quiz.correct ? "Show de bola, acertou! 🎉" : "Quase! A resposta certa tá marcada com ✓"}
-                </p>
-              )}
-            </div>
-          )}
         </div>
       </div>
     );

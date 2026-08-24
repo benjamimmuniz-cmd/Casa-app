@@ -65,4 +65,65 @@ export const COLORING_PAGES = [
       { id: "nuvem", tag: "ellipse", props: { cx: 32, cy: 85, rx: 18, ry: 14 } },
     ],
   },
+  {
+    id: "cordeiro", title: "Cordeirinho", emoji: "🐑", groupIds: ["p", "m"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "corpo", tag: "ellipse", props: { cx: 175, cy: 175, rx: 78, ry: 55 } },
+      { id: "cabeca", tag: "circle", props: { cx: 88, cy: 150, r: 32 } },
+      { id: "orelha", tag: "ellipse", props: { cx: 65, cy: 122, rx: 10, ry: 20, transform: "rotate(-25 65 122)" } },
+      { id: "_olho", tag: "circle", locked: true, props: { cx: 82, cy: 145, r: 4, fill: "#2B2B2B" } },
+      { id: "_focinho", tag: "ellipse", locked: true, props: { cx: 62, cy: 158, rx: 10, ry: 7, fill: "#2B2B2B" } },
+      { id: "_perna1", tag: "rect", locked: true, props: { x: 120, y: 210, width: 14, height: 40, rx: 6, fill: "#2B2B2B" } },
+      { id: "_perna2", tag: "rect", locked: true, props: { x: 220, y: 210, width: 14, height: 40, rx: 6, fill: "#2B2B2B" } },
+    ],
+  },
+  {
+    id: "coroa", title: "Coroa do Rei", emoji: "👑", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "coroa", tag: "path", props: { d: "M60,210 L60,150 L90,100 L120,150 L150,80 L180,150 L210,100 L240,150 L240,210 Z" } },
+      { id: "faixa", tag: "rect", props: { x: 55, y: 200, width: 190, height: 24, rx: 6 } },
+      { id: "joia", tag: "circle", props: { cx: 90, cy: 96, r: 8 } },
+      { id: "joia", tag: "circle", props: { cx: 150, cy: 76, r: 9 } },
+      { id: "joia", tag: "circle", props: { cx: 210, cy: 96, r: 8 } },
+    ],
+  },
+  {
+    id: "vela", title: "A luz do mundo", emoji: "🕯️", groupIds: ["p", "m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "prato", tag: "ellipse", props: { cx: 150, cy: 245, rx: 70, ry: 18 } },
+      { id: "corpo", tag: "rect", props: { x: 120, y: 110, width: 60, height: 140, rx: 10 } },
+      { id: "chama", tag: "path", props: { d: "M150,45 C165,65 172,82 150,100 C128,82 135,65 150,45 Z" } },
+      { id: "_pavio", tag: "rect", locked: true, props: { x: 146, y: 96, width: 8, height: 18, fill: "#2B2B2B" } },
+    ],
+  },
+  {
+    id: "barco", title: "Barco de pescadores", emoji: "⛵", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "casco", tag: "path", props: { d: "M40,195 L260,195 C260,195 235,230 150,230 C65,230 40,195 40,195 Z" } },
+      { id: "vela_pano", tag: "path", props: { d: "M150,60 L150,190 L90,190 Z" } },
+      { id: "_mastro", tag: "rect", locked: true, props: { x: 146, y: 55, width: 8, height: 140, fill: "#2B2B2B" } },
+      { id: "agua", tag: "path", paint: "stroke", props: { d: "M10,235 Q45,218 80,235 T150,235 T220,235 T290,235", fill: "none", "stroke-width": 6 } },
+    ],
+  },
+  {
+    id: "sol-lua", title: "Sol e lua", emoji: "🌞", groupIds: ["p"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "sol", tag: "circle", props: { cx: 95, cy: 110, r: 48 } },
+      { id: "lua", tag: "path", props: { d: "M240,150 A55,55 0 1 1 240,60 A42,42 0 1 0 240,150 Z" } },
+      { id: "_estrela1", tag: "polygon", locked: true, props: { points: "180,220 183,228 191,228 184,233 187,241 180,236 173,241 176,233 169,228 177,228", fill: "#2B2B2B" } },
+      { id: "_estrela2", tag: "polygon", locked: true, props: { points: "60,230 62,236 68,236 63,240 65,246 60,242 55,246 57,240 52,236 58,236", fill: "#2B2B2B" } },
+    ],
+  },
+  {
+    id: "paes-peixes", title: "Pães e peixes", emoji: "🐟", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "cesta", tag: "path", props: { d: "M70,150 L230,150 L210,235 C210,235 180,248 150,248 C120,248 90,235 90,235 Z" } },
+      { id: "_trama1", tag: "path", locked: true, props: { d: "M82,178 L218,178", stroke: "#2B2B2B", "stroke-width": 4, fill: "none" } },
+      { id: "_trama2", tag: "path", locked: true, props: { d: "M87,205 L213,205", stroke: "#2B2B2B", "stroke-width": 4, fill: "none" } },
+      { id: "pao", tag: "ellipse", props: { cx: 105, cy: 135, rx: 26, ry: 17 } },
+      { id: "pao", tag: "ellipse", props: { cx: 150, cy: 122, rx: 26, ry: 17 } },
+      { id: "peixe", tag: "path", props: { d: "M175,150 Q205,128 232,148 Q205,168 175,150 Z" } },
+      { id: "peixe", tag: "path", props: { d: "M195,175 Q220,158 242,175 Q220,192 195,175 Z" } },
+    ],
+  },
 ];
