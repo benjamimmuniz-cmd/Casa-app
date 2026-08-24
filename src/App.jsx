@@ -29,6 +29,7 @@ const ChatScreen = React.lazy(() => import("./screens/ChatScreen.jsx"));
 const DiscipuladoScreen = React.lazy(() => import("./screens/DiscipuladoScreen.jsx"));
 const EnquetesScreen = React.lazy(() => import("./screens/EnquetesScreen.jsx"));
 const EscalaScreen = React.lazy(() => import("./screens/EscalaScreen.jsx"));
+const TransitoScreen = React.lazy(() => import("./screens/TransitoScreen.jsx"));
 const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
 const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
 const FeedScreen = React.lazy(() => import("./screens/FeedScreen.jsx"));
@@ -495,6 +496,8 @@ function App() {
               <DoacoesScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "localizacao" || (tab === "localizacao" && !openTile) ? (
               <LocalizacaoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "transito" || (tab === "transito" && !openTile) ? (
+              <TransitoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "oracao" || (tab === "oracao" && !openTile) ? (
               <OracaoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "gr" || (tab === "gr" && !openTile) ? (

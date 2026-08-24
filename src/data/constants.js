@@ -33,6 +33,7 @@ import {
   Cake,
   Film,
   ClipboardList,
+  Car,
 } from "lucide-react";
 
 export const FONTS = `
@@ -55,6 +56,7 @@ export const TILES = [
   { id: "calendario", label: "Eventos", icon: CalendarDays, color: "#262626" },
   { id: "enquetes", label: "Enquetes", icon: Vote, color: "#454545" },
   { id: "escala", label: "Escala", icon: ClipboardList, color: "#3B6D5C" },
+  { id: "transito", label: "Trânsito", icon: Car, color: "#3B6D8A" },
   { id: "evangelismo", label: "Evangelismo", icon: Compass, color: "#454545" },
   { id: "sounovo", label: "Sou Novo", icon: Handshake, color: "#5C6B45" },
   { id: "novoconvertido", label: "Novo Convertido", icon: UserCheck, color: "#4B7D5C" },
@@ -77,7 +79,7 @@ export const MENU_GROUPS = [
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
-  { label: "Sobre a Casa", ids: ["localizacao"] },
+  { label: "Sobre a Casa", ids: ["localizacao", "transito"] },
   { label: "Loja", ids: ["store", "cantina"] },
   { label: "Organização", ids: ["calendario", "enquetes", "escala"] },
   { label: "Missão", ids: ["evangelismo"] },
@@ -91,6 +93,7 @@ export const TAB_LABELS = {
   ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração",
   gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos", aniversariantes: "Aniversariantes",
   escala: "Escala de Voluntários",
+  transito: "Trânsito",
 };
 
 export const TAB_DESCRIPTIONS = {
@@ -121,6 +124,7 @@ export const TAB_DESCRIPTIONS = {
   aniversariantes: "Veja quem faz aniversário este mês (ou navegue pra outros meses) e não deixe ninguém sem parabéns.",
   mensagens: "Biblioteca de pregações e cultos passados — cole o link do YouTube e reveja quando quiser.",
   escala: "Organize quem serve em cada culto — som, mídia, recepção, Kids — e cada voluntário vê sua própria escala.",
+  transito: "Veja os carros cadastrados pelos membros e seus responsáveis — útil pra achar o dono rapidinho no estacionamento.",
 };
 
 export const GR_COLORS = ["#3B7D8A", "#2B6B76", "#5A9BA6", "#1E5A64", "#4D8A94"];
