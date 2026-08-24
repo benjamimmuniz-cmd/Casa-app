@@ -4,8 +4,10 @@ import {
   BookOpen,
   ChevronRight,
   Heart,
+  Keyboard,
   Palette,
   PartyPopper,
+  PenLine,
   RotateCcw,
   Sparkles,
   Users,
@@ -17,7 +19,10 @@ import { colorFor, initials } from "../utils/helpers.js";
 import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
 import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
+import { HANGMAN_WORDS, VERSE_FILLS } from "../data/kidsGames.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
+import HangmanGame from "../components/HangmanGame.jsx";
+import VerseFillGame from "../components/VerseFillGame.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -39,6 +44,8 @@ function InfantilScreen({ onBack }) {
   const [coloringFills, setColoringFills] = useState({});
   const [openColoringId, setOpenColoringId] = useState(null);
   const [activeCrayon, setActiveCrayon] = useState(CRAYONS[0]);
+  const [openHangmanId, setOpenHangmanId] = useState(null);
+  const [openVerseFillId, setOpenVerseFillId] = useState(null);
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);
   const todayStory = todaysStoryFor(group.id);
@@ -46,6 +53,10 @@ function InfantilScreen({ onBack }) {
   const openStory = openStoryId ? groupStories.find(s => s.id === openStoryId) : null;
   const coloringPages = COLORING_PAGES.filter(p => p.groupIds.includes(group.id));
   const openColoringPage = COLORING_PAGES.find(p => p.id === openColoringId);
+  const groupHangman = HANGMAN_WORDS.filter(w => w.groupId === group.id);
+  const openHangman = groupHangman.find(w => w.id === openHangmanId);
+  const groupVerseFills = VERSE_FILLS.filter(v => v.groupId === group.id);
+  const openVerseFill = groupVerseFills.find(v => v.id === openVerseFillId);
 
   const paintRegion = (pageId, regionId) => {
     setColoringFills(prev => ({ ...prev, [pageId]: { ...(prev[pageId] || {}), [regionId]: activeCrayon } }));
@@ -63,7 +74,7 @@ function InfantilScreen({ onBack }) {
     return () => unsub();
   }, [me.uid]);
 
-  useEffect(() => { setOpenStoryId(null); }, [activeGroup]);
+  useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); }, [activeGroup]);
 
   const todayLabel = () => {
     const d = new Date();
@@ -139,6 +150,38 @@ function InfantilScreen({ onBack }) {
                 boxShadow: activeCrayon === c ? "0 0 0 3px #FFF8EE, 0 0 0 5px #3A2E22" : "0 1px 3px rgba(0,0,0,0.15)",
               }} />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (openHangman) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenHangmanId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">{openHangman.emoji} Jogo da Forca</p>
+        </div>
+        <div className="px-6 pb-8">
+          <HangmanGame item={openHangman} color={group.color} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openVerseFill) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenVerseFillId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">📖 Complete o Versículo</p>
+        </div>
+        <div className="px-6 pb-8">
+          <VerseFillGame item={openVerseFill} color={group.color} />
         </div>
       </div>
     );
@@ -351,7 +394,7 @@ function InfantilScreen({ onBack }) {
         </div>
       )}
 
-      {activeTab === "atividades" && (
+      {activeTab === "atividades" && group.id === "p" && (
         <div className="px-6 mb-8">
           {coloringPages.length === 0 ? (
             <div className="rounded-2xl p-4 text-center mb-5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
@@ -401,6 +444,61 @@ function InfantilScreen({ onBack }) {
               </a>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === "atividades" && group.id !== "p" && (
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Keyboard size={14} color={group.color} />
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Jogo da forca</p>
+          </div>
+          {groupHangman.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center mb-6" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhum jogo pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {groupHangman.map(w => (
+                <button key={w.id} onClick={() => setOpenHangmanId(w.id)}
+                  className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                  <span style={{ fontSize: 26 }}>{w.emoji}</span>
+                  <p style={{ fontFamily: "IBM Plex Mono", color: group.color, letterSpacing: 2 }} className="text-[13px] mt-2">
+                    {w.word.replace(/./g, "_ ").trim()}
+                  </p>
+                  <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[10.5px] mt-1">{w.word.length} letras</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 mb-3">
+            <PenLine size={14} color={group.color} />
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Complete o versículo</p>
+          </div>
+          {groupVerseFills.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhum versículo pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {groupVerseFills.map(v => (
+                <button key={v.id} onClick={() => setOpenVerseFillId(v.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E` }}>
+                    <PenLine size={16} color={group.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12.5px]">{v.reference}</p>
+                    <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[11px] truncate">{v.before} ___{v.after}</p>
+                  </div>
+                  <ChevronRight size={16} color="#D8CBB4" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

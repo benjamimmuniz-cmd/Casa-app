@@ -88,6 +88,30 @@ export const BIBLE_STORIES = [
     moral: "Jesus escuta quem clama por Ele com fé, mesmo quando todo mundo manda a pessoa ficar quieta.",
     verse: "Marcos 10:46-52",
   },
+  {
+    id: "isaque-nasce", groupId: "p", emoji: "👶", title: "O nascimento de Isaque",
+    text: "Deus tinha prometido pro Abraão e pra Sara que eles teriam um filho, mas os anos foram passando e passando, e o bebê não chegava. Abraão e Sara já estavam bem velhinhos, e até acharam que talvez não fosse mais possível. Mas Deus sempre cumpre o que promete! No tempo certo, exatamente como Deus tinha dito, Sara ficou grávida e teve um menino lindo, que eles chamaram de Isaque, que quer dizer \"riso\", porque Sara riu de alegria e surpresa. A casa de Abraão ficou cheia de festa e felicidade com a chegada daquele bebê tão esperado. Isaque cresceu sabendo que era um presente especial de Deus pra sua família.",
+    moral: "Deus sempre cumpre suas promessas no tempo certo, mesmo quando parece que demora demais.",
+    verse: "Gênesis 21",
+  },
+  {
+    id: "davi-e-jonatas", groupId: "p", emoji: "🤝", title: "Davi e seu amigo Jônatas",
+    text: "Davi e Jônatas eram amigos de verdade, mesmo Jônatas sendo filho do rei Saul, que ficou com muita inveja de Davi. Jônatas amava Davi como a si mesmo, e prometeu sempre proteger seu amigo, mesmo que isso fosse contra os planos do próprio pai. Quando Saul ficou com tanta raiva que quis machucar Davi, Jônatas avisou o amigo escondido, ajudando ele a fugir em segurança. Antes de se despedirem, os dois fizeram uma promessa linda de amizade pra sempre, e Jônatas até deu suas próprias roupas e sua espada de presente pra Davi. Mesmo morando longe um do outro depois disso, a amizade dos dois continuou forte, mostrando que verdadeiros amigos cuidam um do outro em qualquer situação.",
+    moral: "Um amigo de verdade fica do nosso lado e nos protege, mesmo quando é difícil.",
+    verse: "1 Samuel 18–20",
+  },
+  {
+    id: "boa-pastor", groupId: "p", emoji: "🐑", title: "Jesus, o bom pastor",
+    text: "Jesus contou uma história bem bonita pra explicar o quanto Ele nos ama: Ele disse que é como um pastor que cuida de cem ovelhinhas. Um dia, uma das ovelhinhas se perdeu, longe do rebanho, sozinha e com medo. Em vez de ficar satisfeito com as noventa e nove que estavam seguras, o bom pastor saiu procurando a ovelhinha perdida, sem descansar, até encontrá-la. Quando finalmente achou a ovelhinha, o pastor não brigou com ela — ele a colocou com todo carinho nos ombros e a trouxe de volta pra casa, cheio de alegria! Jesus disse que Ele é exatamente assim com cada um de nós: Ele nos conhece, nos ama, e vai atrás da gente quando estamos perdidos.",
+    moral: "Jesus é o bom pastor que sempre vai atrás de quem está perdido, com muito amor.",
+    verse: "Lucas 15:3-7 / João 10",
+  },
+  {
+    id: "cura-menina", groupId: "p", emoji: "💗", title: "Jesus cura a menininha",
+    text: "Um homem chamado Jairo, líder de uma sinagoga, correu até Jesus muito aflito, porque sua filhinha estava muito doente. Ele se ajoelhou e implorou: \"Minha filhinha está morrendo, por favor, venha e coloque suas mãos sobre ela para que ela seja curada e viva!\" Jesus foi com ele na hora, mas no caminho chegou a notícia triste de que a menina já tinha morrido. Jesus disse pro pai: \"Não tenha medo, apenas confie\", e continuou o caminho até a casa. Lá, Jesus pegou a mão da menininha e disse: \"Menina, eu digo a você, levante-se!\" Na mesma hora, a menina se levantou e começou a andar, viva e cheia de saúde, deixando todo mundo maravilhado com o poder de Jesus.",
+    moral: "Mesmo quando tudo parece perdido, Jesus tem poder pra trazer esperança e vida.",
+    verse: "Marcos 5:21-43",
+  },
 
   // 6–8 anos
   {
@@ -174,6 +198,30 @@ export const BIBLE_STORIES = [
     moral: "Jesus é realmente o Filho de Deus, e devemos ouvir e seguir o que Ele ensina.",
     verse: "Mateus 17:1-9",
   },
+  {
+    id: "jacoe-esau", groupId: "m", emoji: "🍲", title: "Jacó e Esaú",
+    text: "Jacó e Esaú eram irmãos gêmeos, mas bem diferentes um do outro. Esaú, o mais velho, era caçador e gostava do campo, enquanto Jacó era mais caseiro. Um dia, Esaú chegou faminto de caçar e trocou seu direito de primogenitura, que era muito importante naquela época, por um prato de comida que Jacó tinha preparado — uma troca que ele lamentaria depois. Mais tarde, Jacó, com a ajuda da mãe, enganou o pai já idoso e cego pra receber a bênção que deveria ser de Esaú, o que deixou Esaú furioso e magoado. Jacó teve que fugir de casa por muitos anos, com medo do irmão. Depois de muito tempo, quando os dois finalmente se reencontraram, ao invés de brigarem, Esaú correu, abraçou Jacó e chorou de emoção, perdoando o irmão de coração.",
+    moral: "Mesmo depois de erros e brigas, o perdão pode reconstruir os laços de família.",
+    verse: "Gênesis 25, 27, 33",
+  },
+  {
+    id: "eliseu-viuva", groupId: "m", emoji: "🏺", title: "Eliseu e o óleo da viúva",
+    text: "Uma viúva pobre foi até o profeta Eliseu desesperada, porque devia dinheiro e o credor ia levar seus dois filhos como escravos pra pagar a dívida — algo bem comum e triste naquela época. Eliseu perguntou o que ela tinha em casa, e ela respondeu que só tinha um potinho pequeno de óleo, quase nada. Eliseu deu uma instrução surpreendente: pediu pra ela pegar emprestado o máximo de vasilhas vazias que conseguisse com os vizinhos, e depois começar a despejar o óleo do potinho dentro de cada vasilha. Pra surpresa da viúva, o óleo não parava de sair do potinho pequeno, enchendo vasilha após vasilha, até não sobrar mais nenhum vasilhame vazio! Ela vendeu todo aquele óleo, pagou sua dívida, e ainda sobrou dinheiro pra ela e os filhos viverem tranquilos.",
+    moral: "Deus pode multiplicar o pouco que temos quando confiamos Nele nos momentos difíceis.",
+    verse: "2 Reis 4:1-7",
+  },
+  {
+    id: "naaman", groupId: "m", emoji: "🌊", title: "Naamã é curado",
+    text: "Naamã era um comandante do exército muito respeitado, mas tinha uma doença de pele grave chamada lepra. Uma jovem serva israelita, que trabalhava na casa dele, contou que havia um profeta em Israel, chamado Eliseu, que poderia curá-lo. Naamã viajou até lá cheio de esperança, esperando um ritual grandioso, mas Eliseu simplesmente mandou um mensageiro dizer: \"Vá, lave-se sete vezes no rio Jordão, e você ficará curado.\" Naamã ficou indignado, achando aquilo bobagem demais e quase foi embora com raiva. Mas seus próprios servos o convenceram a tentar, dizendo: \"Se o profeta tivesse pedido algo difícil, você teria feito, então por que não fazer algo tão simples?\" Naamã mergulhou as sete vezes no rio, e na última vez, sua pele ficou completamente curada, como a de uma criança!",
+    moral: "Às vezes Deus age de formas simples, e a humildade de obedecer traz grandes bênçãos.",
+    verse: "2 Reis 5",
+  },
+  {
+    id: "dez-leprosos", groupId: "m", emoji: "🙌", title: "Os dez leprosos",
+    text: "Enquanto Jesus caminhava por uma vila, dez homens com lepra, uma doença que os obrigava a viver isolados de todo mundo, gritaram de longe: \"Jesus, Mestre, tenha piedade de nós!\" Jesus os viu e disse simplesmente: \"Vão mostrar-se aos sacerdotes\", que era o procedimento pra confirmar uma cura. Enquanto os dez caminhavam obedecendo, todos foram curados no meio do caminho! Mas apenas um deles, ao perceber que estava curado, voltou correndo até Jesus, se jogou aos seus pés e agradeceu bem alto, glorificando a Deus. Jesus perguntou: \"Não foram dez os curados? Onde estão os outros nove?\" Aquele homem que voltou pra agradecer era de um povo diferente, mostrando que a gratidão de coração é o que realmente importa pra Deus.",
+    moral: "É importante lembrar sempre de agradecer a Deus pelas coisas boas que Ele faz por nós.",
+    verse: "Lucas 17:11-19",
+  },
 
   // 9–12 anos
   {
@@ -259,6 +307,30 @@ export const BIBLE_STORIES = [
     text: "O apóstolo Paulo, escrevendo uma carta pra igreja de Éfeso, usou uma comparação muito interessante pra explicar como a vida cristã pode ser como uma batalha espiritual. Ele disse que devemos nos vestir com toda a armadura de Deus, pra ficar firmes contra as dificuldades que enfrentamos. Paulo descreveu cada peça: o cinturão da verdade, apertado firme na cintura; a couraça da justiça, protegendo o coração; os pés calçados com a disposição de anunciar o evangelho da paz; o escudo da fé, capaz de apagar as flechas do mal; o capacete da salvação, protegendo a mente; e a espada do Espírito, que é a Palavra de Deus. Paulo também lembrou da importância de orar sempre, em todas as ocasiões, pedindo força a Deus. Assim como um soldado bem equipado enfrenta a batalha com confiança, um cristão bem preparado com a Palavra de Deus e a oração pode enfrentar qualquer dificuldade com coragem.",
     moral: "Deus nos dá tudo que precisamos — verdade, fé, paz e sua Palavra — pra enfrentarmos os desafios da vida.",
     verse: "Efésios 6:10-18",
+  },
+  {
+    id: "sermao-monte", groupId: "g", emoji: "⛰️", title: "O Sermão do Monte",
+    text: "Jesus subiu num monte, sentou-se, e seus discípulos se reuniram ao redor Dele pra ouvir um dos ensinamentos mais importantes de toda a Sua vida, conhecido como o Sermão do Monte. Ele começou com as Bem-aventuranças, dizendo coisas surpreendentes como: \"Bem-aventurados os humildes de espírito, porque deles é o reino dos céus\" e \"Bem-aventurados os que choram, porque serão consolados\" e \"Bem-aventurados os pacificadores, porque serão chamados filhos de Deus.\" Jesus ensinou que seus seguidores deveriam ser como sal da terra e luz do mundo, vivendo de um jeito que mostrasse o amor de Deus pras pessoas ao redor. Ele também ensinou sobre perdoar os inimigos, não julgar os outros, confiar em Deus em vez de se preocupar demais, e construir a vida sobre uma base sólida, como uma casa construída sobre a rocha. Esse ensinamento mudou completamente a forma como as pessoas entendiam o que significa viver com fé.",
+    moral: "Jesus nos ensina que a verdadeira felicidade vem de um coração humilde, generoso e cheio de fé.",
+    verse: "Mateus 5–7",
+  },
+  {
+    id: "talentos", groupId: "g", emoji: "💰", title: "A parábola dos talentos",
+    text: "Jesus contou uma parábola sobre um homem que ia viajar e chamou seus três servos pra confiar seus bens a eles enquanto estivesse fora. Pra um servo, deu cinco talentos (uma quantidade de dinheiro), pra outro, dois talentos, e pro terceiro, apenas um talento, de acordo com a capacidade de cada um. O primeiro servo trabalhou e conseguiu dobrar seus cinco talentos, e o segundo também dobrou os seus dois. Mas o terceiro servo, com medo de arriscar, simplesmente cavou um buraco e escondeu seu único talento na terra, sem fazer nada com ele. Quando o senhor voltou, ficou muito contente com os dois primeiros servos, dizendo: \"Muito bem, servo bom e fiel!\" Mas ficou decepcionado com o terceiro, que não tinha usado o que recebeu, mesmo sendo pouco, pra fazer alguma coisa boa e produtiva.",
+    moral: "Deus espera que a gente use bem os dons e oportunidades que Ele nos dá, por menores que pareçam.",
+    verse: "Mateus 25:14-30",
+  },
+  {
+    id: "estevao", groupId: "g", emoji: "✨", title: "O martírio de Estêvão",
+    text: "Estêvão era um dos primeiros líderes da igreja, conhecido por sua fé forte e sua sabedoria ao falar sobre Jesus. Alguns líderes religiosos, incomodados com suas palavras, o levaram a julgamento e arranjaram testemunhas falsas contra ele. Mesmo diante daquela injustiça, Estêvão falou com coragem sobre a história do povo de Deus e sobre Jesus, o que deixou muitos furiosos. Cheio do Espírito Santo, Estêvão olhou para o céu e disse que via a glória de Deus e Jesus, e por causa disso a multidão enfurecida o arrastou pra fora da cidade. Enquanto era apedrejado injustamente, Estêvão orou, pedindo que Deus recebesse seu espírito, e depois, ajoelhando-se, gritou em alta voz: \"Senhor, não os culpes por este pecado\", perdoando até quem estava fazendo aquele mal contra ele, do mesmo jeito que Jesus tinha feito na cruz.",
+    moral: "Seguir a Jesus de verdade significa amar e perdoar até quando isso parece impossível.",
+    verse: "Atos 6–7",
+  },
+  {
+    id: "nova-jerusalem", groupId: "g", emoji: "🌅", title: "A visão da Nova Jerusalém",
+    text: "No final da Bíblia, o apóstolo João, já bem idoso e exilado numa ilha, recebeu uma visão incrível de Deus sobre o futuro. Ele viu um novo céu e uma nova terra, e uma cidade linda e brilhante descendo do céu, chamada a Nova Jerusalém, preparada como uma noiva se prepara para o seu casamento. João ouviu uma voz forte dizendo: \"Eis que o tabernáculo de Deus está com os homens, e Deus habitará com eles; e ele enxugará dos seus olhos toda lágrima; não haverá mais morte, nem tristeza, nem choro, nem dor, porque as primeiras coisas já passaram.\" A cidade era descrita como algo magnífico, com ruas e portas maravilhosas, e nela não haveria mais necessidade de sol ou lua, porque a própria glória de Deus a iluminaria. Essa visão dá esperança a todos que confiam em Deus: um dia, tudo será restaurado e feito novo, sem dor e sem sofrimento, para sempre.",
+    moral: "Deus promete um futuro cheio de esperança, onde toda dor e tristeza serão transformadas em alegria eterna.",
+    verse: "Apocalipse 21",
   },
 ];
 
