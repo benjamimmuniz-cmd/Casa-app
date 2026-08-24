@@ -405,6 +405,22 @@ function App() {
     }
   };
 
+  const updateUserPossuiCarro = (possuiCarro) => {
+    setCurrentUser(prev => prev ? { ...prev, possuiCarro, placa: possuiCarro ? prev.placa : "" } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { possuiCarro, placa: possuiCarro ? (currentUser.placa || "") : "", role: currentUser.role || "member" })
+        .catch(err => console.error("CARRO_SAVE_ERR", err.code, err.message));
+    }
+  };
+
+  const updateUserPlaca = (placa) => {
+    setCurrentUser(prev => prev ? { ...prev, placa } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { placa, role: currentUser.role || "member" })
+        .catch(err => console.error("PLACA_SAVE_ERR", err.code, err.message));
+    }
+  };
+
   const handleLogout = () => {
     signOut(auth);
     setTab("inicio");
@@ -422,7 +438,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>

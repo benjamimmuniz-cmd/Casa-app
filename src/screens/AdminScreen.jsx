@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Download, ShieldCheck, Users } from "lucide-react";
+import { Car, Download, Search, ShieldCheck, Users, X } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { colorFor, fmtDateBR, initials } from "../utils/helpers.js";
@@ -17,6 +17,7 @@ function fmtCreatedAt(ts) {
 function AdminScreen({ onBack }) {
   const [users, setUsers] = useState(null);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     getDocs(collection(db, "users"))
@@ -29,9 +30,10 @@ function AdminScreen({ onBack }) {
   }, []);
 
   const exportCsv = () => {
-    const header = ["Nome", "E-mail", "Nascimento", "Profissão", "Membro da igreja", "Cadastrado em"];
+    const header = ["Nome", "E-mail", "Nascimento", "Profissão", "Possui carro", "Placa", "Membro da igreja", "Cadastrado em"];
     const rows = users.map(u => [
       u.nome || "", u.email || "", fmtDateBR(u.nascimento) || "", u.profissao || "",
+      u.possuiCarro ? "Sim" : "Não", u.placa || "",
       u.membro ? "Sim" : "Não", fmtCreatedAt(u.createdAt),
     ]);
     const csv = [header, ...rows].map(r => r.map(toCsvValue).join(",")).join("\n");
@@ -88,8 +90,21 @@ function AdminScreen({ onBack }) {
             </button>
           </div>
 
+          <div className="px-6 mb-4">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+              <Search size={15} color="var(--c-faint)" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome ou placa"
+                className="flex-1 outline-none text-[13px] bg-transparent" style={{ fontFamily: "Inter", color: "var(--c-text)" }} />
+              {search && <button onClick={() => setSearch("")}><X size={14} color="var(--c-faint)" /></button>}
+            </div>
+          </div>
+
           <div className="px-6 pb-10 flex flex-col gap-2.5">
-            {users.map(u => (
+            {users.filter(u => {
+              const q = search.trim().toUpperCase();
+              if (!q) return true;
+              return (u.nome || "").toUpperCase().includes(q) || (u.placa || "").toUpperCase().includes(q);
+            }).map(u => (
               <div key={u.uid} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ background: colorFor(u.nome || u.email || "?") }}>
                   {u.photo ? <img src={u.photo} alt="" className="w-full h-full object-cover" /> : <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(u.nome || "?")}</span>}
@@ -97,6 +112,12 @@ function AdminScreen({ onBack }) {
                 <div className="flex-1 min-w-0">
                   <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px] truncate">{u.nome || "Sem nome"}</p>
                   <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px] truncate">{u.email}</p>
+                  {u.possuiCarro && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Car size={10} color="#3B6D8A" />
+                      <span style={{ fontFamily: "IBM Plex Mono", color: "#3B6D8A" }} className="text-[10px]">{u.placa || "sem placa informada"}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   {u.role === "master" && (

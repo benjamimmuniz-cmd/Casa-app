@@ -4,6 +4,7 @@ import {
   BellOff,
   CalendarDays,
   Camera,
+  Car,
   Check,
   MessageCircle,
   Moon,
@@ -27,6 +28,8 @@ function PerfilScreen({ onBack, onLogout }) {
   const [bioDraft, setBioDraft] = useState(user.bio);
   const [editingProfissao, setEditingProfissao] = useState(false);
   const [profissaoDraft, setProfissaoDraft] = useState(user.profissao);
+  const [editingPlaca, setEditingPlaca] = useState(false);
+  const [placaDraft, setPlacaDraft] = useState(user.placa);
 
   const saveName = () => {
     const trimmed = nameDraft.trim();
@@ -42,6 +45,11 @@ function PerfilScreen({ onBack, onLogout }) {
   const saveProfissao = () => {
     user.setProfissao(profissaoDraft.trim());
     setEditingProfissao(false);
+  };
+
+  const savePlaca = () => {
+    user.setPlaca(placaDraft.trim().toUpperCase());
+    setEditingPlaca(false);
   };
 
   const handlePhotoPick = (e) => {
@@ -195,9 +203,57 @@ function PerfilScreen({ onBack, onLogout }) {
               )}
             </div>
           </div>
+          <div className="flex items-center gap-3" style={{ borderTop: "1px solid var(--c-divider)", paddingTop: 12 }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#3B6D8A1E" }}>
+              <Car size={15} color="#3B6D8A" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Possui carro?</p>
+              <div className="flex gap-2 mt-1">
+                <button onClick={() => user.setPossuiCarro(true)}
+                  className="px-3 py-1 rounded-full text-[11.5px] font-semibold"
+                  style={{ fontFamily: "Inter", background: user.possuiCarro ? "#3B6D8A" : "var(--c-bg)", color: user.possuiCarro ? "#FFFFFF" : "var(--c-muted)", border: "1px solid " + (user.possuiCarro ? "#3B6D8A" : "var(--c-border)") }}>
+                  Sim
+                </button>
+                <button onClick={() => user.setPossuiCarro(false)}
+                  className="px-3 py-1 rounded-full text-[11.5px] font-semibold"
+                  style={{ fontFamily: "Inter", background: !user.possuiCarro ? "#3B6D8A" : "var(--c-bg)", color: !user.possuiCarro ? "#FFFFFF" : "var(--c-muted)", border: "1px solid " + (!user.possuiCarro ? "#3B6D8A" : "var(--c-border)") }}>
+                  Não
+                </button>
+              </div>
+            </div>
+          </div>
+          {user.possuiCarro && (
+            <div className="flex items-center gap-3" style={{ borderTop: "1px solid var(--c-divider)", paddingTop: 12 }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#3B6D8A1E" }}>
+                <Tag size={15} color="#3B6D8A" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Placa</p>
+                {editingPlaca ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input autoFocus value={placaDraft} onChange={e => setPlacaDraft(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === "Enter" && savePlaca()}
+                      placeholder="Ex: ABC1D23"
+                      maxLength={8}
+                      className="flex-1 min-w-0 outline-none px-2.5 py-1.5 rounded-lg text-[13px] uppercase"
+                      style={{ fontFamily: "IBM Plex Mono", background: "var(--c-bg)", color: "var(--c-text)", border: "1px solid var(--c-border)" }} />
+                    <button onClick={savePlaca} className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--c-accent)" }}>
+                      <Check size={12} color="#FFFFFF" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => { setPlacaDraft(user.placa); setEditingPlaca(true); }} className="flex items-center gap-1.5">
+                    <p style={{ fontFamily: "IBM Plex Mono", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">{user.placa || "Não informada"}</p>
+                    <Pencil size={11} color="var(--c-faint)" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10.5px] mt-3 leading-relaxed px-1">
-          ⓘ Sua profissão fica visível pra outros membros da igreja, caso alguém precise de um serviço que você oferece.
+          ⓘ Sua profissão fica visível pra outros membros da igreja, caso alguém precise de um serviço que você oferece. A placa fica guardada no seu cadastro pra ajudar a identificar o dono do carro, caso seja preciso no estacionamento.
         </p>
       </div>
 
