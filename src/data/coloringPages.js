@@ -126,4 +126,55 @@ export const COLORING_PAGES = [
       { id: "peixe", tag: "path", props: { d: "M195,175 Q220,158 242,175 Q220,192 195,175 Z" } },
     ],
   },
+  {
+    id: "cruz", title: "Cruz de Jesus", emoji: "✝️", groupIds: ["p", "m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "cruz", tag: "rect", props: { x: 130, y: 60, width: 40, height: 200, rx: 8 } },
+      { id: "cruz", tag: "rect", props: { x: 80, y: 110, width: 140, height: 40, rx: 8 } },
+    ],
+  },
+  {
+    id: "tabuas", title: "As tábuas da Lei", emoji: "📜", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "tabua", tag: "path", props: { d: "M70,120 A30,30 0 0 1 130,120 L130,240 L70,240 Z" } },
+      { id: "tabua", tag: "path", props: { d: "M170,120 A30,30 0 0 1 230,120 L230,240 L170,240 Z" } },
+      { id: "_linhas", tag: "path", locked: true, props: { d: "M80,150 L120,150 M180,150 L220,150 M80,170 L120,170 M180,170 L220,170 M80,190 L120,190 M180,190 L220,190", stroke: "#2B2B2B", "stroke-width": 4, fill: "none" } },
+    ],
+  },
+  {
+    id: "trombeta", title: "Trombeta de Jericó", emoji: "🎺", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "trombeta", tag: "path", props: { d: "M50,190 C60,120 110,70 200,60 L215,95 C140,105 100,145 90,200 Z" } },
+      { id: "_bocal", tag: "circle", locked: true, props: { cx: 205, cy: 78, r: 8, fill: "#2B2B2B" } },
+      { id: "_borda", tag: "ellipse", locked: true, props: { cx: 68, cy: 195, rx: 20, ry: 10, fill: "none", stroke: "#2B2B2B", "stroke-width": 4 } },
+    ],
+  },
+  {
+    id: "arvore-zaqueu", title: "A árvore de Zaqueu", emoji: "🌳", groupIds: ["p", "m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "tronco", tag: "rect", props: { x: 135, y: 170, width: 30, height: 90, rx: 6 } },
+      { id: "copa", tag: "circle", props: { cx: 150, cy: 130, r: 55 } },
+      { id: "copa", tag: "circle", props: { cx: 105, cy: 155, r: 38 } },
+      { id: "copa", tag: "circle", props: { cx: 195, cy: 155, r: 38 } },
+    ],
+  },
+  {
+    id: "cesta-moises", title: "Cestinha de Moisés", emoji: "🧺", groupIds: ["p"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "cesta", tag: "path", props: { d: "M85,160 L215,160 L200,215 C200,215 175,225 150,225 C125,225 100,215 100,215 Z" } },
+      { id: "_trama", tag: "path", locked: true, props: { d: "M95,182 L205,182", stroke: "#2B2B2B", "stroke-width": 4, fill: "none" } },
+      { id: "bebe", tag: "ellipse", props: { cx: 150, cy: 148, rx: 34, ry: 22 } },
+      { id: "_rosto", tag: "circle", locked: true, props: { cx: 150, cy: 140, r: 5, fill: "#2B2B2B" } },
+      { id: "agua", tag: "path", paint: "stroke", props: { d: "M20,240 Q60,222 100,240 T180,240 T260,240", fill: "none", "stroke-width": 6 } },
+    ],
+  },
+  {
+    id: "chamas", title: "Línguas de fogo", emoji: "🔥", groupIds: ["m", "g"], viewBox: "0 0 300 300",
+    shapes: [
+      { id: "chama", tag: "path", props: { d: "M90,90 C110,115 118,135 90,155 C62,135 70,115 90,90 Z" } },
+      { id: "chama", tag: "path", props: { d: "M150,60 C175,90 185,115 150,140 C115,115 125,90 150,60 Z" } },
+      { id: "chama", tag: "path", props: { d: "M210,90 C230,115 238,135 210,155 C182,135 190,115 210,90 Z" } },
+      { id: "_base", tag: "path", locked: true, props: { d: "M60,200 Q150,175 240,200", stroke: "#2B2B2B", "stroke-width": 5, fill: "none" } },
+    ],
+  },
 ];

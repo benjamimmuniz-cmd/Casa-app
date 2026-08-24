@@ -52,6 +52,42 @@ export const BIBLE_STORIES = [
     moral: "Quando a gente foge de Deus, Ele ainda assim cuida da gente e nos dá outra chance.",
     verse: "Jonas 1–2",
   },
+  {
+    id: "adao-eva", groupId: "p", emoji: "🌳", title: "Adão, Eva e o jardim lindo",
+    text: "Deus fez um jardim lindo, cheio de árvores frutíferas, flores coloridas e bichinhos de todo tipo, chamado Éden. Ali, Deus criou o primeiro homem, Adão, e disse que ele cuidaria daquele jardim maravilhoso. Deus viu que Adão precisava de uma companheira, então criou Eva, e os dois viviam felizes, conversando com Deus todos os dias, sem nenhum medo ou vergonha. Deus só pediu uma coisinha: que eles não comessem o fruto de uma árvore especial no meio do jardim. Só que um dia, Eva e depois Adão desobedeceram e comeram o fruto proibido, e ficaram tristes e envergonhados. Mesmo assim, Deus, com muito amor, não abandonou Adão e Eva — Ele já tinha um plano pra cuidar deles e de toda a sua família pra sempre.",
+    moral: "Mesmo quando a gente erra, o amor de Deus por nós nunca acaba.",
+    verse: "Gênesis 2–3",
+  },
+  {
+    id: "abraao-estrelas", groupId: "p", emoji: "✨", title: "Abraão e as estrelinhas do céu",
+    text: "Deus chamou um homem chamado Abraão e pediu pra ele deixar sua terra e sua família, e ir morar num lugar novo que Deus ia mostrar pra ele. Abraão confiou em Deus e obedeceu, mesmo sem saber exatamente pra onde estava indo. Deus prometeu que Abraão teria muitos, muitos filhos e netos — uma família enorme! Só que Abraão e sua esposa Sara já eram bem velhinhos e não tinham nenhum filho ainda. Uma noite, Deus levou Abraão pra fora da tenda e disse: \"Olhe para o céu e conte as estrelas, se você conseguir — assim será a sua descendência!\" Abraão acreditou na promessa de Deus, e com o tempo, Deus cumpriu tudo direitinho, dando a Abraão e Sara um filho muito especial.",
+    moral: "Deus sempre cumpre o que promete, mesmo quando parece impossível pra gente.",
+    verse: "Gênesis 12, 15, 21",
+  },
+  {
+    id: "rute-noemi", groupId: "p", emoji: "🌾", title: "Rute e sua amiga Noemi",
+    text: "Rute era uma moça que amava muito sua sogra, Noemi, e as duas passaram por um tempo bem triste, perdendo pessoas queridas da família. Noemi decidiu voltar pra sua terra natal, e disse pra Rute que ela era livre pra voltar pra família dela também. Mas Rute, com um coração cheio de amor e lealdade, disse: \"Não me peça para deixar você, porque aonde você for, eu irei; o seu povo será o meu povo, e o seu Deus será o meu Deus.\" As duas viajaram juntas, e Rute trabalhava recolhendo espigas de trigo nos campos pra elas terem o que comer. Deus cuidou de Rute e Noemi, e Rute encontrou um homem bondoso chamado Boaz, que se casou com ela e cuidou das duas com muito carinho.",
+    moral: "A amizade de verdade fica pertinho da gente até nos momentos mais difíceis.",
+    verse: "Rute 1–4",
+  },
+  {
+    id: "samuel-ouve", groupId: "p", emoji: "👂", title: "Samuel ouve a voz de Deus",
+    text: "Samuel era um menino que morava no templo, ajudando um sacerdote idoso chamado Eli a cuidar das coisas de Deus. Numa noite, enquanto Samuel dormia, ele ouviu uma voz chamando seu nome: \"Samuel, Samuel!\" Ele correu até Eli, pensando que era ele quem tinha chamado, mas Eli disse que não tinha sido ele. Isso aconteceu mais duas vezes, até que Eli entendeu que era o próprio Deus chamando o menino, e ensinou Samuel a responder: \"Fala, Senhor, que o teu servo está ouvindo.\" Da próxima vez que a voz chamou, Samuel respondeu do jeitinho que Eli tinha ensinado, e Deus começou a falar com ele. Samuel cresceu e se tornou um grande profeta, que sempre ouvia e obedecia a voz de Deus.",
+    moral: "Deus gosta de falar com a gente, e é importante aprender a escutar com o coração.",
+    verse: "1 Samuel 3",
+  },
+  {
+    id: "pedro-anda-agua", groupId: "p", emoji: "🌊", title: "Pedro anda sobre a água",
+    text: "Uma noite, os discípulos estavam no barco no meio do lago, enquanto Jesus tinha ficado na montanha orando sozinho. Bem tarde da noite, os discípulos viram alguém andando por cima da água, vindo na direção deles, e ficaram morrendo de medo, achando que era um fantasma! Mas era Jesus, que disse: \"Tenham coragem, sou eu, não tenham medo.\" Pedro, cheio de empolgação, gritou: \"Senhor, se é o senhor mesmo, mande que eu vá até aí andando sobre a água!\" Jesus disse \"venha\", e Pedro, incrivelmente, desceu do barco e começou a andar sobre a água também! Mas quando Pedro olhou pro vento forte, ficou com medo e começou a afundar — Jesus, na mesma hora, esticou a mão e o segurou, dizendo: \"Por que você duvidou?\"",
+    moral: "Quando a gente olha pra Jesus e confia Nele, Ele nos ajuda mesmo nas horas de medo.",
+    verse: "Mateus 14:22-33",
+  },
+  {
+    id: "cego-bartimeu", groupId: "p", emoji: "👀", title: "Jesus cura o cego Bartimeu",
+    text: "Bartimeu era um homem cego que ficava sentado à beira do caminho, perto da cidade de Jericó, pedindo esmolas pra sobreviver. Quando ele ouviu que Jesus estava passando por ali com uma multidão enorme, começou a gritar bem alto: \"Jesus, filho de Davi, tenha piedade de mim!\" Muitas pessoas mandaram ele ficar quieto, mas Bartimeu gritou ainda mais forte, sem desistir. Jesus parou tudo e disse: \"Chamem ele aqui.\" Bartimeu, cheio de alegria, jogou fora sua capa e correu até Jesus. Jesus perguntou: \"O que você quer que eu faça por você?\" E Bartimeu respondeu: \"Mestre, que eu possa ver!\" Na mesma hora, Jesus curou seus olhos, e Bartimeu, cheio de gratidão, passou a seguir Jesus pelo caminho, enxergando tudo pela primeira vez.",
+    moral: "Jesus escuta quem clama por Ele com fé, mesmo quando todo mundo manda a pessoa ficar quieta.",
+    verse: "Marcos 10:46-52",
+  },
 
   // 6–8 anos
   {
@@ -102,6 +138,42 @@ export const BIBLE_STORIES = [
     moral: "Deus dá muitas oportunidades pra gente obedecer, e Ele se alegra quando alguém muda de vida.",
     verse: "Jonas 1–3",
   },
+  {
+    id: "torre-babel", groupId: "m", emoji: "🏗️", title: "A Torre de Babel",
+    text: "Depois do dilúvio, todas as pessoas do mundo falavam a mesma língua e viviam juntas numa mesma região. Um dia, elas decidiram construir uma cidade com uma torre gigantesca, tão alta que chegasse até o céu, pra ficarem famosas e não se espalharem pela terra como Deus tinha planejado. Deus viu aquele projeto cheio de orgulho e decidiu confundir a língua daquele povo, fazendo com que, de repente, cada grupo começasse a falar um idioma diferente. Sem conseguir se entender mais, os construtores não puderam continuar a obra, e a torre ficou pela metade. As pessoas então se espalharam por toda a terra, formando os diferentes povos e línguas que existem até hoje. Esse lugar ficou conhecido como Babel, que quer dizer \"confusão.\"",
+    moral: "Os planos de Deus são sempre melhores que os nossos próprios planos de orgulho e fama.",
+    verse: "Gênesis 11:1-9",
+  },
+  {
+    id: "sansao", groupId: "m", emoji: "💪", title: "Sansão, o homem forte",
+    text: "Sansão nasceu numa família que dedicou sua vida a Deus desde bebê, e Deus deu a ele uma força física incrível, muito maior que qualquer outro homem. Sansão usava essa força pra proteger o povo de Israel dos inimigos filisteus, fazendo coisas impressionantes, como derrubar um leão só com as mãos. Uma das regras que Sansão precisava seguir era nunca cortar o cabelo, como sinal da sua dedicação a Deus. Só que Sansão se apaixonou por uma mulher chamada Dalila, que foi convencida pelos inimigos a descobrir o segredo da força dele. Depois de insistir bastante, Dalila descobriu o segredo do cabelo e, enquanto Sansão dormia, mandou cortar seus cabelos, fazendo ele perder a força. Mesmo depois desse erro, Deus deu a Sansão uma última chance, e ele usou sua força de volta pra realizar um grande feito final contra os inimigos do povo de Deus.",
+    moral: "Os dons que Deus nos dá devem ser usados com responsabilidade e obediência a Ele.",
+    verse: "Juízes 13–16",
+  },
+  {
+    id: "ester", groupId: "m", emoji: "👑", title: "Ester salva seu povo",
+    text: "Ester era uma jovem judia que, sem esperar, acabou se tornando rainha de um grande império, escondendo que fazia parte do povo de Deus. Um homem poderoso do reino, chamado Hamã, ficou com muito ódio dos judeus e conseguiu que o rei assinasse uma lei terrível, permitindo que todo o povo judeu fosse destruído num certo dia. Mardoqueu, primo de Ester que a tinha criado, pediu pra ela falar com o rei e pedir ajuda pro seu povo, mesmo sendo arriscado entrar na presença do rei sem ser chamada. Ester, com muita coragem, disse: \"Se eu tiver que morrer, que morra\", e decidiu ir falar com o rei mesmo assim, depois de jejuar e orar bastante. O rei recebeu Ester com bondade, e ela, com sabedoria, revelou o plano maligno de Hamã bem na hora certa. O rei cancelou a lei terrível, e o povo de Deus foi salvo, tudo por causa da coragem de uma jovem rainha.",
+    moral: "Deus pode usar a coragem de uma só pessoa pra salvar muita, muita gente.",
+    verse: "Ester 1–9",
+  },
+  {
+    id: "gideao", groupId: "m", emoji: "🏺", title: "Gideão e os 300 soldados",
+    text: "O povo de Israel estava sendo atacado por um exército inimigo enorme, e Deus escolheu um homem chamado Gideão, que se achava fraco e pequeno, pra libertar o povo. Gideão juntou um exército de 32 mil soldados, mas Deus disse que era gente demais — pra ficar bem claro que a vitória viria de Deus, não da força humana. Deus foi diminuindo o exército aos poucos, até sobrar só 300 homens! Com uma estratégia bem diferente, Gideão deu a cada um dos 300 soldados uma trombeta e um jarro de barro escondendo uma tocha acesa. No meio da noite, ao sinal de Gideão, todos os 300 soldados quebraram os jarros ao mesmo tempo, mostrando as tochas acesas, tocaram as trombetas e gritaram bem alto. O exército inimigo, assustado e confuso no escuro, entrou em pânico e fugiu, dando a vitória pro povo de Deus.",
+    moral: "Deus não precisa que a gente seja forte ou numeroso — Ele só precisa da nossa obediência e confiança.",
+    verse: "Juízes 6–7",
+  },
+  {
+    id: "paralitico", groupId: "m", emoji: "🛏️", title: "Os amigos que desceram pelo telhado",
+    text: "Um homem que não conseguia andar tinha quatro amigos muito dedicados, que decidiram levá-lo até Jesus pra ele ser curado. Só que quando chegaram na casa onde Jesus estava ensinando, tinha tanta gente que não conseguiram nem chegar perto da porta. Sem desistir, os quatro amigos tiveram uma ideia criativa: subiram no telhado da casa, abriram um buraco bem no teto, e desceram o amigo paralítico deitado numa maca, bem na frente de Jesus! Jesus, vendo a fé enorme daqueles amigos, disse pro homem que seus pecados estavam perdoados, e depois disse: \"Levante-se, pegue sua maca e vá para casa.\" Na mesma hora, diante de todo mundo, o homem se levantou, andando normalmente, e todos ficaram maravilhados, louvando a Deus por aquele milagre incrível.",
+    moral: "A fé de bons amigos pode ajudar a gente a chegar mais perto de Jesus.",
+    verse: "Marcos 2:1-12",
+  },
+  {
+    id: "transfiguracao", groupId: "m", emoji: "🌟", title: "A transfiguração de Jesus",
+    text: "Jesus levou três discípulos, Pedro, Tiago e João, pra subir com Ele numa montanha bem alta pra orar. Enquanto Jesus orava, algo incrível aconteceu diante dos olhos dos discípulos: o rosto de Jesus começou a brilhar como o sol, e suas roupas ficaram brancas e resplandecentes como a luz. De repente, apareceram dois grandes homens da história do povo de Deus, Moisés e Elias, conversando com Jesus sobre tudo que estava por vir. Pedro, maravilhado e sem saber bem o que dizer, sugeriu construir três tendas ali mesmo pra ficarem. Enquanto ele ainda falava, uma nuvem brilhante os cobriu, e uma voz do céu disse: \"Este é o meu Filho amado, em quem me agrado; ouçam-no.\" Quando a nuvem se foi, só Jesus estava ali com eles, e os discípulos desceram da montanha maravilhados com o que tinham visto.",
+    moral: "Jesus é realmente o Filho de Deus, e devemos ouvir e seguir o que Ele ensina.",
+    verse: "Mateus 17:1-9",
+  },
 
   // 9–12 anos
   {
@@ -151,6 +223,42 @@ export const BIBLE_STORIES = [
     text: "O rei Saul, cheio de inveja e medo de perder seu trono, começou a perseguir Davi por muitos anos, tentando prendê-lo, mesmo Davi nunca tendo feito nada de errado contra ele. Numa noite, Davi e seus homens encontraram Saul dormindo profundamente numa caverna, completamente indefeso, bem na frente deles. Os homens de Davi disseram: \"essa é a sua chance, Deus colocou seu inimigo nas suas mãos!\" Mas Davi, mesmo podendo se vingar facilmente, recusou-se a machucar o rei, dizendo que não era certo levantar a mão contra alguém que Deus tinha escolhido pra governar. Davi apenas cortou um pedacinho da capa de Saul, como prova de que poderia tê-lo alcançado, mas não quis. Depois, de uma distância segura, Davi mostrou o pedaço da capa pra Saul, provando sua lealdade e seu coração de perdão, o que deixou o próprio rei emocionado e reconhecendo que Davi era melhor do que ele.",
     moral: "Confiar em Deus significa também saber esperar por Ele, em vez de se vingar por conta própria.",
     verse: "1 Samuel 24",
+  },
+  {
+    id: "salomao-sabedoria", groupId: "g", emoji: "🧠", title: "Salomão pede sabedoria",
+    text: "Quando Salomão se tornou rei de Israel, ainda bem jovem, ele sabia que tinha uma responsabilidade enorme pela frente. Numa noite, Deus apareceu pra ele num sonho e disse: \"Peça o que você quiser, e eu darei a você.\" A maioria das pessoas talvez pedisse riquezas, fama ou uma vida longa, mas Salomão pediu algo diferente: um coração sábio, capaz de entender e governar bem o povo de Deus. Deus ficou tão contente com esse pedido que não só deu a Salomão uma sabedoria incrível, maior que a de qualquer outra pessoa, como também lhe deu riquezas e honra, mesmo sem ele ter pedido. Com o tempo, a fama da sabedoria de Salomão se espalhou por muitos reinos, e pessoas de terras distantes viajavam só pra ouvir os conselhos sábios que ele dava. Salomão usou essa sabedoria pra julgar com justiça e construir um templo lindo dedicado a Deus.",
+    moral: "Quando a gente busca primeiro o que realmente importa pra Deus, Ele cuida do resto também.",
+    verse: "1 Reis 3",
+  },
+  {
+    id: "job", groupId: "g", emoji: "🙏", title: "Jó permanece fiel",
+    text: "Jó era um homem que amava profundamente a Deus, e tinha uma família grande, muitos bens e uma vida cheia de bênçãos. Só que, num período muito difícil, Jó perdeu quase tudo que tinha: seus animais, sua riqueza, e até seus filhos, um atrás do outro, além de ficar gravemente doente. Seus amigos vieram visitá-lo, mas em vez de consolar, ficaram tentando explicar por que aquilo estava acontecendo, achando que Jó tinha feito algo de muito errado. Mesmo sem entender o motivo de tanto sofrimento, Jó continuou confiando em Deus, dizendo: \"O Senhor deu, e o Senhor tirou; bendito seja o nome do Senhor.\" Depois de um longo tempo, Deus finalmente falou com Jó, mostrando o quão grande e sábio Ele é, muito além do que qualquer pessoa consegue compreender totalmente. No final, Deus abençoou Jó ainda mais do que antes, restaurando tudo que ele tinha perdido.",
+    moral: "Mesmo quando não entendemos o motivo do sofrimento, podemos continuar confiando que Deus é bom.",
+    verse: "Jó 1–42",
+  },
+  {
+    id: "dez-mandamentos", groupId: "g", emoji: "📜", title: "Moisés recebe os dez mandamentos",
+    text: "Depois que o povo de Deus saiu do Egito, eles viajaram pelo deserto até chegar num monte chamado Sinai. Deus chamou Moisés pra subir até o topo da montanha, e ali, em meio a trovões, relâmpagos e uma nuvem espessa, Deus falou com Moisés e deu a ele dez leis importantes pra guiar a vida do povo — os Dez Mandamentos. Essas leis ensinavam o povo a amar a Deus acima de tudo, a não ter outros ídolos, a descansar num dia da semana, a honrar os pais, e a tratar bem uns aos outros, sem mentir, roubar ou invejar o que não era seu. Deus escreveu esses mandamentos em duas tábuas de pedra, com seu próprio poder. Quando Moisés desceu da montanha e mostrou as tábuas ao povo, todos prometeram seguir aquelas leis, porque entenderam que eram um presente de Deus pra ajudá-los a viver bem e em paz uns com os outros.",
+    moral: "As regras de Deus não são pra nos prender, mas pra nos ensinar a viver com amor e respeito.",
+    verse: "Êxodo 19–20",
+  },
+  {
+    id: "ultima-ceia", groupId: "g", emoji: "🍞", title: "A última ceia",
+    text: "Pouco antes de ser preso, Jesus se reuniu com seus doze discípulos numa sala pra celebrar uma refeição especial, chamada de última ceia. Durante o jantar, Jesus surpreendeu todo mundo ao se levantar, pegar uma bacia com água e começar a lavar os pés de cada discípulo — uma tarefa que normalmente era feita pelos servos mais humildes. Depois, Jesus pegou o pão, deu graças, partiu em pedaços e disse: \"Isto é o meu corpo, entregue por vocês; façam isto em memória de mim.\" Em seguida, pegou um cálice de vinho e disse: \"Este cálice é a nova aliança no meu sangue, derramado por vocês.\" Jesus estava explicando, de um jeito simples e profundo, que Ele ia entregar sua vida por amor a todos. Aquela refeição se tornou um dos momentos mais lembrados por todos que seguem Jesus até hoje, celebrado em igrejas ao redor do mundo inteiro.",
+    moral: "Jesus nos ensinou que amar de verdade é estar disposto a servir e se entregar pelo outro.",
+    verse: "Mateus 26:17-30 / Lucas 22:7-20",
+  },
+  {
+    id: "maria-marta", groupId: "g", emoji: "🏡", title: "Maria e Marta",
+    text: "Jesus era muito próximo de uma família formada por duas irmãs, Marta e Maria, e um irmão chamado Lázaro, que moravam numa cidade chamada Betânia. Numa visita, Marta ficou correndo de um lado pro outro, ocupadíssima preparando tudo pra receber Jesus muito bem em sua casa. Enquanto isso, Maria, sua irmã, simplesmente sentou aos pés de Jesus, prestando atenção em cada palavra que Ele ensinava. Marta, cansada e um pouco frustrada, foi até Jesus e perguntou: \"Não se importa que minha irmã me deixou fazer tudo sozinha? Diga a ela para me ajudar.\" Jesus respondeu com gentileza: \"Marta, Marta, você anda ansiosa e preocupada com tantas coisas, mas só uma é realmente necessária, e Maria escolheu a parte boa, que não lhe será tirada.\" Jesus não estava dizendo que trabalhar era errado, mas que passar tempo aprendendo e estando perto Dele é o mais importante de tudo.",
+    moral: "No meio da correria da vida, separar um tempo pra estar perto de Deus é sempre a melhor escolha.",
+    verse: "Lucas 10:38-42",
+  },
+  {
+    id: "armadura-de-deus", groupId: "g", emoji: "🛡️", title: "A armadura de Deus",
+    text: "O apóstolo Paulo, escrevendo uma carta pra igreja de Éfeso, usou uma comparação muito interessante pra explicar como a vida cristã pode ser como uma batalha espiritual. Ele disse que devemos nos vestir com toda a armadura de Deus, pra ficar firmes contra as dificuldades que enfrentamos. Paulo descreveu cada peça: o cinturão da verdade, apertado firme na cintura; a couraça da justiça, protegendo o coração; os pés calçados com a disposição de anunciar o evangelho da paz; o escudo da fé, capaz de apagar as flechas do mal; o capacete da salvação, protegendo a mente; e a espada do Espírito, que é a Palavra de Deus. Paulo também lembrou da importância de orar sempre, em todas as ocasiões, pedindo força a Deus. Assim como um soldado bem equipado enfrenta a batalha com confiança, um cristão bem preparado com a Palavra de Deus e a oração pode enfrentar qualquer dificuldade com coragem.",
+    moral: "Deus nos dá tudo que precisamos — verdade, fé, paz e sua Palavra — pra enfrentarmos os desafios da vida.",
+    verse: "Efésios 6:10-18",
   },
 ];
 
