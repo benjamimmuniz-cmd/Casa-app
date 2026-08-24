@@ -11,6 +11,7 @@ import { doc, getDoc, updateDoc, deleteDoc, deleteField, collection, query, wher
 import { auth, db } from "./firebase.js";
 import { FeedContext, UserContext, StoryContext, ConnectionsContext, NotificationsContext, ShortsContext, LiveContext, ThemeContext, ChatUnreadContext, UsersDirectoryContext, ProfileNavContext } from "./context/contexts.js";
 import { loadTheme, saveTheme } from "./utils/themeStore.js";
+import { loadTextLarge, saveTextLarge } from "./utils/textSizeStore.js";
 import { timeAgo } from "./utils/helpers.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
@@ -30,6 +31,7 @@ const DiscipuladoScreen = React.lazy(() => import("./screens/DiscipuladoScreen.j
 const EnquetesScreen = React.lazy(() => import("./screens/EnquetesScreen.jsx"));
 const EscalaScreen = React.lazy(() => import("./screens/EscalaScreen.jsx"));
 const TransitoScreen = React.lazy(() => import("./screens/TransitoScreen.jsx"));
+const DiretorioScreen = React.lazy(() => import("./screens/DiretorioScreen.jsx"));
 const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
 const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
 const FeedScreen = React.lazy(() => import("./screens/FeedScreen.jsx"));
@@ -302,6 +304,9 @@ function App() {
   const [theme, setThemeState] = useState(loadTheme);
   const setTheme = (t) => { setThemeState(t); saveTheme(t); };
 
+  const [textLarge, setTextLargeState] = useState(loadTextLarge);
+  const setTextLarge = (v) => { setTextLargeState(v); saveTextLarge(v); };
+
   const [storeProducts, setStoreProducts] = useState([]);
   const [cantinaProducts, setCantinaProducts] = useState([]);
   useEffect(() => {
@@ -449,8 +454,8 @@ function App() {
           <ChatUnreadContext.Provider value={{ hasUnread: chatHasUnread }}>
           <NotificationsContext.Provider value={{ notifications, markAllRead: markAllNotificationsRead, addNotification }}>
           <LiveContext.Provider value={{ liveActive, setLiveActive }}>
-          <ThemeContext.Provider value={{ theme, setTheme }}>
-          <div className="flex flex-col h-full">
+          <ThemeContext.Provider value={{ theme, setTheme, textLarge, setTextLarge }}>
+          <div className="flex flex-col h-full" style={{ zoom: textLarge ? 1.1 : 1 }} data-text-large={textLarge ? "" : undefined}>
             <React.Suspense fallback={<div className="flex-1" style={{ background: "var(--c-bg)" }} />}>
             {openTile === "biblia" || (tab === "biblia" && !openTile) ? (
               <BibliaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
@@ -510,6 +515,8 @@ function App() {
               <AmigosScreen initialTab="solicitacoes" onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "aniversariantes" || (tab === "aniversariantes" && !openTile) ? (
               <AniversariantesScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "diretorio" || (tab === "diretorio" && !openTile) ? (
+              <DiretorioScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "notificacoes" ? (
               <NotificationsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "admin" ? (

@@ -14,7 +14,7 @@ export const ShortsContext = createContext({ shorts: [], addShort: () => {}, tog
 
 export const LiveContext = createContext({ liveActive: false, setLiveActive: () => {} });
 
-export const ThemeContext = createContext({ theme: "light", setTheme: () => {} });
+export const ThemeContext = createContext({ theme: "light", setTheme: () => {}, textLarge: false, setTextLarge: () => {} });
 
 export const UserContext = createContext({ uid: null, name: "Visitante", email: "", profissao: "", photo: null, bio: "", setPhoto: () => {}, setName: () => {}, setBio: () => {}, role: "member", notificacoesAtivas: true, setNotificacoesAtivas: () => {}, possuiCarro: false, placa: "", setPossuiCarro: () => {}, setPlaca: () => {} });
 

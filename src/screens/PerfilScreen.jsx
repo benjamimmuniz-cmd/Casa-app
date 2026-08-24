@@ -10,7 +10,8 @@ import {
   Moon,
   Pencil,
   Sun,
-  Tag
+  Tag,
+  Type as TextIcon,
 } from "lucide-react";
 import { UserContext, ThemeContext, FeedContext } from "../context/contexts.js";
 import { colorFor, fmtDateBR, initials } from "../utils/helpers.js";
@@ -18,7 +19,7 @@ import { compressImage } from "../utils/imageCompress.js";
 
 function PerfilScreen({ onBack, onLogout }) {
   const user = useContext(UserContext);
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { theme, setTheme, textLarge, setTextLarge } = useContext(ThemeContext);
   const { posts } = useContext(FeedContext);
   const myPosts = posts.filter(p => (p.authorUid ? p.authorUid === user.uid : p.author === user.name));
   const inputRef = React.useRef(null);
@@ -281,6 +282,27 @@ function PerfilScreen({ onBack, onLogout }) {
             <Moon size={15} /> Escuro
           </button>
         </div>
+      </div>
+
+      <div className="px-6 mb-6">
+        <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10px] uppercase tracking-wide font-semibold mb-2 px-1">Acessibilidade</p>
+        <button onClick={() => setTextLarge(!textLarge)}
+          className="w-full flex items-center gap-3 p-3.5 rounded-2xl"
+          style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: textLarge ? "var(--c-accent)" : "var(--c-bg)" }}>
+            <TextIcon size={16} color={textLarge ? "#FFFFFF" : "var(--c-faint)"} />
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">Texto grande</p>
+            <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[11px]">Deixa tudo maior e mais fácil de ler</p>
+          </div>
+          <div className="w-11 h-6 rounded-full flex items-center shrink-0 px-0.5 transition-colors"
+            style={{ background: textLarge ? "var(--c-accent)" : "var(--c-border)" }}>
+            <div className="w-5 h-5 rounded-full bg-white transition-transform"
+              style={{ transform: textLarge ? "translateX(20px)" : "translateX(0)" }} />
+          </div>
+        </button>
       </div>
 
       <div className="px-6 mb-6">
