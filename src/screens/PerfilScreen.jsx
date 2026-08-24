@@ -1,5 +1,7 @@
 import React, { useContext, useState } from "react";
 import {
+  Bell,
+  BellOff,
   CalendarDays,
   Camera,
   Check,
@@ -223,6 +225,29 @@ function PerfilScreen({ onBack, onLogout }) {
             <Moon size={15} /> Escuro
           </button>
         </div>
+      </div>
+
+      <div className="px-6 mb-6">
+        <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10px] uppercase tracking-wide font-semibold mb-2 px-1">Notificações</p>
+        <button onClick={() => user.setNotificacoesAtivas(!user.notificacoesAtivas)}
+          className="w-full flex items-center gap-3 p-3.5 rounded-2xl"
+          style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: user.notificacoesAtivas ? "var(--c-accent)" : "var(--c-bg)" }}>
+            {user.notificacoesAtivas
+              ? <Bell size={16} color="#FFFFFF" />
+              : <BellOff size={16} color="var(--c-faint)" />}
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">Receber notificações</p>
+            <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[11px]">Mensagens, chat e novidades da igreja</p>
+          </div>
+          <div className="w-11 h-6 rounded-full flex items-center shrink-0 px-0.5 transition-colors"
+            style={{ background: user.notificacoesAtivas ? "var(--c-accent)" : "var(--c-border)" }}>
+            <div className="w-5 h-5 rounded-full bg-white transition-transform"
+              style={{ transform: user.notificacoesAtivas ? "translateX(20px)" : "translateX(0)" }} />
+          </div>
+        </button>
       </div>
 
       <div className="px-6 pb-8">

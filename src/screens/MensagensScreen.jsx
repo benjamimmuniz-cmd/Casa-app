@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { BookOpen, ChevronRight, Play, Plus, Search, Trash2, X } from "lucide-react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext, FeedContext, ProfileNavContext } from "../context/contexts.js";
 import { fmtDateBR } from "../utils/helpers.js";
@@ -55,13 +55,25 @@ function MensagensScreen({ mensagemId, onBack }) {
         addedByUid: me.uid, addedByName: me.name,
         createdAt: serverTimestamp(),
       });
+      const detalhes = [speaker && `pregação de ${speaker}`, newDate && fmtDateBR(newDate)].filter(Boolean).join(" · ");
       if (announceInFeed) {
-        const detalhes = [speaker && `pregação de ${speaker}`, newDate && fmtDateBR(newDate)].filter(Boolean).join(" · ");
         addPost({
           author: me.name, authorUid: me.uid,
           text: `🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`,
           image: youtubeThumbUrl(videoId), kind: "mensagem", mensagemId: docRef.id,
         }).catch(err => console.error("MENSAGEM_FEED_POST_ERR", err.code, err.message));
+
+        getDocs(collection(db, "users")).then(snap => {
+          const texto = `🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`;
+          snap.docs.forEach(d => {
+            if (d.id === me.uid) return;
+            const u = d.data();
+            if (u.notificacoesAtivas === false) return;
+            addDoc(collection(db, "notifications"), {
+              toUid: d.id, text: texto, read: false, createdAt: serverTimestamp(),
+            }).catch(() => {});
+          });
+        }).catch(err => console.error("MENSAGEM_BROADCAST_ERR", err.code, err.message));
       }
       setNewUrl(""); setNewTitle(""); setNewSpeaker(""); setNewDate("");
       setShowAdd(false);
@@ -218,8 +230,8 @@ function MensagensScreen({ mensagemId, onBack }) {
               <input type="checkbox" checked={announceInFeed} onChange={e => setAnnounceInFeed(e.target.checked)}
                 className="w-4 h-4 rounded shrink-0" style={{ accentColor: "#000000" }} />
               <span>
-                <span style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] block">Avisar no Feed</span>
-                <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] block mt-0.5">Publica um post avisando que a mensagem já tá disponível, com link direto pra cá.</span>
+                <span style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] block">Avisar no Feed e notificar</span>
+                <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] block mt-0.5">Publica um post no Feed e manda notificação pra quem tiver com notificações ativas.</span>
               </span>
             </label>
 

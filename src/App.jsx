@@ -266,7 +266,7 @@ function App() {
     let firstLoad = true;
     const q = query(collection(db, "notifications"), where("toUid", "==", currentUser.uid));
     const unsub = onSnapshot(q, snap => {
-      if (!firstLoad && window.Notification && Notification.permission === "granted" && document.visibilityState !== "visible") {
+      if (!firstLoad && window.Notification && Notification.permission === "granted" && document.visibilityState !== "visible" && currentUser?.notificacoesAtivas !== false) {
         snap.docChanges().forEach(change => {
           if (change.type === "added") {
             const data = change.doc.data();
@@ -396,6 +396,14 @@ function App() {
     }
   };
 
+  const updateNotificacoesAtivas = (ativas) => {
+    setCurrentUser(prev => prev ? { ...prev, notificacoesAtivas: ativas } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { notificacoesAtivas: ativas, role: currentUser.role || "member" })
+        .catch(err => console.error("NOTIF_PREF_SAVE_ERR", err.code, err.message));
+    }
+  };
+
   const handleLogout = () => {
     signOut(auth);
     setTab("inicio");
@@ -413,7 +421,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
