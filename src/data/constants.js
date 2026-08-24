@@ -73,6 +73,7 @@ export const TILES = [
 
 export const MENU_GROUPS = [
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
+  { label: "Crianças", ids: ["infantil"] },
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
@@ -81,7 +82,6 @@ export const MENU_GROUPS = [
   { label: "Organização", ids: ["calendario", "enquetes", "escala"] },
   { label: "Missão", ids: ["evangelismo"] },
   { label: "Boas-vindas", ids: ["sounovo", "novoconvertido"] },
-  { label: "Crianças", ids: ["infantil"] },
 ];
 
 export const TAB_LABELS = {
