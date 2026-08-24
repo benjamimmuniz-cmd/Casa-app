@@ -20,7 +20,7 @@ import {
 import { collection, query, where, onSnapshot, addDoc, getDocs, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, initials } from "../utils/helpers.js";
+import { colorFor, initials, isStaffRole } from "../utils/helpers.js";
 import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
 import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
@@ -61,7 +61,7 @@ function InfantilScreen({ onBack }) {
   const [checkinSearch, setCheckinSearch] = useState("");
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [confirmCheckoutFor, setConfirmCheckoutFor] = useState(null);
-  const isStaff = me.role === "master";
+  const isStaff = isStaffRole(me.role);
   const TABS = isStaff ? [...BASE_TABS, CHECKIN_TAB] : BASE_TABS;
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);

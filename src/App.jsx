@@ -461,15 +461,6 @@ function App() {
     }
   };
 
-  // TEMPORÁRIO: botão de autopromoção a admin, pra não precisar editar o
-  // Firestore Console na mão. Remover depois que a regra "kids"/"users" for
-  // fechada de novo — ver PerfilScreen.jsx.
-  const becomeMaster = () => {
-    if (!currentUser?.uid) return Promise.reject(new Error("sem usuário"));
-    return updateDoc(doc(db, "users", currentUser.uid), { role: "master" })
-      .then(() => setCurrentUser(prev => prev ? { ...prev, role: "master" } : prev));
-  };
-
   const handleLogout = () => {
     signOut(auth);
     setTab("inicio");
@@ -487,7 +478,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca, becomeMaster }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>

@@ -1,5 +1,14 @@
 import { AVATAR_COLORS, CATEGORIES } from "../data/constants.js";
 
+// Cargos: "member" (padrão) não tem acesso a nada especial; "junta" e
+// "lideranca" liberam o Painel de cadastros e o Check-in da Área Infantil.
+// "master" é o valor legado (setado antes de existir "lideranca") — continua
+// valendo pra não travar quem já tinha esse cargo.
+export const ROLE_LABELS = { member: "Membro", junta: "Junta", lideranca: "Liderança", master: "Liderança" };
+export function isStaffRole(role) {
+  return role === "junta" || role === "lideranca" || role === "master";
+}
+
 export function fmtDateBR(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");

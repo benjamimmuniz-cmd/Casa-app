@@ -12,7 +12,7 @@ import {
   X
 } from "lucide-react";
 import { FeedContext, UserContext, NotificationsContext, ConnectionsContext, LiveContext, ChatUnreadContext } from "../context/contexts.js";
-import { visiblePosts } from "../utils/helpers.js";
+import { visiblePosts, isStaffRole } from "../utils/helpers.js";
 import { KIND_LABELS, MENU_GROUPS, TILES } from "../data/constants.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import StoriesRow from "../components/StoriesRow.jsx";
@@ -220,7 +220,7 @@ function HomeScreen({ onOpenTile }) {
                   </div>
                   <span style={{ fontFamily: "Inter", color: "var(--c-text)" }} className="text-[13px]">Perfil</span>
                 </button>
-                {me.role === "master" && (
+                {isStaffRole(me.role) && (
                   <button onClick={() => { setShowMenu(false); onOpenTile("admin"); }}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left active:scale-[0.98] transition-transform">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#3E5FBF1E" }}>
