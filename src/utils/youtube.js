@@ -25,3 +25,10 @@ export function youtubeEmbedUrl(videoId) {
   });
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
+
+// Embed normal, com controles e sem autoplay/loop/mudo — pra video mais longo
+// que a pessoa assiste de proposito (mensagens/pregacoes), diferente do Shorts.
+export function youtubeWatchEmbedUrl(videoId) {
+  const params = new URLSearchParams({ modestbranding: "1", playsinline: "1", rel: "0" });
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+}

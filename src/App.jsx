@@ -40,6 +40,7 @@ const AniversariantesScreen = React.lazy(() => import("./screens/Aniversariantes
 const StoreScreen = React.lazy(() => import("./screens/StoreScreen.jsx"));
 const TransmissaoScreen = React.lazy(() => import("./screens/TransmissaoScreen.jsx"));
 const ShortsScreen = React.lazy(() => import("./screens/ShortsScreen.jsx"));
+const MensagensScreen = React.lazy(() => import("./screens/MensagensScreen.jsx"));
 const OfertasDizimosScreen = React.lazy(() => import("./screens/OfertasDizimosScreen.jsx"));
 const DoacoesScreen = React.lazy(() => import("./screens/DoacoesScreen.jsx"));
 const LocalizacaoScreen = React.lazy(() => import("./screens/LocalizacaoScreen.jsx"));
@@ -457,6 +458,8 @@ function App() {
               <TransmissaoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "shorts" || (tab === "shorts" && !openTile) ? (
               <ShortsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "mensagens" || (tab === "mensagens" && !openTile) ? (
+              <MensagensScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "ofertas" || (tab === "ofertas" && !openTile) ? (
               <OfertasDizimosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "doacoes" || (tab === "doacoes" && !openTile) ? (
