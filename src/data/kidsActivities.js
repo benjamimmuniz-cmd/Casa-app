@@ -112,6 +112,30 @@ export const BIBLE_STORIES = [
     moral: "Mesmo quando tudo parece perdido, Jesus tem poder pra trazer esperança e vida.",
     verse: "Marcos 5:21-43",
   },
+  {
+    id: "elias-corvos", groupId: "p", emoji: "🐦", title: "Elias alimentado pelos corvos",
+    text: "Numa época de muita seca, quando quase não chovia, Deus mandou o profeta Elias se esconder perto de um riachinho, longe de todo mundo. Deus tinha um jeito bem especial de cuidar de Elias: todas as manhãs e todas as tardes, uns corvos vinham voando e traziam pão e carne no bico, direto pra Elias comer! Elias bebia a água fresquinha do riacho e confiava que Deus ia continuar cuidando dele, mesmo num lugar tão desértico. Quando o riacho finalmente secou, Deus já tinha outro plano pronto pra cuidar de Elias em outro lugar. Deus sempre encontra um jeito de cuidar de quem confia Nele, até usando passarinhos pra isso!",
+    moral: "Deus tem sempre um jeito de cuidar da gente, mesmo quando parece impossível.",
+    verse: "1 Reis 17:1-6",
+  },
+  {
+    id: "peixe-moeda", groupId: "p", emoji: "🐟", title: "A moeda na boca do peixe",
+    text: "Um dia, uns cobradores de impostos perguntaram pro Pedro se Jesus pagava um certo imposto do templo. Pedro disse que sim, e foi contar pra Jesus. Jesus, com um sorriso, deu uma instrução bem diferente: pediu pra Pedro ir até o lago, jogar um anzol na água, e pegar o primeiro peixe que fisgasse. Pedro, mesmo achando estranho, obedeceu e foi pescar. Quando abriu a boca do peixinho que pegou, encontrou lá dentro uma moeda, do jeitinho exato de pagar o imposto de Jesus e de Pedro! Jesus mostrou, de um jeito bem criativo e surpreendente, que Ele tem poder sobre tudo, até sobre um peixinho no fundo do lago.",
+    moral: "Jesus cuida até dos detalhes pequenos da nossa vida, de formas surpreendentes.",
+    verse: "Mateus 17:24-27",
+  },
+  {
+    id: "jesus-templo-menino", groupId: "p", emoji: "📖", title: "O menino Jesus no templo",
+    text: "Todo ano, a família de Jesus viajava até Jerusalém pra celebrar uma festa importante. Quando Jesus tinha doze anos, depois da festa, Maria e José começaram a viagem de volta pra casa, achando que Jesus estava junto com os outros parentes. Só que, depois de andar um dia inteiro, perceberam que Jesus não estava lá! Voltaram correndo pra Jerusalém, super preocupados, e depois de três dias procurando, encontraram Jesus sentado no templo, conversando e fazendo perguntas pros mestres da lei, que ficavam maravilhados com sua sabedoria. Jesus disse que precisava estar cuidando das coisas do seu Pai. Depois disso, Jesus voltou pra casa com Maria e José, obediente, e continuou crescendo em sabedoria e no amor de Deus e das pessoas.",
+    moral: "Desde pequeno, Jesus já amava aprender e falar sobre as coisas de Deus.",
+    verse: "Lucas 2:41-52",
+  },
+  {
+    id: "servo-centuriao", groupId: "p", emoji: "🙏", title: "A fé do centurião",
+    text: "Um centurião, que era um líder de soldados romanos, tinha um servo que ele amava muito, mas o servo estava muito doente, quase morrendo. O centurião ouviu falar de Jesus e mandou uns amigos pedirem ajuda, porque ele mesmo achava que não merecia receber Jesus em sua casa. Ele mandou uma mensagem dizendo: \"Basta dizeres uma palavra, e o meu servo há de sarar. Eu também sou um homem debaixo de autoridade, e sei que quando mando fazer algo, é feito.\" Jesus ficou impressionado com aquela fé tão grande, e disse que nunca tinha visto uma fé assim em ninguém. Na mesma hora, à distância, sem nem precisar ir até lá, Jesus curou o servo, que ficou completamente bom!",
+    moral: "Jesus tem poder pra curar e ajudar, não importa a distância, quando confiamos Nele.",
+    verse: "Mateus 8:5-13",
+  },
 
   // 6–8 anos
   {
@@ -222,6 +246,30 @@ export const BIBLE_STORIES = [
     moral: "É importante lembrar sempre de agradecer a Deus pelas coisas boas que Ele faz por nós.",
     verse: "Lucas 17:11-19",
   },
+  {
+    id: "balaao-jumenta", groupId: "m", emoji: "🐴", title: "Balaão e a jumenta que falou",
+    text: "Um profeta chamado Balaão foi chamado por um rei inimigo pra amaldiçoar o povo de Deus, em troca de muito dinheiro. Deus não queria que Balaão fizesse isso, mas Balaão insistiu em ir mesmo assim, montado em sua jumenta. No meio do caminho, um anjo de Deus apareceu na estrada, com uma espada, mas só a jumenta conseguia ver! A jumenta parou de repente, se desviou e até se deitou no chão, deixando Balaão furioso, que bateu nela três vezes sem entender o motivo. Então Deus fez a jumenta falar, perguntando pra Balaão por que ele estava batendo nela depois de tantos anos de serviço fiel! Na mesma hora, Deus abriu os olhos de Balaão, que viu o anjo e entendeu que precisava só falar exatamente o que Deus mandasse — e, no final, em vez de amaldiçoar, Balaão abençoou o povo de Deus.",
+    moral: "Deus pode usar até os meios mais inesperados pra nos alertar e nos guiar pelo caminho certo.",
+    verse: "Números 22–24",
+  },
+  {
+    id: "raabe", groupId: "m", emoji: "🧵", title: "Raabe ajuda os espias",
+    text: "Antes de atacar a cidade de Jericó, o líder Josué mandou dois espias entrarem escondidos na cidade pra descobrir informações. Uma mulher chamada Raabe, que morava perto do muro da cidade, escondeu os dois espias em sua casa quando o rei mandou soldados procurá-los. Raabe já tinha ouvido sobre os grandes milagres que o Deus de Israel tinha feito, e decidiu confiar e ajudar o povo de Deus, mesmo arriscando sua própria vida. Em troca da ajuda, os espias prometeram que, quando a cidade fosse conquistada, a família de Raabe seria poupada, contanto que ela amarrasse um cordão vermelho na janela como sinal. Quando os muros de Jericó caíram, exatamente como prometido, Raabe e toda a sua família foram salvos, e ela se tornou parte importante da história do povo de Deus.",
+    moral: "A coragem de confiar em Deus pode transformar completamente a nossa história, não importa o nosso passado.",
+    verse: "Josué 2, 6",
+  },
+  {
+    id: "elias-carruagem-fogo", groupId: "m", emoji: "🔥", title: "Elias é levado ao céu",
+    text: "Chegou o momento em que Deus decidiu levar o profeta Elias direto pro céu, sem ele precisar morrer. Elias sabia que esse dia estava chegando, e seu discípulo Eliseu, que o amava muito, insistiu em ficar bem pertinho dele até o final, recusando se separar do seu mestre. Elias perguntou o que Eliseu gostaria de receber antes de partir, e Eliseu pediu uma porção dobrada do espírito que estava sobre Elias, pra poder continuar o trabalho dele. De repente, uma carruagem de fogo puxada por cavalos de fogo apareceu entre os dois, e um redemoinho forte levou Elias direto pro céu! Eliseu, vendo aquilo, gritou emocionado, pegou o manto que caiu de Elias, e a partir dali continuou a obra do seu mestre, cheio do mesmo poder de Deus.",
+    moral: "Deus recompensa quem é fiel e dedicado até o fim, e sua obra continua através de quem vem depois.",
+    verse: "2 Reis 2:1-14",
+  },
+  {
+    id: "boas-obras-tabita", groupId: "m", emoji: "🧵", title: "Tabita é ressuscitada",
+    text: "Tabita, também chamada de Dorcas, era uma mulher muito querida numa cidade chamada Jope, conhecida por fazer muitas boas obras e ajudar os pobres, costurando roupas pra quem precisava. Um dia, ela ficou muito doente e acabou morrendo, deixando todo mundo na cidade profundamente triste. Os discípulos, sabendo que o apóstolo Pedro estava numa cidade próxima, mandaram chamá-lo depressa. Quando Pedro chegou, encontrou várias viúvas chorando, mostrando as roupas que Tabita tinha feito pra elas com tanto carinho. Pedro pediu pra todos saírem do quarto, ajoelhou-se e orou, e depois disse: \"Tabita, levante-se!\" Pra surpresa e alegria de todos, Tabita abriu os olhos e se levantou, viva outra vez, e a notícia daquele milagre se espalhou por toda a região.",
+    moral: "Deus vê e valoriza as boas obras que fazemos por amor às outras pessoas.",
+    verse: "Atos 9:36-42",
+  },
 
   // 9–12 anos
   {
@@ -331,6 +379,30 @@ export const BIBLE_STORIES = [
     text: "No final da Bíblia, o apóstolo João, já bem idoso e exilado numa ilha, recebeu uma visão incrível de Deus sobre o futuro. Ele viu um novo céu e uma nova terra, e uma cidade linda e brilhante descendo do céu, chamada a Nova Jerusalém, preparada como uma noiva se prepara para o seu casamento. João ouviu uma voz forte dizendo: \"Eis que o tabernáculo de Deus está com os homens, e Deus habitará com eles; e ele enxugará dos seus olhos toda lágrima; não haverá mais morte, nem tristeza, nem choro, nem dor, porque as primeiras coisas já passaram.\" A cidade era descrita como algo magnífico, com ruas e portas maravilhosas, e nela não haveria mais necessidade de sol ou lua, porque a própria glória de Deus a iluminaria. Essa visão dá esperança a todos que confiam em Deus: um dia, tudo será restaurado e feito novo, sem dor e sem sofrimento, para sempre.",
     moral: "Deus promete um futuro cheio de esperança, onde toda dor e tristeza serão transformadas em alegria eterna.",
     verse: "Apocalipse 21",
+  },
+  {
+    id: "juizo-salomao", groupId: "g", emoji: "⚖️", title: "O julgamento sábio de Salomão",
+    text: "Duas mulheres foram até o rei Salomão com um problema muito difícil de resolver: as duas moravam na mesma casa, cada uma tinha tido um bebê havia poucos dias, mas um dos bebês tinha morrido durante a noite. Cada mulher afirmava, com toda convicção, que o bebê vivo era o seu filho, e ninguém mais tinha visto a verdade acontecer. Diante de um caso tão complicado, sem testemunhas, Salomão pediu uma espada e propôs algo chocante: cortar o bebê vivo ao meio e dar uma metade pra cada mulher. Uma das mulheres, desesperada, gritou: \"Não! Deem o bebê pra ela, mas não o matem!\", enquanto a outra concordou com a divisão. Salomão, com sua grande sabedoria, entendeu na hora que a mulher que preferiu perder o filho a vê-lo morto era a verdadeira mãe, cheia de amor, e entregou o bebê a ela.",
+    moral: "A verdadeira sabedoria enxerga além das aparências, direto no coração das pessoas.",
+    verse: "1 Reis 3:16-28",
+  },
+  {
+    id: "pedro-liberto-anjo", groupId: "g", emoji: "⛓️", title: "Pedro liberto da prisão",
+    text: "O apóstolo Pedro foi preso pelo rei Herodes, que queria persegui-lo, e ficou vigiado por dezesseis soldados, acorrentado entre dois deles, numa segurança máxima. A igreja, sabendo do perigo, se reuniu pra orar intensamente por Pedro durante toda aquela noite. Enquanto Pedro dormia, um anjo do Senhor apareceu, com uma luz brilhando na cela, e tocou no seu lado pra acordá-lo. As correntes caíram sozinhas das mãos de Pedro, e o anjo o guiou passando pelos guardas, que nem perceberam nada, até que o portão de ferro da prisão se abriu sozinho! Pedro, achando que estava tendo uma visão, só percebeu que era tudo real quando se viu sozinho na rua. Ele foi direto até a casa onde os cristãos estavam orando, e quando bateu na porta, todos ficaram maravilhados, mal acreditando que a oração deles tinha sido respondida daquele jeito.",
+    moral: "A oração da igreja tem poder, e Deus responde de formas surpreendentes.",
+    verse: "Atos 12:1-17",
+  },
+  {
+    id: "filipe-eunuco", groupId: "g", emoji: "📜", title: "Filipe e o eunuco etíope",
+    text: "Um anjo do Senhor apareceu pro evangelista Filipe e mandou ele ir por um caminho deserto, sem explicar muito o motivo. No caminho, Filipe encontrou um importante oficial etíope, responsável pelos tesouros de uma rainha, que estava voltando de uma viagem numa carruagem, lendo em voz alta um livro do profeta Isaías, sem entender bem o que estava lendo. O Espírito Santo disse pra Filipe se aproximar da carruagem, e Filipe perguntou se ele entendia o que estava lendo. O oficial respondeu: \"Como poderia entender, se ninguém me explica?\", e convidou Filipe pra subir e sentar ao seu lado. Filipe, começando exatamente daquela passagem, explicou as boas novas sobre Jesus. O oficial, tocado profundamente, pediu pra ser batizado ali mesmo, assim que viram água no caminho, e seguiu sua viagem cheio de alegria.",
+    moral: "Deus coloca pessoas no nosso caminho pra ajudar outros a entenderem sua Palavra.",
+    verse: "Atos 8:26-39",
+  },
+  {
+    id: "ana-oracao", groupId: "g", emoji: "🙏", title: "Ana ora por um filho",
+    text: "Ana era uma mulher que amava muito a Deus, mas vivia triste porque não conseguia ter filhos, algo que a fazia sofrer muito, ano após ano. Durante uma visita ao templo, Ana chorou e orou com tanta intensidade e angústia, em silêncio, movendo apenas os lábios, que o sacerdote Eli achou que ela estava embriagada. Ana explicou que estava apenas derramando seu coração diante de Deus, pedindo com toda sinceridade por um filho, e prometendo que, se Deus a atendesse, dedicaria a criança a Ele pra sempre. Eli a abençoou, dizendo que Deus concederia seu pedido, e pouco tempo depois, Ana realmente engravidou e teve um menino, a quem chamou de Samuel. Fiel à sua promessa, quando Samuel ainda era pequeno, Ana o levou pra servir no templo, confiando totalmente que Deus continuaria cuidando dele.",
+    moral: "Deus ouve as orações feitas com um coração sincero, mesmo nos momentos de maior angústia.",
+    verse: "1 Samuel 1",
   },
 ];
 
