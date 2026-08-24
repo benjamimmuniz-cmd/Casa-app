@@ -12,11 +12,12 @@ import {
   PartyPopper,
   PenLine,
   RotateCcw,
+  ShieldCheck,
   Sparkles,
   Users,
   X,
 } from "lucide-react";
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, addDoc, getDocs, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
@@ -30,12 +31,14 @@ import HangmanGame from "../components/HangmanGame.jsx";
 import VerseFillGame from "../components/VerseFillGame.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
-const TABS = [
+const BASE_TABS = [
   { id: "historias", label: "Histórias", icon: BookOpen },
   { id: "atividades", label: "Atividades", icon: Palette },
   { id: "conquistas", label: "Conquistas", icon: Award },
   { id: "frequencia", label: "Frequência", icon: Users },
 ];
+const CHECKIN_TAB = { id: "checkin", label: "Check-in", icon: ShieldCheck };
+const generateCheckinCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
 function InfantilScreen({ onBack }) {
   const me = useContext(UserContext);
@@ -54,6 +57,12 @@ function InfantilScreen({ onBack }) {
   const [openVerseFillId, setOpenVerseFillId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
+  const [checkinList, setCheckinList] = useState(null);
+  const [checkinSearch, setCheckinSearch] = useState("");
+  const [checkinLoading, setCheckinLoading] = useState(false);
+  const [confirmCheckoutFor, setConfirmCheckoutFor] = useState(null);
+  const isStaff = me.role === "master";
+  const TABS = isStaff ? [...BASE_TABS, CHECKIN_TAB] : BASE_TABS;
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);
   const todayStory = todaysStoryFor(group.id);
@@ -153,6 +162,42 @@ function InfantilScreen({ onBack }) {
     if (!selectedChildId) return;
     updateDoc(doc(db, "kids", selectedChildId), { versesCorrect: increment(1) })
       .catch(err => console.error("KID_VERSE_CORRECT_ERR", err.code, err.message));
+  };
+
+  const doCheckin = (childId) => {
+    const code = generateCheckinCode();
+    updateDoc(doc(db, "kids", childId), { checkinActive: true, checkinCode: code, checkinAt: serverTimestamp() })
+      .catch(err => console.error("KID_CHECKIN_ERR", err.code, err.message));
+  };
+
+  const cancelCheckin = (childId) => {
+    updateDoc(doc(db, "kids", childId), { checkinActive: false, checkinCode: null })
+      .catch(err => console.error("KID_CHECKIN_CANCEL_ERR", err.code, err.message));
+  };
+
+  const loadCheckinList = () => {
+    setCheckinLoading(true);
+    getDocs(collection(db, "kids")).then(snap => {
+      setCheckinList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setCheckinLoading(false);
+    }).catch(err => {
+      console.error("KID_CHECKIN_LIST_ERR", err.code, err.message);
+      setCheckinList([]);
+      setCheckinLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    if (activeTab === "checkin" && isStaff && checkinList === null) loadCheckinList();
+  }, [activeTab, isStaff]);
+
+  const confirmCheckout = (childId) => {
+    updateDoc(doc(db, "kids", childId), { checkinActive: false, checkinCode: null })
+      .then(() => {
+        setCheckinList(prev => prev ? prev.map(c => c.id === childId ? { ...c, checkinActive: false, checkinCode: null } : c) : prev);
+      })
+      .catch(err => console.error("KID_CHECKOUT_ERR", err.code, err.message));
+    setConfirmCheckoutFor(null);
   };
 
   if (openColoringPage) {
@@ -264,6 +309,31 @@ function InfantilScreen({ onBack }) {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="px-6 mb-5">
+          <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[12px] mb-3">Check-in de segurança</p>
+          {openChild.checkinActive ? (
+            <div className="rounded-2xl p-4" style={{ background: "#2FA8A0", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
+              <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.85)" }} className="text-[11.5px] mb-2">Mostre esse código pra quem for buscar a criança</p>
+              <p style={{ fontFamily: "IBM Plex Mono", color: "#FFFFFF", fontWeight: 700, letterSpacing: 4 }} className="text-[32px] text-center mb-3">{openChild.checkinCode}</p>
+              <button onClick={() => cancelCheckin(openChild.id)}
+                className="w-full py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.2)", color: "#FFFFFF" }}>
+                Cancelar check-in
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => doCheckin(openChild.id)}
+              className="w-full flex items-center gap-3 rounded-2xl p-4 text-left" style={{ background: "#FFFFFF", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#2FA8A01E" }}>
+                <ShieldCheck size={17} color="#2FA8A0" />
+              </div>
+              <div className="flex-1">
+                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">Fazer check-in</p>
+                <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">Gera um código pra confirmar quem vai buscar a criança depois</p>
+              </div>
+            </button>
+          )}
         </div>
 
         <div className="px-6 pb-8">
@@ -652,6 +722,11 @@ function InfantilScreen({ onBack }) {
                       {c.age} anos · {c.attendance.length} {c.attendance.length === 1 ? "presença" : "presenças"}
                     </p>
                   </div>
+                  {c.checkinActive && (
+                    <span className="flex items-center gap-1 text-[9.5px] px-2 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: "#2FA8A01E", color: "#2FA8A0" }}>
+                      <ShieldCheck size={10} /> check-in
+                    </span>
+                  )}
                   {c.diet && (
                     <span className="text-[9.5px] px-2 py-1 rounded-full shrink-0" style={{ fontFamily: "Inter", background: "#FF7A591E", color: "#FF7A59" }}>
                       restrição
@@ -667,6 +742,77 @@ function InfantilScreen({ onBack }) {
           </p>
         </div>
       )}
+
+      {activeTab === "checkin" && isStaff && (() => {
+        const q = checkinSearch.trim().toLowerCase();
+        const filteredCheckin = (checkinList || []).filter(c => !q || (c.name || "").toLowerCase().includes(q));
+        const aguardando = filteredCheckin.filter(c => c.checkinActive).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        const semCheckin = filteredCheckin.filter(c => !c.checkinActive).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        return (
+          <div className="px-6 mb-8">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-4" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+              <ShieldCheck size={15} color="#9A8B76" />
+              <input value={checkinSearch} onChange={e => setCheckinSearch(e.target.value)} placeholder="Buscar criança por nome"
+                className="flex-1 outline-none text-[13px] bg-transparent" style={{ fontFamily: "Inter", color: "#3A2E22" }} />
+              <button onClick={loadCheckinList} style={{ fontFamily: "Inter", color: "#2FA8A0" }} className="text-[11px] font-semibold shrink-0">Atualizar</button>
+            </div>
+
+            {checkinLoading || checkinList === null ? (
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px] text-center py-8">Carregando...</p>
+            ) : (
+              <>
+                <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px] mb-3">Aguardando busca ({aguardando.length})</p>
+                {aguardando.length === 0 ? (
+                  <div className="rounded-2xl p-4 text-center mb-6" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+                    <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Ninguém com check-in ativo agora.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5 mb-6">
+                    {aguardando.map(c => (
+                      <button key={c.id} onClick={() => setConfirmCheckoutFor(c)}
+                        className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                        style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)", border: "1.5px solid #2FA8A055" }}>
+                        {c.childPhoto ? (
+                          <img src={c.childPhoto} alt={c.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                            <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.name)}</span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
+                          <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">{c.age} anos</p>
+                        </div>
+                        <span style={{ fontFamily: "IBM Plex Mono", color: "#2FA8A0", fontWeight: 700, letterSpacing: 2 }} className="text-[16px]">{c.checkinCode}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px] mb-3">Sem check-in ({semCheckin.length})</p>
+                {semCheckin.length === 0 ? (
+                  <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma criança.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {semCheckin.map(c => (
+                      <div key={c.id} className="flex items-center gap-3 rounded-2xl p-2.5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+                        {c.childPhoto ? (
+                          <img src={c.childPhoto} alt={c.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                            <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[10px]">{initials(c.name)}</span>
+                          </div>
+                        )}
+                        <p style={{ fontFamily: "Inter", color: "#6B6255" }} className="text-[12.5px]">{c.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {showAddChild && (
         <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowAddChild(false)}>
@@ -747,6 +893,20 @@ function InfantilScreen({ onBack }) {
           </div>
         );
       })()}
+
+      {confirmCheckoutFor && (
+        <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setConfirmCheckoutFor(null)}>
+          <div className="w-full rounded-t-3xl p-6" style={{ background: "#FFF8EE" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[17px] mb-1">Confirmar saída de {confirmCheckoutFor.name}</p>
+            <p style={{ fontFamily: "Inter", color: "#6B6255" }} className="text-[12.5px] mb-4">Confira se a pessoa que veio buscar sabe o código abaixo antes de confirmar.</p>
+            <p style={{ fontFamily: "IBM Plex Mono", color: "#2FA8A0", fontWeight: 700, letterSpacing: 4 }} className="text-[36px] text-center mb-5">{confirmCheckoutFor.checkinCode}</p>
+            <div className="flex gap-2.5">
+              <button onClick={() => setConfirmCheckoutFor(null)} className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#6B6255" }}>Cancelar</button>
+              <button onClick={() => confirmCheckout(confirmCheckoutFor.id)} className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "#2FA8A0", color: "#FFFFFF" }}>Confirmar saída</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

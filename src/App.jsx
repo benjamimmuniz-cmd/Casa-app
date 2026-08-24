@@ -7,12 +7,12 @@ import {
   ShoppingBag
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, updateDoc, deleteDoc, deleteField, collection, query, where, orderBy, limit, onSnapshot, addDoc, arrayUnion, arrayRemove, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, getDocs, updateDoc, deleteDoc, deleteField, collection, query, where, orderBy, limit, onSnapshot, addDoc, arrayUnion, arrayRemove, serverTimestamp, Timestamp } from "firebase/firestore";
 import { auth, db } from "./firebase.js";
 import { FeedContext, UserContext, StoryContext, ConnectionsContext, NotificationsContext, ShortsContext, LiveContext, ThemeContext, ChatUnreadContext, UsersDirectoryContext, ProfileNavContext } from "./context/contexts.js";
 import { loadTheme, saveTheme } from "./utils/themeStore.js";
 import { loadTextLarge, saveTextLarge } from "./utils/textSizeStore.js";
-import { timeAgo } from "./utils/helpers.js";
+import { timeAgo, fmtDateBR } from "./utils/helpers.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
@@ -287,6 +287,40 @@ function App() {
       setNotifications(list);
     }, () => {});
     return () => unsub();
+  }, [currentUser?.uid]);
+
+  // Lembrete da Escala: sem Cloud Functions (Blaze) pra rodar num horário fixo,
+  // então isso roda de leve toda vez que alguém abre o app — se tiver escala
+  // pro dia seguinte que ainda não avisou, avisa quem foi escalado, uma vez só
+  // (marca "lembreteEnviado" na escala pra não repetir).
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const checkEscalaReminders = async () => {
+      try {
+        const t = new Date();
+        t.setDate(t.getDate() + 1);
+        const tomorrowISO = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+        const snap = await getDocs(query(collection(db, "escalas"), where("date", "==", tomorrowISO)));
+        for (const escalaDoc of snap.docs) {
+          const escala = escalaDoc.data();
+          if (escala.lembreteEnviado) continue;
+          await updateDoc(doc(db, "escalas", escalaDoc.id), { lembreteEnviado: true });
+          const uids = new Set();
+          Object.values(escala.funcoes || {}).forEach(list => list.forEach(p => p?.uid && uids.add(p.uid)));
+          for (const uid of uids) {
+            try {
+              const userSnap = await getDoc(doc(db, "users", uid));
+              if (userSnap.exists() && userSnap.data().notificacoesAtivas === false) continue;
+              await addDoc(collection(db, "notifications"), {
+                toUid: uid, read: false, createdAt: serverTimestamp(),
+                text: `📋 Lembrete: amanhã (${fmtDateBR(escala.date)}) você está escalado(a) em "${escala.culto}".`,
+              });
+            } catch {}
+          }
+        }
+      } catch (err) { console.error("ESCALA_REMINDER_ERR", err); }
+    };
+    checkEscalaReminders();
   }, [currentUser?.uid]);
 
   const markAllNotificationsRead = () => {
