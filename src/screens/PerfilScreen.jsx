@@ -31,6 +31,16 @@ function PerfilScreen({ onBack, onLogout }) {
   const [profissaoDraft, setProfissaoDraft] = useState(user.profissao);
   const [editingPlaca, setEditingPlaca] = useState(false);
   const [placaDraft, setPlacaDraft] = useState(user.placa);
+  const [becomingMaster, setBecomingMaster] = useState(false);
+  const [masterError, setMasterError] = useState("");
+
+  const handleBecomeMaster = () => {
+    setMasterError("");
+    setBecomingMaster(true);
+    user.becomeMaster()
+      .catch(() => setMasterError("Não funcionou — confere se a regra temporária já foi publicada."))
+      .finally(() => setBecomingMaster(false));
+  };
 
   const saveName = () => {
     const trimmed = nameDraft.trim();
@@ -327,6 +337,18 @@ function PerfilScreen({ onBack, onLogout }) {
           </div>
         </button>
       </div>
+
+      {user.role !== "master" && (
+        <div className="px-6 mb-6">
+          <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10px] uppercase tracking-wide font-semibold mb-2 px-1">Temporário</p>
+          <button onClick={handleBecomeMaster} disabled={becomingMaster}
+            className="w-full py-3.5 rounded-2xl font-semibold text-[13.5px] active:scale-[0.98] transition-transform"
+            style={{ background: "var(--c-surface)", color: "var(--c-accent-2)", fontFamily: "Inter", border: "1px solid var(--c-border)" }}>
+            {becomingMaster ? "Aplicando..." : "Virar administrador"}
+          </button>
+          {masterError && <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mt-2 text-center">{masterError}</p>}
+        </div>
+      )}
 
       <div className="px-6 pb-8">
         <button onClick={onLogout}
