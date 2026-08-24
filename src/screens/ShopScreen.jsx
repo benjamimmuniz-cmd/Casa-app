@@ -10,6 +10,7 @@ import {
 import { FeedContext, UserContext } from "../context/contexts.js";
 import { fmtPrice } from "../utils/helpers.js";
 import { PRODUCT_COLORS } from "../data/constants.js";
+import { compressImage } from "../utils/imageCompress.js";
 
 function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock, updateProduct, deleteProduct, categories, accent, waNumber, layout = "grid" }) {
   const me = useContext(UserContext);
@@ -47,8 +48,9 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setForm(f => ({ ...f, image: reader.result }));
+    reader.onload = () => compressImage(reader.result, 900, 0.72).then(img => setForm(f => ({ ...f, image: img })));
     reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const closeAddSheet = () => {
