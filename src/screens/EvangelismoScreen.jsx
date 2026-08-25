@@ -12,7 +12,7 @@ import {
 import { collection, addDoc, arrayUnion, arrayRemove, doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, getMonthGrid, initials } from "../utils/helpers.js";
+import { colorFor, fmtDateBR, getMonthGrid, initials, todayISO } from "../utils/helpers.js";
 import { EVANG_DOACAO_TIPOS } from "../data/constants.js";
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -27,6 +27,15 @@ function EvangelismoScreen({ onBack }) {
   const [openFamilyId, setOpenFamilyId] = useState(null);
   const [familyForm, setFamilyForm] = useState({ name: "", address: "", phone: "", people: "", notes: "" });
   const [familyError, setFamilyError] = useState("");
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "evangelismoFamilias"), snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      setFamilies(list);
+    }, () => {});
+    return () => unsub();
+  }, []);
 
   const hoje = new Date();
   const YEAR = hoje.getFullYear(), MONTH = hoje.getMonth(), TODAY = hoje.getDate();
@@ -52,6 +61,15 @@ function EvangelismoScreen({ onBack }) {
   const [donationForm, setDonationForm] = useState({ donor: "", type: "dinheiro", value: "", description: "" });
   const [donationError, setDonationError] = useState("");
 
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "evangelismoDoacoes"), snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      setDonations(list);
+    }, () => {});
+    return () => unsub();
+  }, []);
+
   const weeks = getMonthGrid(YEAR, MONTH);
   const eventsMesAtual = events.filter(e => (e.date || "").startsWith(mesKeyAtual));
   const dayEvents = eventsMesAtual.filter(e => Number((e.date || "").slice(-2)) === selectedDay);
@@ -64,21 +82,23 @@ function EvangelismoScreen({ onBack }) {
   const handleAddFamily = () => {
     setFamilyError("");
     if (!familyForm.name.trim()) { setFamilyError("Digite o nome da família."); return; }
-    setFamilies(prev => [{
-      id: "fam" + Date.now(),
+    addDoc(collection(db, "evangelismoFamilias"), {
       name: familyForm.name.trim(),
       address: familyForm.address.trim(),
       phone: familyForm.phone.trim(),
       people: familyForm.people.trim(),
       notes: familyForm.notes.trim(),
       lastVisit: null,
-    }, ...prev]);
+      createdByUid: me.uid || null,
+      createdAt: serverTimestamp(),
+    }).catch(err => console.error("EVANG_FAMILIA_ADD_ERR", err.code, err.message));
     setFamilyForm({ name: "", address: "", phone: "", people: "", notes: "" });
     setShowAddFamily(false);
   };
 
   const registrarVisita = (id) => {
-    setFamilies(prev => prev.map(f => f.id === id ? { ...f, lastVisit: "Hoje" } : f));
+    updateDoc(doc(db, "evangelismoFamilias", id), { lastVisit: todayISO() })
+      .catch(err => console.error("EVANG_VISITA_ERR", err.code, err.message));
   };
 
   const handleAddEvent = () => {
@@ -115,14 +135,15 @@ function EvangelismoScreen({ onBack }) {
     if (!donationForm.donor.trim()) { setDonationError("Digite o nome do doador."); return; }
     if (donationForm.type === "dinheiro" && !donationForm.value.trim()) { setDonationError("Digite o valor doado."); return; }
     if (donationForm.type !== "dinheiro" && !donationForm.description.trim()) { setDonationError("Descreva a doação."); return; }
-    setDonations(prev => [{
-      id: "don" + Date.now(),
+    addDoc(collection(db, "evangelismoDoacoes"), {
       donor: donationForm.donor.trim(),
       type: donationForm.type,
       value: donationForm.value.trim(),
       description: donationForm.description.trim(),
-      date: "16/08",
-    }, ...prev]);
+      date: todayISO(),
+      createdByUid: me.uid || null,
+      createdAt: serverTimestamp(),
+    }).catch(err => console.error("EVANG_DOACAO_ADD_ERR", err.code, err.message));
     setDonationForm({ donor: "", type: "dinheiro", value: "", description: "" });
     setShowAddDonation(false);
   };
@@ -154,7 +175,7 @@ function EvangelismoScreen({ onBack }) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Última visita</p>
-                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[14px]">{openFamily.lastVisit || "Nenhuma ainda"}</p>
+                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[14px]">{openFamily.lastVisit ? fmtDateBR(openFamily.lastVisit) : "Nenhuma ainda"}</p>
               </div>
               <button onClick={() => registrarVisita(openFamily.id)}
                 className="px-4 py-2.5 rounded-full text-[12px] font-semibold"
@@ -291,7 +312,7 @@ function EvangelismoScreen({ onBack }) {
                   <div className="flex-1 min-w-0">
                     <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{f.name}</p>
                     <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] truncate">
-                      {f.address || "Sem endereço"} · {f.lastVisit ? "Visita: " + f.lastVisit : "Sem visitas"}
+                      {f.address || "Sem endereço"} · {f.lastVisit ? "Visita: " + fmtDateBR(f.lastVisit) : "Sem visitas"}
                     </p>
                   </div>
                   <ChevronRight size={16} color="#B5AC9C" />
@@ -394,7 +415,7 @@ function EvangelismoScreen({ onBack }) {
                     <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{d.donor}</p>
                     <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px]">
                       {EVANG_DOACAO_TIPOS.find(t => t.id === d.type)?.label}
-                      {d.type === "dinheiro" ? " · R$ " + d.value : (d.description ? " · " + d.description : "")} · {d.date}
+                      {d.type === "dinheiro" ? " · R$ " + d.value : (d.description ? " · " + d.description : "")} · {fmtDateBR(d.date)}
                     </p>
                   </div>
                 </div>
