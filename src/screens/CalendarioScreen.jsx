@@ -4,6 +4,8 @@ import {
   BellOff,
   ChevronLeft,
   ChevronRight,
+  Download,
+  FileSpreadsheet,
   ImageIcon,
   MapPin,
   Plus,
@@ -12,12 +14,18 @@ import {
   X
 } from "lucide-react";
 import { collection, addDoc, arrayUnion, arrayRemove, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import * as XLSX from "xlsx";
 import { db } from "../firebase.js";
 import { FeedContext, UserContext } from "../context/contexts.js";
 import { catColor, getMonthGrid, todayISO } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
 import { broadcastNotification } from "../utils/notifyAll.js";
 import { CATEGORIES } from "../data/constants.js";
+
+function toCsvValue(v) {
+  const s = (v ?? "").toString().replace(/"/g, '""');
+  return `"${s}"`;
+}
 
 function CalendarioScreen({ onBack }) {
   const me = useContext(UserContext);
@@ -141,6 +149,35 @@ function CalendarioScreen({ onBack }) {
 
   const resultsEvent = events.find(e => e.id === resultsForEvent);
   const signupEvent = events.find(e => e.id === signupForEvent);
+
+  const buildSignupRows = (ev) => {
+    const header = ["Nome", "Celular"];
+    const rows = (ev.signups || []).map(s => [s.name || "", s.phone || ""]);
+    return [header, ...rows];
+  };
+
+  const slugFileName = (title) => (title || "evento").replace(/[\\/:*?"<>|]/g, "-");
+
+  const exportSignupsCsv = (ev) => {
+    const csv = buildSignupRows(ev).map(r => r.map(toCsvValue).join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inscritos-${slugFileName(ev.title)}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportSignupsExcel = (ev) => {
+    const ws = XLSX.utils.aoa_to_sheet(buildSignupRows(ev));
+    ws["!cols"] = [{ wch: 26 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inscritos");
+    XLSX.writeFile(wb, `inscritos-${slugFileName(ev.title)}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
 
   const cancelSignup = (ev) => {
     const newSignups = (ev.signups || []).filter(s => s.uid !== me.uid);
@@ -392,6 +429,20 @@ function CalendarioScreen({ onBack }) {
               <button onClick={() => setResultsForEvent(null)}><X size={18} color="#9E9E9E" /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-6">
+              {(resultsEvent.signups || []).length > 0 && (
+                <div className="flex items-center gap-2.5 mb-4">
+                  <button onClick={() => exportSignupsExcel(resultsEvent)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[12px] font-semibold"
+                    style={{ fontFamily: "Inter", background: "#000000", color: "#FFFFFF" }}>
+                    <FileSpreadsheet size={14} /> Exportar Excel
+                  </button>
+                  <button onClick={() => exportSignupsCsv(resultsEvent)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-[12px] font-semibold"
+                    style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#000000", border: "1px solid #E3E3E3" }}>
+                    <Download size={14} /> Exportar CSV
+                  </button>
+                </div>
+              )}
               {(resultsEvent.signups || []).length === 0 ? (
                 <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] text-center py-8">Ninguém se inscreveu ainda.</p>
               ) : (
