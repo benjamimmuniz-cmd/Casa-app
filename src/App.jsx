@@ -33,6 +33,7 @@ const EscalaScreen = React.lazy(() => import("./screens/EscalaScreen.jsx"));
 const TransitoScreen = React.lazy(() => import("./screens/TransitoScreen.jsx"));
 const DiretorioScreen = React.lazy(() => import("./screens/DiretorioScreen.jsx"));
 const CheckinScreen = React.lazy(() => import("./screens/CheckinScreen.jsx"));
+const CriancasScreen = React.lazy(() => import("./screens/CriancasScreen.jsx"));
 const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
 const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
 const FeedScreen = React.lazy(() => import("./screens/FeedScreen.jsx"));
@@ -514,6 +515,8 @@ function App() {
               <InfantilScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "checkin" || (tab === "checkin" && !openTile) ? (
               <CheckinScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "criancas" || (tab === "criancas" && !openTile) ? (
+              <CriancasScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "calendario" || (tab === "calendario" && !openTile) ? (
               <CalendarioScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "enquetes" || (tab === "enquetes" && !openTile) ? (

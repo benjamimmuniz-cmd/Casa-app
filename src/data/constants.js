@@ -36,6 +36,7 @@ import {
   Car,
   Contact,
   ShieldCheck,
+  Search,
 } from "lucide-react";
 
 export const FONTS = `
@@ -55,6 +56,7 @@ export const TILES = [
   { id: "estudo", label: "Estudos", icon: GraduationCap, color: "#5A5A5A" },
   { id: "infantil", label: "Infantil", icon: Baby, color: "#787878" },
   { id: "checkin", label: "Check-in", icon: ShieldCheck, color: "#2FA8A0" },
+  { id: "criancas", label: "Buscar Crianças", icon: Search, color: "#6D8A5C" },
   { id: "discipulado", label: "Discipulado", icon: Users, color: "#707070" },
   { id: "ministerios", label: "Ministérios", icon: Sparkles, color: "#636363" },
   { id: "feed", label: "Feed", icon: MessageCircle, color: "#707070" },
@@ -84,7 +86,7 @@ export const TILES = [
 
 export const MENU_GROUPS = [
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
-  { label: "Crianças", ids: ["infantil", "checkin"] },
+  { label: "Crianças", ids: ["infantil", "checkin", "criancas"] },
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes", "diretorio"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
@@ -105,6 +107,7 @@ export const TAB_LABELS = {
   transito: "Trânsito",
   diretorio: "Diretório de Membros",
   checkin: "Check-in",
+  criancas: "Buscar Crianças",
 };
 
 export const TAB_DESCRIPTIONS = {
@@ -138,6 +141,7 @@ export const TAB_DESCRIPTIONS = {
   transito: "Veja os carros cadastrados pelos membros e seus responsáveis — útil pra achar o dono rapidinho no estacionamento.",
   diretorio: "Busque qualquer membro cadastrado por nome ou profissão e veja o perfil dele, mesmo sem ser amigo ainda.",
   checkin: "Confirme a saída das crianças da Área Infantil comparando o código gerado no check-in. Acesso da Junta e Liderança.",
+  criancas: "Busque qualquer criança cadastrada por nome e veja a ficha dela, com responsável e restrição alimentar. Acesso da Junta e Liderança.",
 };
 
 export const GR_COLORS = ["#3B7D8A", "#2B6B76", "#5A9BA6", "#1E5A64", "#4D8A94"];

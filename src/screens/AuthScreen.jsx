@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Baby, Check, Eye, EyeOff, Plus } from "lucide-react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase.js";
+import { compressImage } from "../utils/imageCompress.js";
 import PhotoPickerField from "../components/PhotoPickerField.jsx";
 
 function PasswordField({ value, onChange, placeholder, className, style }) {
@@ -34,6 +35,8 @@ function mapAuthError(code) {
   }
 }
 
+const EMPTY_CHILD = { name: "", age: "", diet: "", childPhoto: null };
+
 function AuthScreen({ onSuccess }) {
   const [mode, setMode] = useState("cadastro"); // cadastro | login
   const [error, setError] = useState("");
@@ -41,7 +44,74 @@ function AuthScreen({ onSuccess }) {
   const [form, setForm] = useState({ nome: "", nascimento: "", email: "", senha: "", confirmaSenha: "", profissao: "", membro: null, receberMensagens: true, photo: null });
   const [loginForm, setLoginForm] = useState({ email: "", senha: "" });
 
+  const [step, setStep] = useState("form"); // form | filhos
+  const [pendingUser, setPendingUser] = useState(null);
+  const [childForm, setChildForm] = useState(EMPTY_CHILD);
+  const [childrenAdded, setChildrenAdded] = useState(0);
+  const [savingChild, setSavingChild] = useState(false);
+  const [childError, setChildError] = useState("");
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const setChild = (k, v) => setChildForm(f => ({ ...f, [k]: v }));
+
+  const handleChildPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => compressImage(reader.result, 700, 0.7).then(img => setChild("childPhoto", img));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const childFormHasData = childForm.name.trim() || childForm.age.trim();
+
+  const saveChildDoc = () => addDoc(collection(db, "kids"), {
+    parentUid: pendingUser.uid,
+    name: childForm.name.trim(),
+    age: childForm.age.trim(),
+    diet: childForm.diet.trim(),
+    childPhoto: childForm.childPhoto,
+    parentsPhoto: pendingUser.photo || null,
+    attendance: [],
+    createdAt: serverTimestamp(),
+  });
+
+  const addAnotherChild = async () => {
+    setChildError("");
+    if (!childForm.name.trim()) { setChildError("Digite o nome da criança."); return; }
+    if (!childForm.age.trim()) { setChildError("Digite a idade da criança."); return; }
+    setSavingChild(true);
+    try {
+      await saveChildDoc();
+      setChildrenAdded(n => n + 1);
+      setChildForm(EMPTY_CHILD);
+    } catch (e) {
+      setChildError("Não deu pra salvar agora. Tenta de novo.");
+    }
+    setSavingChild(false);
+  };
+
+  const finishOnboarding = async () => {
+    setChildError("");
+    if (childFormHasData) {
+      if (!childForm.name.trim() || !childForm.age.trim()) {
+        setChildError("Preencha nome e idade da criança, ou limpe os campos pra pular.");
+        return;
+      }
+      setSavingChild(true);
+      try {
+        await saveChildDoc();
+      } catch (e) {
+        setChildError("Não deu pra salvar agora. Tenta de novo, ou pule por enquanto.");
+        setSavingChild(false);
+        return;
+      }
+      setSavingChild(false);
+    }
+    onSuccess(pendingUser);
+  };
+
+  const skipChildren = () => onSuccess(pendingUser);
 
   const handleCadastro = async () => {
     setError("");
@@ -74,7 +144,8 @@ function AuthScreen({ onSuccess }) {
         photo: form.photo || null, role: "member", createdAt: serverTimestamp(),
       };
       await setDoc(doc(db, "users", cred.user.uid), profile);
-      onSuccess({ uid: cred.user.uid, ...profile });
+      setPendingUser({ uid: cred.user.uid, ...profile });
+      setStep("filhos");
     } catch (e) {
       setError(mapAuthError(e.code));
     } finally {
@@ -95,6 +166,71 @@ function AuthScreen({ onSuccess }) {
       setLoading(false);
     }
   };
+
+  if (step === "filhos") {
+    return (
+      <div className="relative w-full h-full overflow-hidden flex flex-col" style={{ background: "#F2F2F2" }}>
+        <div className="flex-1 overflow-y-auto px-7 pt-8 pb-8">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: "#4B7D5C1E" }}>
+            <Baby size={24} color="#4B7D5C" />
+          </div>
+          <h1 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[20px] mb-1">Você tem filhos?</h1>
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12.5px] mb-6 leading-relaxed">
+            Cadastre agora e já vinculamos ao seu perfil como responsável. Se preferir, você pode fazer isso depois em Área Infantil.
+          </p>
+
+          {childrenAdded > 0 && (
+            <div className="flex items-center gap-2 mb-5 px-4 py-2.5 rounded-2xl" style={{ background: "#4B7D5C1E" }}>
+              <Check size={14} color="#4B7D5C" />
+              <span style={{ fontFamily: "Inter", color: "#4B7D5C", fontWeight: 600 }} className="text-[12px]">
+                {childrenAdded} {childrenAdded === 1 ? "criança adicionada" : "crianças adicionadas"}
+              </span>
+            </div>
+          )}
+
+          <label className="flex items-center gap-3 mb-4 cursor-pointer">
+            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
+              {childForm.childPhoto ? <img src={childForm.childPhoto} alt="Prévia" className="w-full h-full object-cover" /> : <Baby size={20} color="#9E9E9E" />}
+            </div>
+            <div>
+              <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{childForm.childPhoto ? "Trocar foto" : "Foto da criança"}</p>
+              <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">Opcional</p>
+            </div>
+            <input type="file" accept="image/*" onChange={handleChildPhoto} className="hidden" />
+          </label>
+
+          <input value={childForm.name} onChange={e => setChild("name", e.target.value)} placeholder="Nome da criança"
+            className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+          <input value={childForm.age} onChange={e => setChild("age", e.target.value.replace(/[^0-9]/g, ""))} placeholder="Idade" inputMode="numeric"
+            className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+          <input value={childForm.diet} onChange={e => setChild("diet", e.target.value)} placeholder="Restrição alimentar (opcional)"
+            className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+          <button onClick={addAnotherChild} disabled={savingChild}
+            className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl mb-5 text-[12.5px] font-semibold"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#4D4D4D", border: "1px solid #D6D6D6", opacity: savingChild ? 0.6 : 1 }}>
+            <Plus size={14} /> Adicionar e cadastrar outra criança
+          </button>
+
+          {childError && <p style={{ fontFamily: "Inter", color: "#8A8A8A" }} className="text-[12px] mb-4 text-center">{childError}</p>}
+
+          <button onClick={finishOnboarding} disabled={savingChild}
+            className="w-full py-4 rounded-full font-semibold text-[15px] active:scale-[0.98] transition-transform mb-2.5"
+            style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter", opacity: savingChild ? 0.6 : 1 }}>
+            {savingChild ? "Salvando..." : childFormHasData ? "Salvar e continuar" : "Continuar"}
+          </button>
+          <button onClick={skipChildren} disabled={savingChild}
+            className="w-full py-3 rounded-full font-semibold text-[13px]"
+            style={{ fontFamily: "Inter", color: "#707070" }}>
+            Pular por enquanto
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full overflow-hidden flex flex-col" style={{ background: "#F2F2F2" }}>
