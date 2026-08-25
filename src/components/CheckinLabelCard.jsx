@@ -25,17 +25,13 @@ function CheckinLabelCard({ kicker, nameLeft, nameRight, code, qrValue, groupEmo
       <div className="px-3 py-2">
         <div className="flex items-center justify-between">
           <p style={{ fontFamily: "IBM Plex Mono", color: "#3A2E22", fontWeight: 800, letterSpacing: 2 }} className="text-[26px]">{code}</p>
-          <div className="flex items-center gap-1.5" title="🦁 turma · ⚠️ restrição alimentar · ♾️ neurodivergente">
-            {groupEmoji && <span style={{ fontSize: 19 }}>{groupEmoji}</span>}
-            {diet && <span style={{ fontSize: 17 }}>⚠️</span>}
-            {neuro && <span style={{ fontSize: 17 }}>♾️</span>}
-          </div>
+          {groupEmoji && <span style={{ fontSize: 19 }} title="Turma">{groupEmoji}</span>}
         </div>
         {diet && (
-          <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[10px] mt-0.5 leading-snug">⚠️ Restrição: {diet}</p>
+          <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[10px] mt-0.5 leading-snug">Restrição: {diet}</p>
         )}
         {neuro && (
-          <p style={{ fontFamily: "Inter", color: "#5A4BC7" }} className="text-[10px] mt-0.5 leading-snug">♾️ Neurodivergente</p>
+          <p style={{ fontFamily: "Inter", color: "#5A4BC7" }} className="text-[10px] mt-0.5 leading-snug">Neurodivergente</p>
         )}
       </div>
       <div className="flex items-center justify-between px-3 py-2" style={{ background: "#3A2E22" }}>
