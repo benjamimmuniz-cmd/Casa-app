@@ -21,10 +21,13 @@ import { AGE_GROUPS, ATIVIDADES_PDF } from "../data/constants.js";
 import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
 import { HANGMAN_WORDS, VERSE_FILLS } from "../data/kidsGames.js";
-import { BADGES, badgeProgress, groupIdForAge } from "../data/kidsBadges.js";
+import { MEMORY_SETS, COUNTING_GAMES } from "../data/kidsGamesInfantil.js";
+import { BADGES_BY_GROUP, badgeProgress, groupIdForAge } from "../data/kidsBadges.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 import HangmanGame from "../components/HangmanGame.jsx";
 import VerseFillGame from "../components/VerseFillGame.jsx";
+import MemoryGame from "../components/MemoryGame.jsx";
+import CountingGame from "../components/CountingGame.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -44,6 +47,8 @@ function InfantilScreen({ onBack }) {
   const [activeCrayon, setActiveCrayon] = useState(CRAYONS[0]);
   const [openHangmanId, setOpenHangmanId] = useState(null);
   const [openVerseFillId, setOpenVerseFillId] = useState(null);
+  const [openMemoryId, setOpenMemoryId] = useState(null);
+  const [openCountingId, setOpenCountingId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
   const group = AGE_GROUPS[activeGroup];
@@ -56,6 +61,10 @@ function InfantilScreen({ onBack }) {
   const openHangman = groupHangman.find(w => w.id === openHangmanId);
   const groupVerseFills = VERSE_FILLS.filter(v => v.groupId === group.id);
   const openVerseFill = groupVerseFills.find(v => v.id === openVerseFillId);
+  const groupMemorySets = MEMORY_SETS.filter(s => s.groupId === group.id);
+  const openMemorySet = groupMemorySets.find(s => s.id === openMemoryId);
+  const groupCountingGames = COUNTING_GAMES.filter(g => g.groupId === group.id);
+  const openCounting = groupCountingGames.find(g => g.id === openCountingId);
 
   const paintRegion = (pageId, regionId) => {
     setColoringFills(prev => ({ ...prev, [pageId]: { ...(prev[pageId] || {}), [regionId]: activeCrayon } }));
@@ -78,7 +87,7 @@ function InfantilScreen({ onBack }) {
     if (!children.some(c => c.id === selectedChildId)) setSelectedChildId(children[0].id);
   }, [children]);
 
-  useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); }, [activeGroup]);
+  useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); setOpenMemoryId(null); setOpenCountingId(null); }, [activeGroup]);
 
   const selectedChild = children.find(c => c.id === selectedChildId);
 
@@ -97,6 +106,18 @@ function InfantilScreen({ onBack }) {
     if (!selectedChildId) return;
     updateDoc(doc(db, "kids", selectedChildId), { versesCorrect: increment(1) })
       .catch(err => console.error("KID_VERSE_CORRECT_ERR", err.code, err.message));
+  };
+
+  const recordMemoryWin = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { memoryWins: increment(1) })
+      .catch(err => console.error("KID_MEMORY_WIN_ERR", err.code, err.message));
+  };
+
+  const recordCountingCorrect = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { countingCorrect: increment(1) })
+      .catch(err => console.error("KID_COUNTING_CORRECT_ERR", err.code, err.message));
   };
 
   if (openColoringPage) {
@@ -158,6 +179,38 @@ function InfantilScreen({ onBack }) {
         </div>
         <div className="px-6 pb-8">
           <VerseFillGame item={openVerseFill} color={group.color} onCorrect={recordVerseCorrect} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openMemorySet) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenMemoryId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">{openMemorySet.emoji} {openMemorySet.title}</p>
+        </div>
+        <div className="px-6 pb-8">
+          <MemoryGame set={openMemorySet} color={group.color} onWin={recordMemoryWin} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openCounting) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenCountingId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">🔢 Quantos Você Vê?</p>
+        </div>
+        <div className="px-6 pb-8">
+          <CountingGame item={openCounting} color={group.color} onCorrect={recordCountingCorrect} />
         </div>
       </div>
     );
@@ -317,6 +370,53 @@ function InfantilScreen({ onBack }) {
 
       {activeTab === "atividades" && group.id === "p" && (
         <div className="px-6 mb-8">
+          {children.length > 0 && (
+            <div className="rounded-2xl p-3 mb-5 flex items-center gap-2 overflow-x-auto" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+              <span style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[10.5px] shrink-0">Jogando como:</span>
+              {children.map(c => (
+                <button key={c.id} onClick={() => setSelectedChildId(c.id)}
+                  className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full shrink-0"
+                  style={{ background: selectedChildId === c.id ? `${group.color}1E` : "#FFF8EE" }}>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                    <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontSize: 8, fontWeight: 700 }}>{initials(c.name)}</span>
+                  </div>
+                  <span style={{ fontFamily: "Inter", color: selectedChildId === c.id ? group.color : "#9A8B76", fontWeight: 600 }} className="text-[11px]">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ fontSize: 14 }}>🧩</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Jogo da memória</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {groupMemorySets.map(s => (
+              <button key={s.id} onClick={() => setOpenMemoryId(s.id)}
+                className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                <span style={{ fontSize: 26 }}>{s.emoji}</span>
+                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">{s.title}</p>
+                <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[10.5px] mt-1">{s.pieces.length} pares</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ fontSize: 14 }}>🔢</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Quantos você vê?</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {groupCountingGames.map(g => (
+              <button key={g.id} onClick={() => setOpenCountingId(g.id)}
+                className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                <span style={{ fontSize: 26 }}>{g.emoji}</span>
+                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">Contar {g.emoji}</p>
+              </button>
+            ))}
+          </div>
+
           {coloringPages.length === 0 ? (
             <div className="rounded-2xl p-4 text-center mb-5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
               <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma atividade pra essa faixa ainda.</p>
@@ -450,7 +550,7 @@ function InfantilScreen({ onBack }) {
               {children.map(c => {
                 const childGroupId = groupIdForAge(c.age);
                 const totalGroupStories = BIBLE_STORIES.filter(s => s.groupId === childGroupId).length;
-                const badges = BADGES.filter(b => childGroupId !== "p" || (b.of !== "hangman" && b.of !== "verses"));
+                const badges = BADGES_BY_GROUP[childGroupId] || [];
                 const unlockedCount = badges.filter(b => badgeProgress(b, c, totalGroupStories).unlocked).length;
                 return (
                   <div key={c.id} className="rounded-3xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
