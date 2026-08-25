@@ -440,6 +440,14 @@ function App() {
     }
   };
 
+  const updateUserTelefone = (telefone) => {
+    setCurrentUser(prev => prev ? { ...prev, telefone } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { telefone, role: currentUser.role || "member" })
+        .catch(err => console.error("TELEFONE_SAVE_ERR", err.code, err.message));
+    }
+  };
+
   const updateNotificacoesAtivas = (ativas) => {
     setCurrentUser(prev => prev ? { ...prev, notificacoesAtivas: ativas } : prev);
     if (currentUser?.uid) {
@@ -481,7 +489,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>

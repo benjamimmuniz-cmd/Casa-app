@@ -41,7 +41,7 @@ function AuthScreen({ onSuccess }) {
   const [mode, setMode] = useState("cadastro"); // cadastro | login
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ nome: "", nascimento: "", email: "", senha: "", confirmaSenha: "", profissao: "", membro: null, receberMensagens: true, photo: null });
+  const [form, setForm] = useState({ nome: "", nascimento: "", email: "", telefone: "", senha: "", confirmaSenha: "", profissao: "", membro: null, receberMensagens: true, photo: null });
   const [loginForm, setLoginForm] = useState({ email: "", senha: "" });
 
   const [step, setStep] = useState("form"); // form | filhos
@@ -140,7 +140,7 @@ function AuthScreen({ onSuccess }) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, form.email.trim(), form.senha);
       const profile = {
-        nome: form.nome.trim(), nascimento: form.nascimento, email: form.email.trim(),
+        nome: form.nome.trim(), nascimento: form.nascimento, email: form.email.trim(), telefone: form.telefone.trim(),
         profissao: form.profissao.trim(), membro: form.membro, receberMensagens: form.receberMensagens,
         photo: form.photo || null, role: "member", createdAt: serverTimestamp(),
       };
@@ -285,6 +285,11 @@ function AuthScreen({ onSuccess }) {
 
             <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">E-mail (será seu login)</label>
             <input type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="voce@email.com"
+              className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+              style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+            <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Celular / WhatsApp <span style={{ color: "#9E9E9E" }}>(opcional)</span></label>
+            <input value={form.telefone} onChange={e => set("telefone", e.target.value)} placeholder="(11) 90000-0000"
               className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 

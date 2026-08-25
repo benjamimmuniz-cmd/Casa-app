@@ -52,9 +52,9 @@ function AdminScreen({ onBack }) {
   }, []);
 
   const buildExportRows = () => {
-    const header = ["Nome", "E-mail", "Nascimento", "Profissão", "Cargo", "Possui carro", "Placa", "Membro da igreja", "Cadastrado em"];
+    const header = ["Nome", "E-mail", "Celular", "Nascimento", "Profissão", "Cargo", "Possui carro", "Placa", "Membro da igreja", "Cadastrado em"];
     const rows = users.map(u => [
-      u.nome || "", u.email || "", fmtDateBR(u.nascimento) || "", u.profissao || "", ROLE_LABELS[u.role] || "Membro",
+      u.nome || "", u.email || "", u.telefone || "", fmtDateBR(u.nascimento) || "", u.profissao || "", ROLE_LABELS[u.role] || "Membro",
       u.possuiCarro ? "Sim" : "Não", u.placa || "",
       u.membro ? "Sim" : "Não", fmtCreatedAt(u.createdAt),
     ]);
@@ -76,7 +76,7 @@ function AdminScreen({ onBack }) {
 
   const exportExcel = () => {
     const ws = XLSX.utils.aoa_to_sheet(buildExportRows());
-    ws["!cols"] = [{ wch: 24 }, { wch: 26 }, { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
+    ws["!cols"] = [{ wch: 24 }, { wch: 26 }, { wch: 16 }, { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Cadastros");
     XLSX.writeFile(wb, `cadastros-casa-app-${new Date().toISOString().slice(0, 10)}.xlsx`);
