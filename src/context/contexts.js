@@ -16,7 +16,7 @@ export const LiveContext = createContext({ liveActive: false, setLiveActive: () 
 
 export const ThemeContext = createContext({ theme: "light", setTheme: () => {}, textLarge: false, setTextLarge: () => {} });
 
-export const UserContext = createContext({ uid: null, name: "Visitante", email: "", profissao: "", telefone: "", photo: null, bio: "", setPhoto: () => {}, setName: () => {}, setBio: () => {}, setTelefone: () => {}, role: "member", notificacoesAtivas: true, setNotificacoesAtivas: () => {}, possuiCarro: false, placa: "", setPossuiCarro: () => {}, setPlaca: () => {} });
+export const UserContext = createContext({ uid: null, name: "Visitante", email: "", profissao: "", telefone: "", photo: null, bio: "", setPhoto: () => {}, setName: () => {}, setBio: () => {}, setTelefone: () => {}, role: "member", notificacoesAtivas: true, setNotificacoesAtivas: () => {}, possuiCarro: false, placa: "", setPossuiCarro: () => {}, setPlaca: () => {}, dizimos: {}, toggleDizimoMes: () => {} });
 
 // Diretório em tempo real de todo mundo cadastrado (uid -> {nome, photo}) — usado pelo
 // Avatar pra mostrar a foto atual de qualquer pessoa, não só de quem está logado.
