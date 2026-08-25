@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
-import { BookOpen, ChevronRight, Play, Plus, Search, Trash2, X } from "lucide-react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { BookOpen, ChevronRight, PenLine, Play, Plus, Search, Trash2, X } from "lucide-react";
+import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext, FeedContext, ProfileNavContext } from "../context/contexts.js";
 import { fmtDateBR } from "../utils/helpers.js";
@@ -26,6 +26,9 @@ function MensagensScreen({ mensagemId, onBack }) {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [noteText, setNoteText] = useState("");
+  const [noteStatus, setNoteStatus] = useState("");
+  const noteTimeoutRef = useRef(null);
 
   useEffect(() => {
     const q = query(collection(db, "mensagens"), orderBy("createdAt", "desc"));
@@ -42,6 +45,38 @@ function MensagensScreen({ mensagemId, onBack }) {
     ? mensagens.filter(m => (m.title || "").toLowerCase().includes(search.trim().toLowerCase()) || (m.speaker || "").toLowerCase().includes(search.trim().toLowerCase()))
     : mensagens;
   const aberta = mensagens.find(m => m.id === openId);
+
+  useEffect(() => {
+    setNoteStatus("");
+    if (!aberta || !me.uid) { setNoteText(""); return; }
+    const unsub = onSnapshot(doc(db, "mensagens", aberta.id, "notas", me.uid), snap => {
+      setNoteText(snap.exists() ? (snap.data().text || "") : "");
+    }, () => {});
+    return () => unsub();
+  }, [aberta?.id, me.uid]);
+
+  const saveNote = (text) => {
+    if (!aberta || !me.uid) return;
+    setNoteStatus("salvando");
+    setDoc(doc(db, "mensagens", aberta.id, "notas", me.uid), { text, updatedAt: serverTimestamp() }, { merge: true })
+      .then(() => setNoteStatus("salvo"))
+      .catch(err => { console.error("MENSAGEM_NOTA_SAVE_ERR", err.code, err.message); setNoteStatus(""); });
+  };
+
+  const handleNoteChange = (text) => {
+    setNoteText(text);
+    if (noteTimeoutRef.current) clearTimeout(noteTimeoutRef.current);
+    noteTimeoutRef.current = setTimeout(() => saveNote(text), 900);
+  };
+
+  const closeMensagem = () => {
+    if (noteTimeoutRef.current) {
+      clearTimeout(noteTimeoutRef.current);
+      noteTimeoutRef.current = null;
+      saveNote(noteText);
+    }
+    setOpenId(null);
+  };
 
   const publish = async () => {
     if (!videoId || !newTitle.trim() || publishing) return;
@@ -91,7 +126,7 @@ function MensagensScreen({ mensagemId, onBack }) {
     return (
       <div className="flex-1 overflow-y-auto" style={{ background: "#000000" }}>
         <div className="px-6 pt-6 pb-3 flex items-center justify-between">
-          <button onClick={() => setOpenId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.7)" }}>← Mensagens</button>
+          <button onClick={closeMensagem} className="text-[13px]" style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.7)" }}>← Mensagens</button>
           {aberta.addedByUid === me.uid && (
             <button onClick={() => setConfirmDelete(aberta)}><Trash2 size={16} color="rgba(242,242,242,0.7)" /></button>
           )}
@@ -106,6 +141,23 @@ function MensagensScreen({ mensagemId, onBack }) {
           <p style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.65)" }} className="text-[12.5px] mt-1.5">
             {[aberta.speaker, aberta.date && fmtDateBR(aberta.date)].filter(Boolean).join(" · ") || "Igreja do Nazareno A Casa"}
           </p>
+        </div>
+
+        <div className="px-6 pb-10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <PenLine size={13} color="rgba(242,242,242,0.55)" />
+              <p style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.55)" }} className="text-[11.5px]">Minhas anotações</p>
+            </div>
+            <span style={{ fontFamily: "Inter", color: noteStatus === "salvo" ? "#2FA8A0" : "rgba(242,242,242,0.4)" }} className="text-[10.5px]">
+              {noteStatus === "salvando" ? "Salvando..." : noteStatus === "salvo" ? "Salvo ✓" : ""}
+            </span>
+          </div>
+          <textarea value={noteText} onChange={e => handleNoteChange(e.target.value)} rows={6}
+            placeholder="Escreva aqui o que Deus falou com você através dessa mensagem..."
+            className="w-full px-4 py-3.5 rounded-2xl outline-none text-[13px] resize-none leading-relaxed"
+            style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: "#F2F2F2" }} />
+          <p style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.35)" }} className="text-[10px] mt-1.5">Só você vê essas anotações.</p>
         </div>
 
         {confirmDelete && (

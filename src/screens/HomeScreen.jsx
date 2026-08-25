@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import {
   Bell,
+  BookmarkCheck,
   ChevronRight,
+  Heart,
   Home as HomeLikeIcon,
   Menu,
   MessageCircle,
   Radio,
+  Share2,
   ShieldCheck,
   User,
   UserPlus,
@@ -19,6 +22,7 @@ import StoriesRow from "../components/StoriesRow.jsx";
 import Avatar from "../components/Avatar.jsx";
 import { TOTAL_READING_DAYS, getDayReading, formatReadingLabel } from "../data/readingPlan.js";
 import { loadReadingProgress } from "../utils/readingProgress.js";
+import { verseOfTheDay } from "../data/dailyVerses.js";
 
 function HomeScreen({ onOpenTile }) {
   const [marked, setMarked] = useState(false);
@@ -40,11 +44,14 @@ function HomeScreen({ onOpenTile }) {
   const feedPosts = visiblePosts(allFeedPosts, me.uid, connections);
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingRequests = connections.filter(c => c.status === "pending" && c.toUid === me.uid).length;
+  const verse = verseOfTheDay();
 
   const handleShare = () => {
-    const text = '"Tudo posso naquele que me fortalece." — Filipenses 4:13';
+    const text = `"${verse.text}" — ${verse.ref}`;
     if (navigator.share) {
       navigator.share({ text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
     }
     setShareMsg(true);
     setTimeout(() => setShareMsg(false), 1800);
@@ -91,6 +98,26 @@ function HomeScreen({ onOpenTile }) {
             {pendingRequests > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full" style={{ background: "#B33B3B", border: "1.5px solid var(--c-surface)" }} />
             )}
+          </button>
+        </div>
+      </div>
+
+      <div className="mx-6 rounded-3xl p-5 mb-5" style={{ background: "#000000" }}>
+        <p style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.5)" }} className="text-[10px] uppercase tracking-wide font-semibold mb-2.5">Versículo do dia</p>
+        <p style={{ fontFamily: "Fraunces", fontStyle: "italic", color: "#F2F2F2" }} className="text-[16px] leading-relaxed mb-2">"{verse.text}"</p>
+        <p style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.55)" }} className="text-[11.5px] mb-4">{verse.ref}</p>
+        <div className="flex items-center gap-4" style={{ borderTop: "1px solid rgba(242,242,242,0.12)", paddingTop: 12 }}>
+          <button onClick={() => setMarked(v => !v)} className="flex items-center gap-1.5">
+            <Heart size={16} color="#F2F2F2" fill={marked ? "#F2F2F2" : "none"} />
+            <span style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.75)" }} className="text-[11.5px]">Amei</span>
+          </button>
+          <button onClick={() => setSaved(v => !v)} className="flex items-center gap-1.5">
+            <BookmarkCheck size={16} color="#F2F2F2" fill={saved ? "#F2F2F2" : "none"} />
+            <span style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.75)" }} className="text-[11.5px]">Guardar</span>
+          </button>
+          <button onClick={handleShare} className="flex items-center gap-1.5">
+            <Share2 size={15} color="#F2F2F2" />
+            <span style={{ fontFamily: "Inter", color: "rgba(242,242,242,0.75)" }} className="text-[11.5px]">{shareMsg ? "Compartilhado!" : "Compartilhar"}</span>
           </button>
         </div>
       </div>
