@@ -140,7 +140,7 @@ export const TAB_DESCRIPTIONS = {
   escala: "Organize quem serve em cada culto — som, mídia, recepção, Kids — e cada voluntário vê sua própria escala.",
   transito: "Veja os carros cadastrados pelos membros e seus responsáveis — útil pra achar o dono rapidinho no estacionamento.",
   diretorio: "Busque qualquer membro cadastrado por nome ou profissão e veja o perfil dele, mesmo sem ser amigo ainda.",
-  checkin: "Confirme a saída das crianças da Área Infantil comparando o código gerado no check-in. Acesso da Junta e Liderança.",
+  checkin: "Check-in/check-out de segurança, cadastro de criança nova e marcação de presença — tudo num lugar só. Acesso da Junta e Liderança.",
   criancas: "Busque qualquer criança cadastrada por nome e veja a ficha dela, com responsável e restrição alimentar. Acesso da Junta e Liderança.",
 };
 
