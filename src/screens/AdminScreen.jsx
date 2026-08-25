@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Car, ChevronRight, Download, Search, ShieldCheck, Users, X } from "lucide-react";
+import { Car, ChevronRight, Download, FileSpreadsheet, Search, ShieldCheck, Users, X } from "lucide-react";
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import * as XLSX from "xlsx";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, fmtDateBR, initials, ROLE_LABELS } from "../utils/helpers.js";
@@ -50,14 +51,18 @@ function AdminScreen({ onBack }) {
       .catch(() => setError("Não foi possível carregar os cadastros. Verifique sua permissão de acesso."));
   }, []);
 
-  const exportCsv = () => {
-    const header = ["Nome", "E-mail", "Nascimento", "Profissão", "Possui carro", "Placa", "Membro da igreja", "Cadastrado em"];
+  const buildExportRows = () => {
+    const header = ["Nome", "E-mail", "Nascimento", "Profissão", "Cargo", "Possui carro", "Placa", "Membro da igreja", "Cadastrado em"];
     const rows = users.map(u => [
-      u.nome || "", u.email || "", fmtDateBR(u.nascimento) || "", u.profissao || "",
+      u.nome || "", u.email || "", fmtDateBR(u.nascimento) || "", u.profissao || "", ROLE_LABELS[u.role] || "Membro",
       u.possuiCarro ? "Sim" : "Não", u.placa || "",
       u.membro ? "Sim" : "Não", fmtCreatedAt(u.createdAt),
     ]);
-    const csv = [header, ...rows].map(r => r.map(toCsvValue).join(",")).join("\n");
+    return [header, ...rows];
+  };
+
+  const exportCsv = () => {
+    const csv = buildExportRows().map(r => r.map(toCsvValue).join(",")).join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -67,6 +72,14 @@ function AdminScreen({ onBack }) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const exportExcel = () => {
+    const ws = XLSX.utils.aoa_to_sheet(buildExportRows());
+    ws["!cols"] = [{ wch: 24 }, { wch: 26 }, { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cadastros");
+    XLSX.writeFile(wb, `cadastros-casa-app-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (
@@ -96,17 +109,24 @@ function AdminScreen({ onBack }) {
 
       {users && (
         <>
-          <div className="px-6 mb-5 flex items-center gap-3">
-            <div className="flex-1 rounded-2xl p-4" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <div className="px-6 mb-3">
+            <div className="rounded-2xl p-4" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
               <div className="flex items-center gap-2 mb-1">
                 <Users size={14} color="var(--c-muted)" />
                 <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Total de cadastrados</p>
               </div>
               <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[24px]">{users.length}</p>
             </div>
-            <button onClick={exportCsv} disabled={users.length === 0}
-              className="flex items-center gap-2 px-4 py-4 rounded-2xl text-[12.5px] font-semibold shrink-0"
+          </div>
+          <div className="px-6 mb-5 flex items-center gap-2.5">
+            <button onClick={exportExcel} disabled={users.length === 0}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-[12.5px] font-semibold"
               style={{ fontFamily: "Inter", background: "var(--c-accent)", color: "#FFFFFF", opacity: users.length === 0 ? 0.5 : 1 }}>
+              <FileSpreadsheet size={15} /> Exportar Excel
+            </button>
+            <button onClick={exportCsv} disabled={users.length === 0}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-[12.5px] font-semibold"
+              style={{ fontFamily: "Inter", background: "var(--c-surface)", color: "var(--c-text)", border: "1px solid var(--c-border)", opacity: users.length === 0 ? 0.5 : 1 }}>
               <Download size={15} /> Exportar CSV
             </button>
           </div>
