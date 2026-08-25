@@ -11,6 +11,7 @@ import {
   PenLine,
   RotateCcw,
   Sparkles,
+  Target,
   X,
 } from "lucide-react";
 import { collection, query, where, onSnapshot, updateDoc, doc, arrayUnion, increment } from "firebase/firestore";
@@ -22,12 +23,15 @@ import { BIBLE_STORIES, todaysStoryFor } from "../data/kidsActivities.js";
 import { COLORING_PAGES } from "../data/coloringPages.js";
 import { HANGMAN_WORDS, VERSE_FILLS } from "../data/kidsGames.js";
 import { MEMORY_SETS, COUNTING_GAMES } from "../data/kidsGamesInfantil.js";
+import { FIND_DIFFERENT_SETS, QUIZ_QUESTIONS } from "../data/kidsGamesQuiz.js";
 import { BADGES_BY_GROUP, badgeProgress, groupIdForAge } from "../data/kidsBadges.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 import HangmanGame from "../components/HangmanGame.jsx";
 import VerseFillGame from "../components/VerseFillGame.jsx";
 import MemoryGame from "../components/MemoryGame.jsx";
 import CountingGame from "../components/CountingGame.jsx";
+import FindDifferentGame from "../components/FindDifferentGame.jsx";
+import QuizGame from "../components/QuizGame.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -49,6 +53,8 @@ function InfantilScreen({ onBack }) {
   const [openVerseFillId, setOpenVerseFillId] = useState(null);
   const [openMemoryId, setOpenMemoryId] = useState(null);
   const [openCountingId, setOpenCountingId] = useState(null);
+  const [openFindDiffId, setOpenFindDiffId] = useState(null);
+  const [openQuizId, setOpenQuizId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
   const group = AGE_GROUPS[activeGroup];
@@ -65,6 +71,10 @@ function InfantilScreen({ onBack }) {
   const openMemorySet = groupMemorySets.find(s => s.id === openMemoryId);
   const groupCountingGames = COUNTING_GAMES.filter(g => g.groupId === group.id);
   const openCounting = groupCountingGames.find(g => g.id === openCountingId);
+  const groupFindDiff = FIND_DIFFERENT_SETS.filter(s => s.groupId === group.id);
+  const openFindDiff = groupFindDiff.find(s => s.id === openFindDiffId);
+  const groupQuiz = QUIZ_QUESTIONS.filter(q => q.groupId === group.id);
+  const openQuiz = groupQuiz.find(q => q.id === openQuizId);
 
   const paintRegion = (pageId, regionId) => {
     setColoringFills(prev => ({ ...prev, [pageId]: { ...(prev[pageId] || {}), [regionId]: activeCrayon } }));
@@ -87,7 +97,10 @@ function InfantilScreen({ onBack }) {
     if (!children.some(c => c.id === selectedChildId)) setSelectedChildId(children[0].id);
   }, [children]);
 
-  useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); setOpenMemoryId(null); setOpenCountingId(null); }, [activeGroup]);
+  useEffect(() => {
+    setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null);
+    setOpenMemoryId(null); setOpenCountingId(null); setOpenFindDiffId(null); setOpenQuizId(null);
+  }, [activeGroup]);
 
   const selectedChild = children.find(c => c.id === selectedChildId);
 
@@ -118,6 +131,18 @@ function InfantilScreen({ onBack }) {
     if (!selectedChildId) return;
     updateDoc(doc(db, "kids", selectedChildId), { countingCorrect: increment(1) })
       .catch(err => console.error("KID_COUNTING_CORRECT_ERR", err.code, err.message));
+  };
+
+  const recordFindDifferentWin = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { findDifferentWins: increment(1) })
+      .catch(err => console.error("KID_FINDDIFF_WIN_ERR", err.code, err.message));
+  };
+
+  const recordQuizCorrect = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { quizCorrect: increment(1) })
+      .catch(err => console.error("KID_QUIZ_CORRECT_ERR", err.code, err.message));
   };
 
   if (openColoringPage) {
@@ -211,6 +236,38 @@ function InfantilScreen({ onBack }) {
         </div>
         <div className="px-6 pb-8">
           <CountingGame item={openCounting} color={group.color} onCorrect={recordCountingCorrect} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openFindDiff) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenFindDiffId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">👀 {openFindDiff.title}</p>
+        </div>
+        <div className="px-6 pb-8">
+          <FindDifferentGame set={openFindDiff} color={group.color} onWin={recordFindDifferentWin} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openQuiz) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenQuizId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">🎯 Quiz Bíblico</p>
+        </div>
+        <div className="px-6 pb-8">
+          <QuizGame item={openQuiz} color={group.color} onCorrect={recordQuizCorrect} />
         </div>
       </div>
     );
@@ -365,6 +422,32 @@ function InfantilScreen({ onBack }) {
               ))}
             </div>
           )}
+
+          <div className="flex items-center gap-2 mb-3 mt-6">
+            <Target size={14} color={group.color} />
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Quiz bíblico</p>
+          </div>
+          {groupQuiz.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma pergunta pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {groupQuiz.map(q => (
+                <button key={q.id} onClick={() => setOpenQuizId(q.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E` }}>
+                    <Target size={16} color={group.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12.5px] truncate">{q.question}</p>
+                  </div>
+                  <ChevronRight size={16} color="#D8CBB4" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -413,6 +496,21 @@ function InfantilScreen({ onBack }) {
                 style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
                 <span style={{ fontSize: 26 }}>{g.emoji}</span>
                 <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">Contar {g.emoji}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ fontSize: 14 }}>👀</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Encontre a diferente</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {groupFindDiff.map(s => (
+              <button key={s.id} onClick={() => setOpenFindDiffId(s.id)}
+                className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                <span style={{ fontSize: 26 }}>{s.same}</span>
+                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">{s.title}</p>
               </button>
             ))}
           </div>

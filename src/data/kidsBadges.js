@@ -22,6 +22,7 @@ export const BADGES_BY_GROUP = {
     { id: "sabe-tudo-p", emoji: "🧠", label: "Sei Tudo da Turma!", desc: "Ouviu todas as histórias da sua turma.", of: "stories", need: "all" },
     { id: "bom-memoria-p", emoji: "🧩", label: "Bom de Memória", desc: "Venceu o jogo da memória 3 vezes.", of: "memory", need: 3 },
     { id: "sabe-contar-p", emoji: "🔢", label: "Sei Contar!", desc: "Acertou 3 desafios de contar.", of: "counting", need: 3 },
+    { id: "olho-aguia-p", emoji: "👀", label: "Olho de Águia", desc: "Achou a figurinha diferente 3 vezes.", of: "finddiff", need: 3 },
   ],
   m: [
     { id: "primeira-presenca-m", emoji: "🙌", label: "Primeira Presença", desc: "Marcou presença pela primeira vez.", of: "attendance", need: 1 },
@@ -32,6 +33,7 @@ export const BADGES_BY_GROUP = {
     { id: "sabe-tudo-m", emoji: "🧠", label: "Sabe Tudo", desc: "Leu todas as histórias da sua turma.", of: "stories", need: "all" },
     { id: "mestre-forca-m", emoji: "🔤", label: "Mestre da Forca", desc: "Venceu o jogo da forca 3 vezes.", of: "hangman", need: 3 },
     { id: "guardiao-palavra-m", emoji: "📜", label: "Guardião da Palavra", desc: "Acertou 3 versículos.", of: "verses", need: 3 },
+    { id: "craque-quiz-m", emoji: "🎯", label: "Craque do Quiz", desc: "Acertou 3 perguntas do quiz bíblico.", of: "quiz", need: 3 },
   ],
   g: [
     { id: "primeira-presenca-g", emoji: "🙌", label: "Primeira Presença", desc: "Marcou presença pela primeira vez.", of: "attendance", need: 1 },
@@ -42,6 +44,7 @@ export const BADGES_BY_GROUP = {
     { id: "teologo-mirim-g", emoji: "🧠", label: "Teólogo Mirim", desc: "Leu todas as histórias da sua turma.", of: "stories", need: "all" },
     { id: "mestre-forca-g", emoji: "🔤", label: "Mestre da Forca", desc: "Venceu o jogo da forca 5 vezes.", of: "hangman", need: 5 },
     { id: "guardiao-palavra-g", emoji: "📜", label: "Guardião da Palavra", desc: "Acertou 5 versículos.", of: "verses", need: 5 },
+    { id: "craque-quiz-g", emoji: "🎯", label: "Craque do Quiz", desc: "Acertou 5 perguntas do quiz bíblico.", of: "quiz", need: 5 },
   ],
 };
 
@@ -52,7 +55,9 @@ export function badgeProgress(badge, child, totalGroupStories) {
     badge.of === "hangman" ? (child.hangmanWins || 0) :
     badge.of === "verses" ? (child.versesCorrect || 0) :
     badge.of === "memory" ? (child.memoryWins || 0) :
-    badge.of === "counting" ? (child.countingCorrect || 0) : 0;
+    badge.of === "counting" ? (child.countingCorrect || 0) :
+    badge.of === "finddiff" ? (child.findDifferentWins || 0) :
+    badge.of === "quiz" ? (child.quizCorrect || 0) : 0;
   const need = badge.need === "all" ? totalGroupStories : badge.need;
   return { value, need, unlocked: need > 0 && value >= need };
 }
