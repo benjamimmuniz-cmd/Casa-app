@@ -67,7 +67,7 @@ function PlanoLeituraScreen({ onBack }) {
       author: me,
       text: `Desbloqueei a conquista "${newAchievement.title}" no Plano de Leitura! ${newAchievement.desc}. 🙌`,
       kind: "conquista",
-    });
+    }).catch(err => console.error("CONQUISTA_FEED_POST_ERR", err.code, err.message));
     setShared(true);
   };
 

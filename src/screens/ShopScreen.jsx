@@ -111,7 +111,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           text: `Novidade na ${title}: ${form.name.trim()} — ${fmtPrice(price)}${form.desc.trim() ? `\n${form.desc.trim()}` : ""}`,
           image: form.image,
           kind: title === "Casa Cantina" ? "cardapio" : "produto",
-        });
+        }).catch(err => console.error("PRODUCT_FEED_POST_ERR", err.code, err.message));
       }
       closeAddSheet();
     } catch (err) {

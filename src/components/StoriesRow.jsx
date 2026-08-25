@@ -33,7 +33,7 @@ function StoriesRow({ onPublish, onShorts }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async () => setEditingImage(await compressImage(reader.result));
+    reader.onload = async () => setEditingImage(await compressImage(reader.result, 1000, 0.72));
     reader.readAsDataURL(file);
     e.target.value = "";
   };

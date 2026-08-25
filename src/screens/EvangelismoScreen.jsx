@@ -9,6 +9,8 @@ import {
   Phone,
   X
 } from "lucide-react";
+import { collection, addDoc, arrayUnion, arrayRemove, doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, getMonthGrid, initials } from "../utils/helpers.js";
 import { EVANG_DOACAO_TIPOS } from "../data/constants.js";
@@ -16,7 +18,8 @@ import { EVANG_DOACAO_TIPOS } from "../data/constants.js";
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 function EvangelismoScreen({ onBack }) {
-  const meName = useContext(UserContext).name || "Alguém da igreja";
+  const me = useContext(UserContext);
+  const meName = me.name || "Alguém da igreja";
   const [innerTab, setInnerTab] = useState("familias");
 
   const [families, setFamilies] = useState([]);
@@ -27,10 +30,16 @@ function EvangelismoScreen({ onBack }) {
 
   const hoje = new Date();
   const YEAR = hoje.getFullYear(), MONTH = hoje.getMonth(), TODAY = hoje.getDate();
-  const [events, setEvents] = useState([
-    { id: "ev1", day: 22, title: "Evangelismo no Parque", time: "09:00", location: "Parque da Cidade", volunteers: ["Benjamim Muniz"] },
-    { id: "ev2", day: 29, title: "Visita ao Bairro Esperança", time: "14:00", location: "Bairro Esperança", volunteers: [] },
-  ]);
+  const mesKeyAtual = `${YEAR}-${String(MONTH + 1).padStart(2, "0")}`;
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "evangelismoEventos"), snap => {
+      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return () => unsub();
+  }, []);
+
   const [selectedDay, setSelectedDay] = useState(TODAY);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [openEventId, setOpenEventId] = useState(null);
@@ -44,8 +53,9 @@ function EvangelismoScreen({ onBack }) {
   const [donationError, setDonationError] = useState("");
 
   const weeks = getMonthGrid(YEAR, MONTH);
-  const dayEvents = events.filter(e => e.day === selectedDay);
-  const eventDays = new Set(events.map(e => e.day));
+  const eventsMesAtual = events.filter(e => (e.date || "").startsWith(mesKeyAtual));
+  const dayEvents = eventsMesAtual.filter(e => Number((e.date || "").slice(-2)) === selectedDay);
+  const eventDays = new Set(eventsMesAtual.map(e => Number((e.date || "").slice(-2))));
   const openEvent = events.find(e => e.id === openEventId);
   const openFamily = families.find(f => f.id === openFamilyId);
 
@@ -74,26 +84,30 @@ function EvangelismoScreen({ onBack }) {
   const handleAddEvent = () => {
     setEventError("");
     if (!eventForm.title.trim()) { setEventError("Digite o título do evento."); return; }
-    setEvents(prev => [...prev, {
-      id: "ev" + Date.now(),
-      day: selectedDay,
+    const date = `${mesKeyAtual}-${String(selectedDay).padStart(2, "0")}`;
+    addDoc(collection(db, "evangelismoEventos"), {
+      date,
       title: eventForm.title.trim(),
       time: eventForm.time.trim() || "—",
       location: eventForm.location.trim(),
       volunteers: [],
-    }]);
+      createdByUid: me.uid || null,
+      createdAt: serverTimestamp(),
+    }).catch(err => console.error("EVANG_EVENTO_ADD_ERR", err.code, err.message));
     setEventForm({ title: "", time: "", location: "" });
     setShowAddEvent(false);
   };
 
   const addVolunteer = (eventId) => {
     if (!volunteerName.trim()) return;
-    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, volunteers: [...e.volunteers, volunteerName.trim()] } : e));
+    updateDoc(doc(db, "evangelismoEventos", eventId), { volunteers: arrayUnion(volunteerName.trim()) })
+      .catch(err => console.error("EVANG_VOLUNT_ADD_ERR", err.code, err.message));
     setVolunteerName("");
   };
 
   const removeVolunteer = (eventId, name) => {
-    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, volunteers: e.volunteers.filter(v => v !== name) } : e));
+    updateDoc(doc(db, "evangelismoEventos", eventId), { volunteers: arrayRemove(name) })
+      .catch(err => console.error("EVANG_VOLUNT_RM_ERR", err.code, err.message));
   };
 
   const handleAddDonation = () => {

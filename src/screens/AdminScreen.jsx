@@ -10,6 +10,7 @@ const ROLE_OPTIONS = [
   { value: "member", label: "Membro", desc: "Acesso normal, sem telas de liderança." },
   { value: "junta", label: "Junta", desc: "Libera o Painel de cadastros e o Check-in da Área Infantil." },
   { value: "lideranca", label: "Liderança", desc: "Mesmo acesso da Junta." },
+  { value: "dev", label: "Desenvolvedor", desc: "Nível acima de Liderança — reservado pra quem administra o app, com tudo desbloqueado." },
 ];
 
 function toCsvValue(v) {
@@ -164,8 +165,13 @@ function AdminScreen({ onBack }) {
                 </div>
                 <div className="text-right shrink-0 flex items-center gap-2">
                   <div>
-                    {(u.role === "master" || u.role === "junta" || u.role === "lideranca") && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full inline-block mb-1" style={{ fontFamily: "IBM Plex Mono", background: "#3E5FBF22", color: "var(--c-accent-2)" }}>{ROLE_LABELS[u.role]}</span>
+                    {(u.role === "master" || u.role === "junta" || u.role === "lideranca" || u.role === "dev") && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full inline-block mb-1"
+                        style={{
+                          fontFamily: "IBM Plex Mono",
+                          background: u.role === "dev" ? "#B8860B22" : "#3E5FBF22",
+                          color: u.role === "dev" ? "#B8860B" : "var(--c-accent-2)",
+                        }}>{ROLE_LABELS[u.role]}</span>
                     )}
                     <p style={{ fontFamily: "IBM Plex Mono", color: "var(--c-faint)" }} className="text-[10px]">{fmtCreatedAt(u.createdAt)}</p>
                   </div>
@@ -181,7 +187,7 @@ function AdminScreen({ onBack }) {
         <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setRoleTarget(null)}>
           <div className="w-full rounded-t-3xl p-6" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-1">Cargo de {roleTarget.nome || roleTarget.email}</p>
-            <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] mb-4">Junta e Liderança liberam o Painel de cadastros e o Check-in da Área Infantil.</p>
+            <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] mb-4">Junta e Liderança liberam o Painel de cadastros e o Check-in da Área Infantil. Desenvolvedor libera tudo isso e é o nível mais alto do app.</p>
             <div className="flex flex-col gap-2">
               {ROLE_OPTIONS.map(opt => {
                 const current = roleTarget.role === opt.value || (opt.value === "lideranca" && roleTarget.role === "master") || (!roleTarget.role && opt.value === "member");
