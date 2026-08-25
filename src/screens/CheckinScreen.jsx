@@ -7,7 +7,7 @@ import { colorFor, initials, isStaffRole, todayLabel } from "../utils/helpers.js
 import { compressImage } from "../utils/imageCompress.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 
-const EMPTY_CHILD = { name: "", age: "", diet: "", childPhoto: null };
+const EMPTY_CHILD = { name: "", age: "", diet: "", neurodivergente: false, childPhoto: null };
 const TABS = [
   { id: "checkin", label: "Check-in", icon: ShieldCheck },
   { id: "cadastrar", label: "Cadastrar", icon: Baby },
@@ -78,6 +78,7 @@ function CheckinScreen({ onBack }) {
         name: childForm.name.trim(),
         age: childForm.age.trim(),
         diet: childForm.diet.trim(),
+        neurodivergente: childForm.neurodivergente,
         childPhoto: childForm.childPhoto,
         parentsPhoto: responsavel.photo || null,
         attendance: [],
@@ -190,7 +191,11 @@ function CheckinScreen({ onBack }) {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
+                          <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px] flex items-center gap-1">
+                            {c.name}
+                            {c.diet && <span style={{ fontSize: 12 }} title={`Restrição: ${c.diet}`}>⚠️</span>}
+                            {c.neurodivergente && <span style={{ fontSize: 12 }} title="Neurodivergente">♾️</span>}
+                          </p>
                           <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px]">{c.age} anos</p>
                         </div>
                         <span style={{ fontFamily: "IBM Plex Mono", color: "#2FA8A0", fontWeight: 700, letterSpacing: 2 }} className="text-[16px]">{c.checkinCode}</span>
@@ -255,6 +260,15 @@ function CheckinScreen({ onBack }) {
           <input value={childForm.diet} onChange={e => setChildForm(f => ({ ...f, diet: e.target.value }))} placeholder="Restrição alimentar (opcional)"
             className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
             style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #E8DCC4", color: "#3A2E22" }} />
+
+          <label className="flex items-center gap-3 mb-4 cursor-pointer rounded-2xl p-3.5" style={{ background: "#FFFFFF", border: "1px solid #E8DCC4" }}>
+            <input type="checkbox" checked={childForm.neurodivergente} onChange={e => setChildForm(f => ({ ...f, neurodivergente: e.target.checked }))}
+              className="w-4 h-4 rounded shrink-0" style={{ accentColor: "#5A4BC7" }} />
+            <span>
+              <span style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12.5px] block">Criança neurodivergente</span>
+              <span style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] block mt-0.5">Ex: TEA, TDAH — ajuda a equipe a acolher melhor</span>
+            </span>
+          </label>
 
           <p style={{ fontFamily: "Inter", color: "#6B6255" }} className="text-[11px] block mb-1.5">Responsável</p>
           {responsavel ? (

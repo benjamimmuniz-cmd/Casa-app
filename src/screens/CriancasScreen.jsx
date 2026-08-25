@@ -98,7 +98,11 @@ function CriancasScreen({ onBack }) {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] truncate">{c.name}</p>
+                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] truncate flex items-center gap-1">
+                      {c.name}
+                      {c.diet && <span style={{ fontSize: 11 }} title={`Restrição: ${c.diet}`}>⚠️</span>}
+                      {c.neurodivergente && <span style={{ fontSize: 11 }} title="Neurodivergente">♾️</span>}
+                    </p>
                     <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] truncate">
                       {c.age} anos · resp.: {usersByUid[c.parentUid]?.nome || "—"}
                     </p>
@@ -148,6 +152,14 @@ function CriancasScreen({ onBack }) {
                   <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{openKid.diet || "Nenhuma informada"}</p>
                 </div>
               </div>
+              {openKid.neurodivergente && (
+                <div className="flex items-center gap-3" style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#5A4BC71E" }}>
+                    <span style={{ fontSize: 15 }}>♾️</span>
+                  </div>
+                  <p style={{ fontFamily: "Inter", color: "#5A4BC7", fontWeight: 600 }} className="text-[13px]">Criança neurodivergente</p>
+                </div>
+              )}
               <div style={{ borderTop: "1px solid #F0EAD9", paddingTop: 12 }}>
                 <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">Frequência</p>
                 <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">

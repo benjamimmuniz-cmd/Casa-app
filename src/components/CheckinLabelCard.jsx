@@ -6,7 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 // a mesma cartela serve pra criança e pra quem for buscar (responsável),
 // só trocando os textos. Usada em InfantilScreen (Meus Filhos) e onde mais
 // precisar imprimir a etiqueta.
-function CheckinLabelCard({ kicker, nameLeft, nameRight, code, qrValue, groupEmoji, hasDiet, footerLeft, footerRight }) {
+function CheckinLabelCard({ kicker, nameLeft, nameRight, code, qrValue, groupEmoji, diet, neuro, footerLeft, dateLabel, timeLabel }) {
   return (
     <div className="overflow-hidden" style={{ width: 320, background: "#FFFFFF", border: "2px solid #3A2E22", borderRadius: 10 }}>
       <div className="flex items-stretch justify-between px-3 pt-2.5 pb-2" style={{ borderBottom: "1px dashed #C9BBA0" }}>
@@ -22,16 +22,25 @@ function CheckinLabelCard({ kicker, nameLeft, nameRight, code, qrValue, groupEmo
           <QRCodeSVG value={qrValue} size={54} bgColor="#FFFFFF" fgColor="#3A2E22" level="M" />
         </div>
       </div>
-      <div className="flex items-center justify-between px-3 py-2.5">
-        <p style={{ fontFamily: "IBM Plex Mono", color: "#3A2E22", fontWeight: 800, letterSpacing: 2 }} className="text-[26px]">{code}</p>
-        <div className="flex items-center gap-2">
-          {groupEmoji && <span style={{ fontSize: 20 }}>{groupEmoji}</span>}
-          {hasDiet && <span style={{ fontSize: 18 }}>⚠️</span>}
+      <div className="px-3 py-2">
+        <div className="flex items-center justify-between">
+          <p style={{ fontFamily: "IBM Plex Mono", color: "#3A2E22", fontWeight: 800, letterSpacing: 2 }} className="text-[26px]">{code}</p>
+          <div className="flex items-center gap-1.5" title="🦁 turma · ⚠️ restrição alimentar · ♾️ neurodivergente">
+            {groupEmoji && <span style={{ fontSize: 19 }}>{groupEmoji}</span>}
+            {diet && <span style={{ fontSize: 17 }}>⚠️</span>}
+            {neuro && <span style={{ fontSize: 17 }}>♾️</span>}
+          </div>
         </div>
+        {diet && (
+          <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[10px] mt-0.5 leading-snug">⚠️ Restrição: {diet}</p>
+        )}
+        {neuro && (
+          <p style={{ fontFamily: "Inter", color: "#5A4BC7" }} className="text-[10px] mt-0.5 leading-snug">♾️ Neurodivergente</p>
+        )}
       </div>
       <div className="flex items-center justify-between px-3 py-2" style={{ background: "#3A2E22" }}>
         <span style={{ fontFamily: "Inter", color: "#FFFFFF", fontWeight: 700, letterSpacing: 0.5 }} className="text-[9.5px] uppercase truncate">{footerLeft}</span>
-        <span style={{ fontFamily: "IBM Plex Mono", color: "rgba(255,255,255,0.75)" }} className="text-[9.5px] shrink-0 ml-2">{footerRight}</span>
+        <span style={{ fontFamily: "IBM Plex Mono", color: "rgba(255,255,255,0.75)" }} className="text-[9.5px] shrink-0 ml-2 text-right">{dateLabel}{timeLabel ? ` · ${timeLabel}` : ""}</span>
       </div>
     </div>
   );

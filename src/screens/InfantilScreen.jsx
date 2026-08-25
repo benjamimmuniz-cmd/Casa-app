@@ -49,7 +49,7 @@ function InfantilScreen({ onBack }) {
   const [children, setChildren] = useState([]);
   const [showAddChild, setShowAddChild] = useState(false);
   const [openChildId, setOpenChildId] = useState(null);
-  const [childForm, setChildForm] = useState({ name: "", age: "", diet: "", childPhoto: null, parentsPhoto: null });
+  const [childForm, setChildForm] = useState({ name: "", age: "", diet: "", neurodivergente: false, childPhoto: null, parentsPhoto: null });
   const [childFormError, setChildFormError] = useState("");
   const [savingChild, setSavingChild] = useState(false);
   const [openStoryId, setOpenStoryId] = useState(null);
@@ -127,12 +127,13 @@ function InfantilScreen({ onBack }) {
         name: childForm.name.trim(),
         age: childForm.age.trim(),
         diet: childForm.diet.trim(),
+        neurodivergente: childForm.neurodivergente,
         childPhoto: childForm.childPhoto,
         parentsPhoto: childForm.parentsPhoto,
         attendance: [],
         createdAt: serverTimestamp(),
       });
-      setChildForm({ name: "", age: "", diet: "", childPhoto: null, parentsPhoto: null });
+      setChildForm({ name: "", age: "", diet: "", neurodivergente: false, childPhoto: null, parentsPhoto: null });
       setShowAddChild(false);
     } catch (err) {
       console.error("KID_ADD_ERR", err.code, err.message);
@@ -279,6 +280,14 @@ function InfantilScreen({ onBack }) {
                 <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{openChild.diet || "Nenhuma informada"}</p>
               </div>
             </div>
+            {openChild.neurodivergente && (
+              <div className="flex items-center gap-3" style={{ borderTop: "1px solid #F5EBDA", paddingTop: 12 }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#5A4BC71E" }}>
+                  <span style={{ fontSize: 15 }}>♾️</span>
+                </div>
+                <p style={{ fontFamily: "Inter", color: "#5A4BC7", fontWeight: 600 }} className="text-[13px]">Criança neurodivergente</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -321,7 +330,9 @@ function InfantilScreen({ onBack }) {
         const respLast = respRest.join(" ");
         const childGroup = AGE_GROUPS.find(g => g.id === groupIdForAge(openChild.age));
         const qrValue = `CASA-CHECKIN:${openChild.id}:${openChild.checkinCode}`;
-        const dateLabel = new Date().toLocaleDateString("pt-BR");
+        const checkinAt = openChild.checkinAt?.toDate?.() || new Date();
+        const dateLabel = checkinAt.toLocaleDateString("pt-BR");
+        const timeLabel = checkinAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
         return (
           <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#FFF8EE" }}>
             <style>{`
@@ -344,12 +355,12 @@ function InfantilScreen({ onBack }) {
               <div id="casa-print-label" className="flex flex-col items-center gap-4">
                 <CheckinLabelCard
                   kicker="Criança" nameLeft={firstName} nameRight={lastName} code={openChild.checkinCode} qrValue={qrValue}
-                  groupEmoji={childGroup?.emoji} hasDiet={!!openChild.diet}
-                  footerLeft={`Turma ${childGroup?.label || ""}`} footerRight={dateLabel} />
+                  groupEmoji={childGroup?.emoji} diet={openChild.diet} neuro={openChild.neurodivergente}
+                  footerLeft={`Turma ${childGroup?.label || ""}`} dateLabel={dateLabel} timeLabel={timeLabel} />
                 <CheckinLabelCard
                   kicker="Responsável" nameLeft={respFirst} nameRight={respLast} code={openChild.checkinCode} qrValue={qrValue}
-                  groupEmoji={childGroup?.emoji} hasDiet={!!openChild.diet}
-                  footerLeft={`Buscar: ${openChild.name}`} footerRight={dateLabel} />
+                  groupEmoji={childGroup?.emoji} diet={openChild.diet} neuro={openChild.neurodivergente}
+                  footerLeft={`Buscar: ${openChild.name}`} dateLabel={dateLabel} timeLabel={timeLabel} />
               </div>
             </div>
           </div>
@@ -773,6 +784,15 @@ function InfantilScreen({ onBack }) {
               className="w-full px-4 py-3 rounded-xl mb-2 outline-none text-[13px]"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #E8DCC4", color: "#3A2E22" }} />
             <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] mb-4">Deixe em branco se não houver nenhuma restrição.</p>
+
+            <label className="flex items-center gap-3 mb-4 cursor-pointer rounded-2xl p-3.5" style={{ background: "#FFFFFF", border: "1px solid #E8DCC4" }}>
+              <input type="checkbox" checked={childForm.neurodivergente} onChange={e => setChildForm({ ...childForm, neurodivergente: e.target.checked })}
+                className="w-4 h-4 rounded shrink-0" style={{ accentColor: "#5A4BC7" }} />
+              <span>
+                <span style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12.5px] block">Criança neurodivergente</span>
+                <span style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] block mt-0.5">Ex: TEA, TDAH — ajuda a equipe a acolher melhor</span>
+              </span>
+            </label>
 
             {childFormError && (
               <p style={{ fontFamily: "Inter", color: "#C24C33" }} className="text-[12px] mb-4 text-center">{childFormError}</p>

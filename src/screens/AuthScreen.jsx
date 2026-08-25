@@ -35,7 +35,7 @@ function mapAuthError(code) {
   }
 }
 
-const EMPTY_CHILD = { name: "", age: "", diet: "", childPhoto: null };
+const EMPTY_CHILD = { name: "", age: "", diet: "", neurodivergente: false, childPhoto: null };
 
 function AuthScreen({ onSuccess }) {
   const [mode, setMode] = useState("cadastro"); // cadastro | login
@@ -70,6 +70,7 @@ function AuthScreen({ onSuccess }) {
     name: childForm.name.trim(),
     age: childForm.age.trim(),
     diet: childForm.diet.trim(),
+    neurodivergente: childForm.neurodivergente,
     childPhoto: childForm.childPhoto,
     parentsPhoto: pendingUser.photo || null,
     attendance: [],
@@ -206,8 +207,17 @@ function AuthScreen({ onSuccess }) {
             className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
             style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
           <input value={childForm.diet} onChange={e => setChild("diet", e.target.value)} placeholder="Restrição alimentar (opcional)"
-            className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px]"
+            className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
             style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+
+          <label className="flex items-center gap-3 mb-4 cursor-pointer rounded-2xl p-3.5" style={{ background: "#FFFFFF", border: "1px solid #D6D6D6" }}>
+            <input type="checkbox" checked={childForm.neurodivergente} onChange={e => setChild("neurodivergente", e.target.checked)}
+              className="w-4 h-4 rounded shrink-0" style={{ accentColor: "#5A4BC7" }} />
+            <span>
+              <span style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] block">Criança neurodivergente</span>
+              <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] block mt-0.5">Ex: TEA, TDAH — ajuda a equipe a acolher melhor</span>
+            </span>
+          </label>
 
           <button onClick={addAnotherChild} disabled={savingChild}
             className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl mb-5 text-[12.5px] font-semibold"
