@@ -36,7 +36,7 @@ const TABS = [
   { id: "historias", label: "Histórias", icon: BookOpen },
   { id: "atividades", label: "Atividades", icon: Palette },
   { id: "conquistas", label: "Conquistas", icon: Award },
-  { id: "frequencia", label: "Frequência", icon: Users },
+  { id: "meusfilhos", label: "Meus Filhos", icon: Users },
 ];
 const generateCheckinCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
@@ -93,11 +93,6 @@ function InfantilScreen({ onBack }) {
 
   useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); }, [activeGroup]);
 
-  const todayLabel = () => {
-    const d = new Date();
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
-  };
-
   const handleChildPhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -140,14 +135,6 @@ function InfantilScreen({ onBack }) {
       setChildFormError("Não deu pra cadastrar agora. Tenta de novo.");
     }
     setSavingChild(false);
-  };
-
-  const markAttendance = (childId) => {
-    const label = todayLabel();
-    const child = children.find(c => c.id === childId);
-    if (!child || child.attendance.includes(label)) return;
-    updateDoc(doc(db, "kids", childId), { attendance: arrayUnion(label) })
-      .catch(err => console.error("KID_ATTEND_ERR", err.code, err.message));
   };
 
   const selectedChild = children.find(c => c.id === selectedChildId);
@@ -245,11 +232,10 @@ function InfantilScreen({ onBack }) {
   }
 
   if (openChild) {
-    const presentToday = openChild.attendance.includes(todayLabel());
     return (
       <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
         <div className="px-6 pt-6 pb-2">
-          <button onClick={() => setOpenChildId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Frequência</button>
+          <button onClick={() => setOpenChildId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Meus Filhos</button>
         </div>
 
         <div className="flex flex-col items-center px-6 mt-3 mb-5">
@@ -291,7 +277,7 @@ function InfantilScreen({ onBack }) {
           </div>
         </div>
 
-        <div className="px-6 mb-5">
+        <div className="px-6 pb-8">
           <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[12px] mb-3">Check-in de segurança</p>
           {openChild.checkinActive ? (
             <div className="rounded-2xl p-4" style={{ background: "#2FA8A0", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
@@ -314,33 +300,6 @@ function InfantilScreen({ onBack }) {
               </div>
             </button>
           )}
-        </div>
-
-        <div className="px-6 pb-8">
-          <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[12px] mb-3">Frequência</p>
-          <div className="rounded-2xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
-            <div className="flex items-center justify-between mb-4">
-              <p style={{ fontFamily: "Fraunces", color: "#3A2E22", fontWeight: 600 }} className="text-[15px]">
-                {openChild.attendance.length} {openChild.attendance.length === 1 ? "presença registrada" : "presenças registradas"}
-              </p>
-              <button onClick={() => markAttendance(openChild.id)} disabled={presentToday}
-                className="px-4 py-2 rounded-full text-[12px] font-semibold"
-                style={{ fontFamily: "Inter", background: presentToday ? "#F0E8D8" : "#2FA8A0", color: presentToday ? "#B0A18A" : "#FFFFFF" }}>
-                {presentToday ? "Presente hoje ✓" : "Marcar presença hoje"}
-              </button>
-            </div>
-            {openChild.attendance.length === 0 ? (
-              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma presença registrada ainda.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {openChild.attendance.map((d, i) => (
-                  <span key={i} className="text-[11px] px-3 py-1.5 rounded-full" style={{ fontFamily: "IBM Plex Mono", background: "#FFF8EE", color: "#8A7F6E" }}>
-                    {d}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -626,7 +585,7 @@ function InfantilScreen({ onBack }) {
           {children.length === 0 ? (
             <div className="rounded-2xl p-5 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
               <Award size={22} color="#D8CBB4" className="mx-auto mb-2" />
-              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Cadastre uma criança na aba Frequência pra começar a colecionar medalhas.</p>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Cadastre uma criança na aba Meus Filhos pra começar a colecionar medalhas.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-5">
@@ -671,7 +630,7 @@ function InfantilScreen({ onBack }) {
         </div>
       )}
 
-      {activeTab === "frequencia" && (
+      {activeTab === "meusfilhos" && (
         <div className="px-6 mb-8">
           <div className="flex items-center justify-between mb-3">
             <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Meus filhos cadastrados</p>
@@ -718,7 +677,7 @@ function InfantilScreen({ onBack }) {
             </div>
           )}
           <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10.5px] mt-2">
-            O cadastro é feito só uma vez por criança. Toque em um nome para ver detalhes e frequência.
+            O cadastro é feito só uma vez por criança. Toque em um nome para ver detalhes e fazer o check-in.
           </p>
         </div>
       )}
