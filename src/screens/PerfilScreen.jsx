@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
+  Baby,
   Bell,
   BellOff,
   CalendarDays,
@@ -13,6 +14,8 @@ import {
   Tag,
   Type as TextIcon,
 } from "lucide-react";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { UserContext, ThemeContext, FeedContext } from "../context/contexts.js";
 import { colorFor, fmtDateBR, initials } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
@@ -23,6 +26,16 @@ function PerfilScreen({ onBack, onLogout }) {
   const { posts } = useContext(FeedContext);
   const myPosts = posts.filter(p => (p.authorUid ? p.authorUid === user.uid : p.author === user.name));
   const inputRef = React.useRef(null);
+  const [myChildren, setMyChildren] = useState([]);
+
+  useEffect(() => {
+    if (!user.uid) { setMyChildren([]); return; }
+    const q = query(collection(db, "kids"), where("parentUid", "==", user.uid));
+    const unsub = onSnapshot(q, snap => {
+      setMyChildren(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => {});
+    return () => unsub();
+  }, [user.uid]);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(user.name);
   const [editingBio, setEditingBio] = useState(false);
@@ -252,9 +265,24 @@ function PerfilScreen({ onBack, onLogout }) {
               </div>
             </div>
           )}
+          <div className="flex items-center gap-3" style={{ borderTop: "1px solid var(--c-divider)", paddingTop: 12 }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#4B7D5C1E" }}>
+              <Baby size={15} color="#4B7D5C" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Filhos</p>
+              {myChildren.length === 0 ? (
+                <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">Nenhum cadastrado</p>
+              ) : (
+                <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">
+                  {myChildren.map(c => c.name).join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
         <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10.5px] mt-3 leading-relaxed px-1">
-          ⓘ Sua profissão fica visível pra outros membros da igreja, caso alguém precise de um serviço que você oferece. A placa fica guardada no seu cadastro pra ajudar a identificar o dono do carro, caso seja preciso no estacionamento.
+          ⓘ Sua profissão fica visível pra outros membros da igreja, caso alguém precise de um serviço que você oferece. A placa fica guardada no seu cadastro pra ajudar a identificar o dono do carro, caso seja preciso no estacionamento. Gerencie seus filhos em Área Infantil → Meus Filhos.
         </p>
       </div>
 

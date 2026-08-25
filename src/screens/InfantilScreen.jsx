@@ -11,12 +11,14 @@ import {
   Palette,
   PartyPopper,
   PenLine,
+  Printer,
   RotateCcw,
   ShieldCheck,
   Sparkles,
   Users,
   X,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
@@ -58,6 +60,7 @@ function InfantilScreen({ onBack }) {
   const [openVerseFillId, setOpenVerseFillId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
+  const [showPrintLabel, setShowPrintLabel] = useState(false);
   const group = AGE_GROUPS[activeGroup];
   const openChild = children.find(c => c.id === openChildId);
   const todayStory = todaysStoryFor(group.id);
@@ -92,6 +95,7 @@ function InfantilScreen({ onBack }) {
   }, [children]);
 
   useEffect(() => { setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null); }, [activeGroup]);
+  useEffect(() => { setShowPrintLabel(false); }, [openChildId]);
 
   const handleChildPhoto = (e) => {
     const file = e.target.files?.[0];
@@ -233,6 +237,7 @@ function InfantilScreen({ onBack }) {
 
   if (openChild) {
     return (
+      <>
       <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
         <div className="px-6 pt-6 pb-2">
           <button onClick={() => setOpenChildId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Meus Filhos</button>
@@ -283,10 +288,16 @@ function InfantilScreen({ onBack }) {
             <div className="rounded-2xl p-4" style={{ background: "#2FA8A0", boxShadow: "0 2px 8px rgba(180,140,80,0.1)" }}>
               <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.85)" }} className="text-[11.5px] mb-2">Mostre esse código pra quem for buscar a criança</p>
               <p style={{ fontFamily: "IBM Plex Mono", color: "#FFFFFF", fontWeight: 700, letterSpacing: 4 }} className="text-[32px] text-center mb-3">{openChild.checkinCode}</p>
-              <button onClick={() => cancelCheckin(openChild.id)}
-                className="w-full py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.2)", color: "#FFFFFF" }}>
-                Cancelar check-in
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => setShowPrintLabel(true)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#2FA8A0" }}>
+                  <Printer size={13} /> Imprimir etiqueta
+                </button>
+                <button onClick={() => cancelCheckin(openChild.id)}
+                  className="flex-1 py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "rgba(255,255,255,0.2)", color: "#FFFFFF" }}>
+                  Cancelar check-in
+                </button>
+              </div>
             </div>
           ) : (
             <button onClick={() => doCheckin(openChild.id)}
@@ -302,6 +313,41 @@ function InfantilScreen({ onBack }) {
           )}
         </div>
       </div>
+
+      {showPrintLabel && (
+        <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#FFF8EE" }}>
+          <style>{`
+            @media print {
+              body * { visibility: hidden; }
+              #casa-print-label, #casa-print-label * { visibility: visible; }
+              #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+              .casa-no-print { display: none !important; }
+              @page { size: auto; margin: 8mm; }
+            }
+          `}</style>
+          <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
+            <button onClick={() => setShowPrintLabel(false)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Voltar</button>
+            <button onClick={() => window.print()} className="flex items-center gap-1.5 px-4 py-2 rounded-full" style={{ background: "#2FA8A0" }}>
+              <Printer size={13} color="#FFFFFF" />
+              <span style={{ fontFamily: "Inter", color: "#FFFFFF", fontWeight: 600 }} className="text-[12.5px]">Imprimir</span>
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div id="casa-print-label" className="flex flex-col items-center text-center p-6 rounded-2xl"
+              style={{ width: 280, background: "#FFFFFF", border: "2px dashed #D8CBB4" }}>
+              <p style={{ fontFamily: "Inter", color: "#9A8B76", letterSpacing: 1 }} className="text-[9.5px] uppercase font-semibold mb-2">Igreja do Nazareno A Casa · Área Infantil</p>
+              <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[19px] leading-tight mb-1">{openChild.name}</p>
+              <p style={{ fontFamily: "Inter", color: "#8A7F6E" }} className="text-[11.5px] mb-4">{openChild.age} anos</p>
+              <div className="p-3 rounded-xl mb-4" style={{ background: "#FFFFFF", border: "1px solid #E8DCC4" }}>
+                <QRCodeSVG value={`CASA-CHECKIN:${openChild.id}:${openChild.checkinCode}`} size={130} bgColor="#FFFFFF" fgColor="#3A2E22" level="M" />
+              </div>
+              <p style={{ fontFamily: "IBM Plex Mono", color: "#3A2E22", fontWeight: 700, letterSpacing: 6 }} className="text-[28px] mb-1">{openChild.checkinCode}</p>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10px]">Código pra retirada</p>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
     );
   }
 
