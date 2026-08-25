@@ -18,7 +18,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, arrayUnion, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
@@ -32,6 +31,7 @@ import { compressImage } from "../utils/imageCompress.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 import HangmanGame from "../components/HangmanGame.jsx";
 import VerseFillGame from "../components/VerseFillGame.jsx";
+import CheckinLabelCard from "../components/CheckinLabelCard.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -314,39 +314,47 @@ function InfantilScreen({ onBack }) {
         </div>
       </div>
 
-      {showPrintLabel && (
-        <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#FFF8EE" }}>
-          <style>{`
-            @media print {
-              body * { visibility: hidden; }
-              #casa-print-label, #casa-print-label * { visibility: visible; }
-              #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
-              .casa-no-print { display: none !important; }
-              @page { size: auto; margin: 8mm; }
-            }
-          `}</style>
-          <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
-            <button onClick={() => setShowPrintLabel(false)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Voltar</button>
-            <button onClick={() => window.print()} className="flex items-center gap-1.5 px-4 py-2 rounded-full" style={{ background: "#2FA8A0" }}>
-              <Printer size={13} color="#FFFFFF" />
-              <span style={{ fontFamily: "Inter", color: "#FFFFFF", fontWeight: 600 }} className="text-[12.5px]">Imprimir</span>
-            </button>
-          </div>
-          <div className="flex-1 flex items-center justify-center p-6">
-            <div id="casa-print-label" className="flex flex-col items-center text-center p-6 rounded-2xl"
-              style={{ width: 280, background: "#FFFFFF", border: "2px dashed #D8CBB4" }}>
-              <p style={{ fontFamily: "Inter", color: "#9A8B76", letterSpacing: 1 }} className="text-[9.5px] uppercase font-semibold mb-2">Igreja do Nazareno A Casa · Área Infantil</p>
-              <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[19px] leading-tight mb-1">{openChild.name}</p>
-              <p style={{ fontFamily: "Inter", color: "#8A7F6E" }} className="text-[11.5px] mb-4">{openChild.age} anos</p>
-              <div className="p-3 rounded-xl mb-4" style={{ background: "#FFFFFF", border: "1px solid #E8DCC4" }}>
-                <QRCodeSVG value={`CASA-CHECKIN:${openChild.id}:${openChild.checkinCode}`} size={130} bgColor="#FFFFFF" fgColor="#3A2E22" level="M" />
+      {showPrintLabel && (() => {
+        const [firstName, ...restName] = (openChild.name || "").trim().split(/\s+/);
+        const lastName = restName.join(" ");
+        const [respFirst, ...respRest] = (me.name || "").trim().split(/\s+/);
+        const respLast = respRest.join(" ");
+        const childGroup = AGE_GROUPS.find(g => g.id === groupIdForAge(openChild.age));
+        const qrValue = `CASA-CHECKIN:${openChild.id}:${openChild.checkinCode}`;
+        const dateLabel = new Date().toLocaleDateString("pt-BR");
+        return (
+          <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#FFF8EE" }}>
+            <style>{`
+              @media print {
+                body * { visibility: hidden; }
+                #casa-print-label, #casa-print-label * { visibility: visible; }
+                #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6mm; }
+                .casa-no-print { display: none !important; }
+                @page { size: auto; margin: 8mm; }
+              }
+            `}</style>
+            <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
+              <button onClick={() => setShowPrintLabel(false)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Voltar</button>
+              <button onClick={() => window.print()} className="flex items-center gap-1.5 px-4 py-2 rounded-full" style={{ background: "#2FA8A0" }}>
+                <Printer size={13} color="#FFFFFF" />
+                <span style={{ fontFamily: "Inter", color: "#FFFFFF", fontWeight: 600 }} className="text-[12.5px]">Imprimir as 2 etiquetas</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto flex flex-col items-center gap-4 p-6">
+              <div id="casa-print-label" className="flex flex-col items-center gap-4">
+                <CheckinLabelCard
+                  kicker="Criança" nameLeft={firstName} nameRight={lastName} code={openChild.checkinCode} qrValue={qrValue}
+                  groupEmoji={childGroup?.emoji} hasDiet={!!openChild.diet}
+                  footerLeft={`Turma ${childGroup?.label || ""}`} footerRight={dateLabel} />
+                <CheckinLabelCard
+                  kicker="Responsável" nameLeft={respFirst} nameRight={respLast} code={openChild.checkinCode} qrValue={qrValue}
+                  groupEmoji={childGroup?.emoji} hasDiet={!!openChild.diet}
+                  footerLeft={`Buscar: ${openChild.name}`} footerRight={dateLabel} />
               </div>
-              <p style={{ fontFamily: "IBM Plex Mono", color: "#3A2E22", fontWeight: 700, letterSpacing: 6 }} className="text-[28px] mb-1">{openChild.checkinCode}</p>
-              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[10px]">Código pra retirada</p>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       </>
     );
   }
