@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Car, ChevronRight, Download, FileSpreadsheet, Search, ShieldCheck, Users, X } from "lucide-react";
+import { Car, ChevronRight, Download, FileSpreadsheet, Lock, Search, ShieldCheck, Users, X } from "lucide-react";
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { db } from "../firebase.js";
@@ -10,8 +10,19 @@ const ROLE_OPTIONS = [
   { value: "member", label: "Membro", desc: "Acesso normal, sem telas de liderança." },
   { value: "junta", label: "Junta", desc: "Libera o Painel de cadastros e o Check-in da Área Infantil." },
   { value: "lideranca", label: "Liderança", desc: "Mesmo acesso da Junta." },
-  { value: "dev", label: "Desenvolvedor", desc: "Nível acima de Liderança — reservado pra quem administra o app, com tudo desbloqueado." },
 ];
+
+const DEV_ROLE_OPTION = { value: "dev", label: "Desenvolvedor", desc: "Nível acima de Liderança — reservado pra quem administra o app, com tudo desbloqueado." };
+
+// A senha só trava o acesso casual dentro do app — como é tudo código do lado do
+// cliente, não é proteção real contra alguém que sabe mexer no navegador. Por
+// isso guardamos só o hash, nunca a senha em texto puro.
+const DEV_UNLOCK_HASH = "152c340bf652dcb558034286b33263e2b1fc2eff6a3c298eec81a21dfd31cada";
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
 function toCsvValue(v) {
   const s = (v ?? "").toString().replace(/"/g, '""');
@@ -30,6 +41,33 @@ function AdminScreen({ onBack }) {
   const [search, setSearch] = useState("");
   const [roleTarget, setRoleTarget] = useState(null);
   const [savingRole, setSavingRole] = useState(false);
+  const [devUnlocked, setDevUnlocked] = useState(false);
+  const [showDevUnlock, setShowDevUnlock] = useState(false);
+  const [devPasswordInput, setDevPasswordInput] = useState("");
+  const [devUnlockError, setDevUnlockError] = useState("");
+  const [checkingDevPassword, setCheckingDevPassword] = useState(false);
+
+  const openRoleTarget = (u) => {
+    setRoleTarget(u);
+    setDevUnlocked(false);
+    setShowDevUnlock(false);
+    setDevPasswordInput("");
+    setDevUnlockError("");
+  };
+
+  const tryUnlockDev = async () => {
+    setCheckingDevPassword(true);
+    setDevUnlockError("");
+    const hash = await sha256Hex(devPasswordInput);
+    if (hash === DEV_UNLOCK_HASH) {
+      setDevUnlocked(true);
+      setShowDevUnlock(false);
+      setDevPasswordInput("");
+    } else {
+      setDevUnlockError("Senha incorreta.");
+    }
+    setCheckingDevPassword(false);
+  };
 
   const changeRole = (uid, role) => {
     setSavingRole(true);
@@ -147,7 +185,7 @@ function AdminScreen({ onBack }) {
               if (!q) return true;
               return (u.nome || "").toUpperCase().includes(q) || (u.placa || "").toUpperCase().includes(q);
             }).map(u => (
-              <button key={u.uid} onClick={() => setRoleTarget(u)}
+              <button key={u.uid} onClick={() => openRoleTarget(u)}
                 className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
                 style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ background: colorFor(u.nome || u.email || "?") }}>
@@ -189,7 +227,7 @@ function AdminScreen({ onBack }) {
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-1">Cargo de {roleTarget.nome || roleTarget.email}</p>
             <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] mb-4">Junta e Liderança liberam o Painel de cadastros e o Check-in da Área Infantil. Desenvolvedor libera tudo isso e é o nível mais alto do app.</p>
             <div className="flex flex-col gap-2">
-              {ROLE_OPTIONS.map(opt => {
+              {[...ROLE_OPTIONS, ...(devUnlocked ? [DEV_ROLE_OPTION] : [])].map(opt => {
                 const current = roleTarget.role === opt.value || (opt.value === "lideranca" && roleTarget.role === "master") || (!roleTarget.role && opt.value === "member");
                 return (
                   <button key={opt.value} disabled={savingRole} onClick={() => changeRole(roleTarget.uid, opt.value)}
@@ -204,6 +242,33 @@ function AdminScreen({ onBack }) {
                 );
               })}
             </div>
+
+            {!devUnlocked && (
+              showDevUnlock ? (
+                <div className="mt-3 p-3.5 rounded-2xl" style={{ background: "var(--c-surface)", border: "1px solid var(--c-border)" }}>
+                  <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px] mb-2">Senha do cargo Desenvolvedor</p>
+                  <div className="flex gap-2">
+                    <input type="password" value={devPasswordInput} onChange={e => { setDevPasswordInput(e.target.value); setDevUnlockError(""); }}
+                      onKeyDown={e => e.key === "Enter" && !checkingDevPassword && devPasswordInput && tryUnlockDev()}
+                      autoFocus
+                      className="flex-1 px-3 py-2 rounded-xl outline-none text-[13px]"
+                      style={{ fontFamily: "Inter", background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)" }} />
+                    <button onClick={tryUnlockDev} disabled={checkingDevPassword || !devPasswordInput}
+                      className="px-4 rounded-xl text-[12px] font-semibold"
+                      style={{ fontFamily: "Inter", background: "var(--c-accent)", color: "#FFFFFF", opacity: (checkingDevPassword || !devPasswordInput) ? 0.6 : 1 }}>
+                      Entrar
+                    </button>
+                  </div>
+                  {devUnlockError && <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mt-2">{devUnlockError}</p>}
+                </div>
+              ) : (
+                <button onClick={() => setShowDevUnlock(true)} className="w-full flex items-center justify-center gap-1.5 py-3 mt-1">
+                  <Lock size={11} color="var(--c-faint)" />
+                  <span style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[11px]">Cargo especial (Desenvolvedor)</span>
+                </button>
+              )
+            )}
+
             {roleTarget.uid === me.uid && (
               <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mt-4 text-center">Cuidado: isso é o seu próprio cadastro.</p>
             )}
