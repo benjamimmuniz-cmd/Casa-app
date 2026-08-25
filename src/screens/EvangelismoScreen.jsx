@@ -13,6 +13,8 @@ import { UserContext } from "../context/contexts.js";
 import { colorFor, getMonthGrid, initials } from "../utils/helpers.js";
 import { EVANG_DOACAO_TIPOS } from "../data/constants.js";
 
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
 function EvangelismoScreen({ onBack }) {
   const meName = useContext(UserContext).name || "Alguém da igreja";
   const [innerTab, setInnerTab] = useState("familias");
@@ -23,7 +25,8 @@ function EvangelismoScreen({ onBack }) {
   const [familyForm, setFamilyForm] = useState({ name: "", address: "", phone: "", people: "", notes: "" });
   const [familyError, setFamilyError] = useState("");
 
-  const YEAR = 2026, MONTH = 7, TODAY = 16;
+  const hoje = new Date();
+  const YEAR = hoje.getFullYear(), MONTH = hoje.getMonth(), TODAY = hoje.getDate();
   const [events, setEvents] = useState([
     { id: "ev1", day: 22, title: "Evangelismo no Parque", time: "09:00", location: "Parque da Cidade", volunteers: ["Benjamim Muniz"] },
     { id: "ev2", day: 29, title: "Visita ao Bairro Esperança", time: "14:00", location: "Bairro Esperança", volunteers: [] },
@@ -288,7 +291,7 @@ function EvangelismoScreen({ onBack }) {
       {innerTab === "eventos" && (
         <div className="pb-28">
           <div className="mx-6 rounded-3xl p-4 mb-5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[14px] mb-3">Agosto 2026</p>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[14px] mb-3">{MESES[MONTH]} {YEAR}</p>
             <div className="grid grid-cols-7 gap-1 mb-2">
               {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
                 <div key={i} className="text-center text-[10px]" style={{ fontFamily: "Inter", color: "#9E9E9E" }}>{d}</div>

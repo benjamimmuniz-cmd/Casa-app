@@ -14,6 +14,8 @@ import { addChildToId, collectAll, colorFor, countDescendants, findById, getMont
 import { MINISTRY_COLORS } from "../data/constants.js";
 import VisualTree from "../components/VisualTree.jsx";
 
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
 function MinisteriosScreen({ onBack }) {
   const me = useContext(UserContext);
   const [ministries, setMinistries] = useState([]);
@@ -25,7 +27,7 @@ function MinisteriosScreen({ onBack }) {
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberName, setMemberName] = useState("");
   const [minTab, setMinTab] = useState("arvore"); // arvore | escala
-  const [escalaDay, setEscalaDay] = useState(16);
+  const [escalaDay, setEscalaDay] = useState(() => new Date().getDate());
   const [showAddEscala, setShowAddEscala] = useState(false);
   const [escalaForm, setEscalaForm] = useState({ name: "", role: "" });
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -177,14 +179,16 @@ function MinisteriosScreen({ onBack }) {
         ) : (
           <div className="px-6 pb-28">
             {(() => {
-              const weeks = getMonthGrid(2026, 7);
+              const hoje = new Date();
+              const anoAtual = hoje.getFullYear(), mesAtual = hoje.getMonth();
+              const weeks = getMonthGrid(anoAtual, mesAtual);
               const escalas = ministry.escalas || [];
               const escaladoDays = new Set(escalas.map(e => e.day));
               const dayEscalas = escalas.filter(e => e.day === escalaDay);
               return (
                 <>
                   <div className="rounded-3xl p-4 mb-5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                    <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] mb-3">Agosto 2026</p>
+                    <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] mb-3">{MESES[mesAtual]} {anoAtual}</p>
                     <div className="grid grid-cols-7 mb-2">
                       {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
                         <span key={i} style={{ fontFamily: "IBM Plex Mono", color: "#9E9E9E" }} className="text-[10px] text-center">{d}</span>
@@ -211,7 +215,7 @@ function MinisteriosScreen({ onBack }) {
                     ))}
                   </div>
 
-                  <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Escalados em {escalaDay} de agosto</p>
+                  <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-3">Escalados em {escalaDay} de {MESES[mesAtual].toLowerCase()}</p>
                   {dayEscalas.length === 0 ? (
                     <div className="rounded-2xl py-8 text-center" style={{ background: "#FFFFFF", border: "1px dashed #D6D6D6" }}>
                       <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Ninguém escalado neste dia ainda.</p>
