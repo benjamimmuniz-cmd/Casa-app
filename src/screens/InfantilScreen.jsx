@@ -14,7 +14,7 @@ import {
   Target,
   X,
 } from "lucide-react";
-import { collection, query, where, onSnapshot, updateDoc, doc, arrayUnion, increment } from "firebase/firestore";
+import { collection, query, where, onSnapshot, updateDoc, doc, arrayUnion, increment, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
@@ -104,6 +104,41 @@ function InfantilScreen({ onBack }) {
   useEffect(() => {
     if (children.length === 0) { setSelectedChildId(null); return; }
     if (!children.some(c => c.id === selectedChildId)) setSelectedChildId(children[0].id);
+  }, [children]);
+
+  // Avisa o responsável quando o filho desbloqueia uma medalha nova. Na primeira
+  // vez que vemos cada criança (campo notifiedBadges ainda não existe), só
+  // guarda o que já estava desbloqueado sem notificar — pra não disparar um
+  // monte de aviso retroativo de medalhas que a criança já tinha ganhado antes
+  // dessa função existir.
+  useEffect(() => {
+    children.forEach(c => {
+      const childGroupId = groupIdForAge(c.age);
+      const badges = BADGES_BY_GROUP[childGroupId] || [];
+      const totalGroupStories = BIBLE_STORIES.filter(s => s.groupId === childGroupId).length;
+      const unlockedIds = badges.filter(b => badgeProgress(b, c, totalGroupStories).unlocked).map(b => b.id);
+
+      if (c.notifiedBadges === undefined) {
+        if (unlockedIds.length > 0) {
+          updateDoc(doc(db, "kids", c.id), { notifiedBadges: unlockedIds }).catch(() => {});
+        }
+        return;
+      }
+
+      const already = c.notifiedBadges || [];
+      const newly = unlockedIds.filter(id => !already.includes(id));
+      if (newly.length === 0) return;
+
+      newly.forEach(id => {
+        const badge = badges.find(b => b.id === id);
+        if (!badge) return;
+        addDoc(collection(db, "notifications"), {
+          toUid: me.uid, text: `${badge.emoji} ${c.name} desbloqueou a medalha "${badge.label}"!`, read: false, createdAt: serverTimestamp(),
+        }).catch(err => console.error("BADGE_NOTIFY_ERR", err.code, err.message));
+      });
+      updateDoc(doc(db, "kids", c.id), { notifiedBadges: arrayUnion(...newly) })
+        .catch(err => console.error("BADGE_NOTIFIED_SAVE_ERR", err.code, err.message));
+    });
   }, [children]);
 
   useEffect(() => {
