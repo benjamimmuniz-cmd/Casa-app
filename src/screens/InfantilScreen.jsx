@@ -24,6 +24,7 @@ import { COLORING_PAGES } from "../data/coloringPages.js";
 import { HANGMAN_WORDS, VERSE_FILLS } from "../data/kidsGames.js";
 import { MEMORY_SETS, COUNTING_GAMES } from "../data/kidsGamesInfantil.js";
 import { FIND_DIFFERENT_SETS, QUIZ_QUESTIONS } from "../data/kidsGamesQuiz.js";
+import { SEQUENCE_SETS, TRUE_FALSE_QUESTIONS } from "../data/kidsGamesSequence.js";
 import { BADGES_BY_GROUP, badgeProgress, groupIdForAge } from "../data/kidsBadges.js";
 import ColoringCanvas from "../components/ColoringCanvas.jsx";
 import HangmanGame from "../components/HangmanGame.jsx";
@@ -32,6 +33,8 @@ import MemoryGame from "../components/MemoryGame.jsx";
 import CountingGame from "../components/CountingGame.jsx";
 import FindDifferentGame from "../components/FindDifferentGame.jsx";
 import QuizGame from "../components/QuizGame.jsx";
+import SequenceGame from "../components/SequenceGame.jsx";
+import TrueFalseGame from "../components/TrueFalseGame.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -55,6 +58,8 @@ function InfantilScreen({ onBack }) {
   const [openCountingId, setOpenCountingId] = useState(null);
   const [openFindDiffId, setOpenFindDiffId] = useState(null);
   const [openQuizId, setOpenQuizId] = useState(null);
+  const [openSequenceId, setOpenSequenceId] = useState(null);
+  const [openTrueFalseId, setOpenTrueFalseId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
   const group = AGE_GROUPS[activeGroup];
@@ -75,6 +80,10 @@ function InfantilScreen({ onBack }) {
   const openFindDiff = groupFindDiff.find(s => s.id === openFindDiffId);
   const groupQuiz = QUIZ_QUESTIONS.filter(q => q.groupId === group.id);
   const openQuiz = groupQuiz.find(q => q.id === openQuizId);
+  const groupSequences = SEQUENCE_SETS.filter(s => s.groupId === group.id);
+  const openSequence = groupSequences.find(s => s.id === openSequenceId);
+  const groupTrueFalse = TRUE_FALSE_QUESTIONS.filter(q => q.groupId === group.id);
+  const openTrueFalse = groupTrueFalse.find(q => q.id === openTrueFalseId);
 
   const paintRegion = (pageId, regionId) => {
     setColoringFills(prev => ({ ...prev, [pageId]: { ...(prev[pageId] || {}), [regionId]: activeCrayon } }));
@@ -100,6 +109,7 @@ function InfantilScreen({ onBack }) {
   useEffect(() => {
     setOpenStoryId(null); setOpenHangmanId(null); setOpenVerseFillId(null);
     setOpenMemoryId(null); setOpenCountingId(null); setOpenFindDiffId(null); setOpenQuizId(null);
+    setOpenSequenceId(null); setOpenTrueFalseId(null);
   }, [activeGroup]);
 
   const selectedChild = children.find(c => c.id === selectedChildId);
@@ -143,6 +153,18 @@ function InfantilScreen({ onBack }) {
     if (!selectedChildId) return;
     updateDoc(doc(db, "kids", selectedChildId), { quizCorrect: increment(1) })
       .catch(err => console.error("KID_QUIZ_CORRECT_ERR", err.code, err.message));
+  };
+
+  const recordSequenceWin = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { sequenceWins: increment(1) })
+      .catch(err => console.error("KID_SEQUENCE_WIN_ERR", err.code, err.message));
+  };
+
+  const recordTrueFalseCorrect = () => {
+    if (!selectedChildId) return;
+    updateDoc(doc(db, "kids", selectedChildId), { trueFalseCorrect: increment(1) })
+      .catch(err => console.error("KID_TRUEFALSE_CORRECT_ERR", err.code, err.message));
   };
 
   if (openColoringPage) {
@@ -268,6 +290,38 @@ function InfantilScreen({ onBack }) {
         </div>
         <div className="px-6 pb-8">
           <QuizGame item={openQuiz} color={group.color} onCorrect={recordQuizCorrect} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openSequence) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenSequenceId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">🧭 {openSequence.title}</p>
+        </div>
+        <div className="px-6 pb-8">
+          <SequenceGame set={openSequence} color={group.color} onWin={recordSequenceWin} />
+        </div>
+      </div>
+    );
+  }
+
+  if (openTrueFalse) {
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ background: "#FFF8EE" }}>
+        <div className="px-6 pt-6 pb-2">
+          <button onClick={() => setOpenTrueFalseId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#8A7F6E" }}>← Atividades</button>
+        </div>
+        <div className="px-6 mt-2 mb-6">
+          <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[18px]">🔍 Verdadeiro ou Falso</p>
+        </div>
+        <div className="px-6 pb-8">
+          <TrueFalseGame item={openTrueFalse} color={group.color} onCorrect={recordTrueFalseCorrect} />
         </div>
       </div>
     );
@@ -448,6 +502,53 @@ function InfantilScreen({ onBack }) {
               ))}
             </div>
           )}
+
+          <div className="flex items-center gap-2 mb-3 mt-6">
+            <span style={{ fontSize: 14 }}>🧭</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Coloque em ordem</p>
+          </div>
+          {groupSequences.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center mb-6" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma história pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {groupSequences.map(s => (
+                <button key={s.id} onClick={() => setOpenSequenceId(s.id)}
+                  className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                  <span style={{ fontSize: 26 }}>{s.steps[0].emoji}</span>
+                  <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">{s.title}</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ fontSize: 14 }}>🔍</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Verdadeiro ou Falso</p>
+          </div>
+          {groupTrueFalse.length === 0 ? (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+              <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[12px]">Nenhuma pergunta pra essa faixa ainda.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {groupTrueFalse.map(q => (
+                <button key={q.id} onClick={() => setOpenTrueFalseId(q.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${group.color}1E`, fontSize: 16 }}>
+                    🔍
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12.5px] truncate">{q.statement}</p>
+                  </div>
+                  <ChevronRight size={16} color="#D8CBB4" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -510,6 +611,21 @@ function InfantilScreen({ onBack }) {
                 className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
                 style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
                 <span style={{ fontSize: 26 }}>{s.same}</span>
+                <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">{s.title}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ fontSize: 14 }}>🧭</span>
+            <p style={{ fontFamily: "Inter", color: "#6B6255", fontWeight: 600 }} className="text-[12px]">Coloque em ordem</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {groupSequences.map(s => (
+              <button key={s.id} onClick={() => setOpenSequenceId(s.id)}
+                className="rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+                style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                <span style={{ fontSize: 26 }}>{s.steps[0].emoji}</span>
                 <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[12px] mt-2">{s.title}</p>
               </button>
             ))}
