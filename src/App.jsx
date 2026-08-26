@@ -278,7 +278,14 @@ function App() {
         snap.docChanges().forEach(change => {
           if (change.type === "added") {
             const data = change.doc.data();
-            try { new Notification("Igreja do Nazareno A Casa", { body: data.text }); } catch (e) {}
+            try {
+              const notif = new Notification("Igreja do Nazareno A Casa", { body: data.text });
+              notif.onclick = () => {
+                window.focus();
+                if (data.link) openNotificationLink(data.link);
+                notif.close();
+              };
+            } catch (e) {}
           }
         });
       }
