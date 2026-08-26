@@ -23,6 +23,8 @@ import { db } from "../firebase.js";
 import { UserContext, ThemeContext, FeedContext } from "../context/contexts.js";
 import { colorFor, fmtDateBR, initials } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
+import { hasSeenProfileComplete, markProfileCompleteSeen, isProfileComplete } from "../utils/profileCelebration.js";
 
 function PerfilScreen({ onBack, onLogout, onOpenTile }) {
   const user = useContext(UserContext);
@@ -31,6 +33,11 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
   const myPosts = posts.filter(p => (p.authorUid ? p.authorUid === user.uid : p.author === user.name));
   const inputRef = React.useRef(null);
   const [myChildren, setMyChildren] = useState([]);
+  const [showProfileComplete, setShowProfileComplete] = useState(false);
+
+  useEffect(() => {
+    if (isProfileComplete(user) && !hasSeenProfileComplete()) setShowProfileComplete(true);
+  }, [user.photo, user.profissao, user.telefone, user.nascimento]);
 
   useEffect(() => {
     if (!user.uid) { setMyChildren([]); return; }
@@ -414,6 +421,17 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
           Sair da conta
         </button>
       </div>
+
+      {showProfileComplete && (
+        <CelebrationOverlay
+          emoji="🌟"
+          title="Seu perfil está completo!"
+          desc="Agora a igreja te conhece melhor — sua foto, profissão, celular e data de nascimento já estão em dia. Você faz parte da família da Casa!"
+          buttonLabel="Que bom! 🙌"
+          accent="#3E5FBF"
+          onDismiss={() => { markProfileCompleteSeen(); setShowProfileComplete(false); }}
+        />
+      )}
     </div>
   );
 }

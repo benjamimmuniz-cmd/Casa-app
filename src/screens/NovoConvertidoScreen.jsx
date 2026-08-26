@@ -7,6 +7,7 @@ import { colorFor, initials, fmtDateBR, collectAll, todayISO } from "../utils/he
 import { compressImage } from "../utils/imageCompress.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import Avatar from "../components/Avatar.jsx";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 
 // Cadastro de novo convertido: um membro da igreja registra a pessoa que acabou
 // de se converter e escolhe, entre quem já tem conta no app, quem vai
@@ -26,6 +27,7 @@ function NovoConvertidoScreen({ onBack }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [openId, setOpenId] = useState(null);
+  const [celebratingConvert, setCelebratingConvert] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, "novosConvertidos"), orderBy("createdAt", "desc"));
@@ -118,6 +120,7 @@ function NovoConvertidoScreen({ onBack }) {
         registradoPorUid: me.uid, registradoPorNome: me.name,
         createdAt: serverTimestamp(),
       });
+      setCelebratingConvert(form.nome.trim());
       setForm({ nome: "", telefone: "", nascimento: "", notes: "", culto: "", dataConversao: todayISO(), foto: null });
       setDiscipulador(null);
     } catch (err) {
@@ -421,6 +424,17 @@ function NovoConvertidoScreen({ onBack }) {
       {showPicker && (
         <MemberPickerSheet title="Escolher discipulador" excludeSelf={false} onClose={() => setShowPicker(false)}
           onPick={(u) => { setDiscipulador(u); setShowPicker(false); }} />
+      )}
+
+      {celebratingConvert && (
+        <CelebrationOverlay
+          emoji="✝️"
+          title="Um novo passo na fé!"
+          desc={`${celebratingConvert} acabou de dar o primeiro passo com Jesus. Agora é caminhar junto, discipulando com amor.`}
+          buttonLabel="Glória a Deus! 🙌"
+          accent="#4B7D5C"
+          onDismiss={() => setCelebratingConvert(null)}
+        />
       )}
     </div>
   );
