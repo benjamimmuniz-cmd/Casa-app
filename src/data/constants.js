@@ -89,7 +89,7 @@ export const TILES = [
 export const MENU_GROUPS = [
   { label: "Buscar", ids: ["busca"] },
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
-  { label: "Crianças", ids: ["infantil", "meusfilhos", "checkin", "criancas"] },
+  { label: "Casa Kids", ids: ["infantil", "meusfilhos", "checkin", "criancas"] },
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes", "diretorio"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
