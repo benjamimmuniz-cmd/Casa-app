@@ -18,11 +18,14 @@ import { KIND_LABELS, MENU_GROUPS, TILES } from "../data/constants.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import StoriesRow from "../components/StoriesRow.jsx";
 import Avatar from "../components/Avatar.jsx";
+import WelcomeTour from "../components/WelcomeTour.jsx";
 import { TOTAL_READING_DAYS, getDayReading, formatReadingLabel } from "../data/readingPlan.js";
 import { loadReadingProgress } from "../utils/readingProgress.js";
+import { hasSeenTour, markTourSeen } from "../utils/onboarding.js";
 
 function HomeScreen({ onOpenTile }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showTour, setShowTour] = useState(() => !hasSeenTour());
   const [readingProgress] = useState(loadReadingProgress);
   const currentDay = Math.min(readingProgress.currentDay, TOTAL_READING_DAYS);
   const readingPct = Math.round(((currentDay - 1) / TOTAL_READING_DAYS) * 100);
@@ -225,6 +228,10 @@ function HomeScreen({ onOpenTile }) {
             </div>
           </div>
         </div>
+      )}
+
+      {showTour && (
+        <WelcomeTour onFinish={() => { markTourSeen(); setShowTour(false); }} />
       )}
     </div>
   );
