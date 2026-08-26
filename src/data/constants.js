@@ -83,9 +83,11 @@ export const TILES = [
   { id: "amigos", label: "Amigos", icon: UserPlus, color: "#4B7D5C" },
   { id: "aniversariantes", label: "Aniversariantes", icon: Cake, color: "#D9A441" },
   { id: "mensagens", label: "Mensagens", icon: Film, color: "#B33B3B" },
+  { id: "busca", label: "Buscar", icon: Search, color: "#454545" },
 ];
 
 export const MENU_GROUPS = [
+  { label: "Buscar", ids: ["busca"] },
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
   { label: "Crianças", ids: ["infantil", "meusfilhos", "checkin", "criancas"] },
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes", "diretorio"] },
@@ -110,6 +112,7 @@ export const TAB_LABELS = {
   meusfilhos: "Meus Filhos",
   checkin: "Check-in",
   criancas: "Buscar Crianças",
+  busca: "Buscar",
 };
 
 export const TAB_DESCRIPTIONS = {
@@ -145,6 +148,7 @@ export const TAB_DESCRIPTIONS = {
   meusfilhos: "Cadastre seus filhos, veja os detalhes de cada um e faça o check-in de segurança na hora de deixá-los na Área Infantil.",
   checkin: "Check-in/check-out de segurança, cadastro de criança nova e marcação de presença — tudo num lugar só. Acesso da Junta e Liderança.",
   criancas: "Busque qualquer criança cadastrada por nome e veja a ficha dela, com responsável e restrição alimentar. Acesso da Junta e Liderança.",
+  busca: "Busca única do app: encontre pessoas, mensagens, produtos da loja/cantina e eventos, tudo num lugar só.",
 };
 
 export const GR_COLORS = ["#3B7D8A", "#2B6B76", "#5A9BA6", "#1E5A64", "#4D8A94"];

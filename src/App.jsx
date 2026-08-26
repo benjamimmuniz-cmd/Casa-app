@@ -58,6 +58,7 @@ const AmigosScreen = React.lazy(() => import("./screens/AmigosScreen.jsx"));
 const NotificationsScreen = React.lazy(() => import("./screens/NotificationsScreen.jsx"));
 const AdminScreen = React.lazy(() => import("./screens/AdminScreen.jsx"));
 const PersonProfileScreen = React.lazy(() => import("./screens/PersonProfileScreen.jsx"));
+const BuscaScreen = React.lazy(() => import("./screens/BuscaScreen.jsx"));
 
 function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
@@ -472,17 +473,6 @@ function App() {
     }
   };
 
-  const toggleDizimoMes = (mesKey) => {
-    const jaMarcado = !!currentUser?.dizimos?.[mesKey];
-    setCurrentUser(prev => prev ? { ...prev, dizimos: { ...(prev.dizimos || {}), [mesKey]: jaMarcado ? undefined : true } } : prev);
-    if (currentUser?.uid) {
-      updateDoc(doc(db, "users", currentUser.uid), {
-        [`dizimos.${mesKey}`]: jaMarcado ? deleteField() : true,
-        role: currentUser.role || "member"
-      }).catch(err => console.error("DIZIMO_SAVE_ERR", err.code, err.message));
-    }
-  };
-
   const handleLogout = () => {
     signOut(auth);
     setTab("inicio");
@@ -500,7 +490,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", dizimos: currentUser?.dizimos || {}, setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca, toggleDizimoMes: toggleDizimoMes }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
@@ -579,6 +569,8 @@ function App() {
               <AniversariantesScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "diretorio" || (tab === "diretorio" && !openTile) ? (
               <DiretorioScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "busca" || (tab === "busca" && !openTile) ? (
+              <BuscaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} onOpenTile={(id) => { setOpenTile(id); setTab(id); }} />
             ) : openTile === "notificacoes" ? (
               <NotificationsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "admin" ? (

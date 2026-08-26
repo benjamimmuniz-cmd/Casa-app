@@ -6,6 +6,7 @@ import {
   Menu,
   MessageCircle,
   Radio,
+  Search,
   ShieldCheck,
   User,
   UserPlus,
@@ -53,6 +54,9 @@ function HomeScreen({ onOpenTile }) {
         <div className="flex items-center gap-1.5">
           <button onClick={() => onOpenTile("perfil")} className="shrink-0" style={{ boxShadow: "0 1px 3px var(--c-shadow-strong)", borderRadius: "9999px" }}>
             <Avatar name={me.name} uid={me.uid} size={28} fontSize={10} />
+          </button>
+          <button onClick={() => onOpenTile("busca")} className="relative w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow-strong)" }}>
+            <Search size={13} color="var(--c-text)" />
           </button>
           <button onClick={() => onOpenTile("transmissao")} className="relative w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: liveActive ? "#B33B3B" : "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow-strong)" }}>
             <Radio size={13} color={liveActive ? "#F2F2F2" : "var(--c-text)"} />
