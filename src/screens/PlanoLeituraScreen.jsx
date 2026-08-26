@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useContext } from "react";
 import {
   ChevronRight,
-  CheckCircle2,
-  Share2
+  CheckCircle2
 } from "lucide-react";
 import ProgressRing from "../components/ProgressRing.jsx";
 import ReadingHeatmap from "../components/ReadingHeatmap.jsx";
 import VerseReader from "../components/VerseReader.jsx";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 import { TOTAL_READING_DAYS, TOTAL_CHAPTERS, PLAN_TYPES, getDayReading, chaptersReadThrough, formatReadingLabel } from "../data/readingPlan.js";
 import { loadReadingProgress, saveReadingProgress } from "../utils/readingProgress.js";
 import { READING_ACHIEVEMENTS } from "../data/constants.js";
@@ -220,31 +220,18 @@ function PlanoLeituraScreen({ onBack }) {
       </div>
 
       {newAchievement && (
-        <div className="absolute inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setNewAchievement(null)}>
-          <div className="mx-8 rounded-3xl p-7 text-center" style={{ background: "#FFFFFF" }} onClick={e => e.stopPropagation()}>
-            <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-4" style={{ background: newAchievement.color + "22" }}>
-              <newAchievement.icon size={36} color={newAchievement.color} />
-            </div>
-            <p style={{ fontFamily: "Inter", color: "#9E9E9E", letterSpacing: 1 }} className="text-[11px] uppercase font-semibold mb-1">Nova conquista!</p>
-            <h2 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[20px] mb-1">{newAchievement.title}</h2>
-            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-5">{newAchievement.desc}</p>
-            {shared ? (
-              <p style={{ fontFamily: "Inter", color: "#5C6B45" }} className="text-[12px] mb-3">Compartilhado no Feed! 🎉</p>
-            ) : (
-              <button onClick={shareAchievement}
-                className="w-full mb-2.5 py-3 rounded-full font-semibold text-[13.5px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-                style={{ background: newAchievement.color + "1E", color: newAchievement.color, fontFamily: "Inter" }}>
-                <Share2 size={15} />
-                Compartilhar no Feed
-              </button>
-            )}
-            <button onClick={() => setNewAchievement(null)}
-              className="w-full py-3 rounded-full font-semibold text-[13.5px] active:scale-[0.98] transition-transform"
-              style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
-              Continuar
-            </button>
-          </div>
-        </div>
+        <CelebrationOverlay
+          icon={newAchievement.icon}
+          title={newAchievement.title}
+          desc={newAchievement.desc}
+          accent={newAchievement.color}
+          buttonLabel="Continuar"
+          secondaryLabel="Compartilhar no Feed"
+          onSecondary={shareAchievement}
+          secondaryDone={shared}
+          secondaryDoneLabel="Compartilhado no Feed! 🎉"
+          onDismiss={() => setNewAchievement(null)}
+        />
       )}
     </div>
   );

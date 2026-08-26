@@ -24,11 +24,13 @@ import { TOTAL_READING_DAYS, getDayReading, formatReadingLabel } from "../data/r
 import { loadReadingProgress } from "../utils/readingProgress.js";
 import { hasSeenTour, markTourSeen } from "../utils/onboarding.js";
 import { isTodayBirthday, hasSeenBirthdayToday, markBirthdaySeenToday } from "../utils/birthday.js";
+import { membershipAnniversaryYears, hasSeenAnniversaryToday, markAnniversarySeenToday } from "../utils/anniversary.js";
 
 function HomeScreen({ onOpenTile }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showTour, setShowTour] = useState(() => !hasSeenTour());
   const [showBirthday, setShowBirthday] = useState(false);
+  const [anniversaryYears, setAnniversaryYears] = useState(null);
   const [readingProgress] = useState(loadReadingProgress);
   const currentDay = Math.min(readingProgress.currentDay, TOTAL_READING_DAYS);
   const readingPct = Math.round(((currentDay - 1) / TOTAL_READING_DAYS) * 100);
@@ -47,8 +49,10 @@ function HomeScreen({ onOpenTile }) {
 
   useEffect(() => {
     if (showTour) return;
-    if (isTodayBirthday(me.nascimento) && !hasSeenBirthdayToday()) setShowBirthday(true);
-  }, [me.nascimento, showTour]);
+    if (isTodayBirthday(me.nascimento) && !hasSeenBirthdayToday()) { setShowBirthday(true); return; }
+    const years = membershipAnniversaryYears(me.createdAt);
+    if (years && !hasSeenAnniversaryToday()) setAnniversaryYears(years);
+  }, [me.nascimento, me.createdAt, showTour]);
 
   return (
     <div className="flex-1 overflow-y-auto pb-2 relative" style={{ background: "var(--c-bg)" }}>
@@ -250,6 +254,17 @@ function HomeScreen({ onOpenTile }) {
           buttonLabel="Obrigado(a)! 🎉"
           accent="#D9A441"
           onDismiss={() => { markBirthdaySeenToday(); setShowBirthday(false); }}
+        />
+      )}
+
+      {anniversaryYears && (
+        <CelebrationOverlay
+          emoji="🏠"
+          title={`${anniversaryYears} ${anniversaryYears === 1 ? "ano" : "anos"} na Casa!`}
+          desc={`Hoje faz ${anniversaryYears} ${anniversaryYears === 1 ? "ano" : "anos"} que você faz parte da família da Igreja do Nazareno A Casa. Que alegria ter você com a gente!`}
+          buttonLabel="Gratidão! 🙏"
+          accent="#5C6B45"
+          onDismiss={() => { markAnniversarySeenToday(); setAnniversaryYears(null); }}
         />
       )}
     </div>

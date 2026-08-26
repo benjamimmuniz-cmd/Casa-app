@@ -13,9 +13,15 @@ function makeConfetti(count) {
   }));
 }
 
-// Overlay de celebração reutilizável — usado no aniversário e no desbloqueio
-// de medalhas das crianças. Confete simples em CSS, sem biblioteca externa.
-function CelebrationOverlay({ emoji, title, desc, buttonLabel = "Continuar", accent = "#000000", onDismiss }) {
+// Overlay de celebração reutilizável — usado no aniversário, no desbloqueio de
+// medalhas, no plano de leitura e outros marcos do app. Confete simples em
+// CSS, sem biblioteca externa. Aceita "icon" (componente lucide) em vez de
+// "emoji" quando faz mais sentido, e um botão secundário opcional (ex:
+// "Compartilhar no Feed") que fica acima do botão principal.
+function CelebrationOverlay({
+  emoji, icon: Icon, title, desc, buttonLabel = "Continuar", accent = "#000000", onDismiss,
+  secondaryLabel, onSecondary, secondaryDone, secondaryDoneLabel,
+}) {
   const confetti = useMemo(() => makeConfetti(16), []);
 
   return (
@@ -43,9 +49,26 @@ function CelebrationOverlay({ emoji, title, desc, buttonLabel = "Continuar", acc
         </div>
 
         <div className="relative">
-          <span style={{ fontSize: 56, display: "block", marginBottom: 12 }}>{emoji}</span>
+          {Icon ? (
+            <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3" style={{ background: `${accent}22` }}>
+              <Icon size={30} color={accent} />
+            </div>
+          ) : (
+            <span style={{ fontSize: 56, display: "block", marginBottom: 12 }}>{emoji}</span>
+          )}
           <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[19px] mb-2">{title}</p>
           <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[13px] leading-relaxed mb-6">{desc}</p>
+          {secondaryLabel && (
+            secondaryDone ? (
+              <p style={{ fontFamily: "Inter", color: "#5C6B45" }} className="text-[12px] mb-2.5">{secondaryDoneLabel || "Feito!"}</p>
+            ) : (
+              <button onClick={onSecondary}
+                className="w-full mb-2.5 py-3 rounded-full font-semibold text-[13.5px] active:scale-[0.98] transition-transform"
+                style={{ background: `${accent}1E`, color: accent, fontFamily: "Inter" }}>
+                {secondaryLabel}
+              </button>
+            )
+          )}
           <button onClick={onDismiss}
             className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
             style={{ background: accent, color: "#FFFFFF", fontFamily: "Inter" }}>
