@@ -19,13 +19,16 @@ import ProgressRing from "../components/ProgressRing.jsx";
 import StoriesRow from "../components/StoriesRow.jsx";
 import Avatar from "../components/Avatar.jsx";
 import WelcomeTour from "../components/WelcomeTour.jsx";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 import { TOTAL_READING_DAYS, getDayReading, formatReadingLabel } from "../data/readingPlan.js";
 import { loadReadingProgress } from "../utils/readingProgress.js";
 import { hasSeenTour, markTourSeen } from "../utils/onboarding.js";
+import { isTodayBirthday, hasSeenBirthdayToday, markBirthdaySeenToday } from "../utils/birthday.js";
 
 function HomeScreen({ onOpenTile }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showTour, setShowTour] = useState(() => !hasSeenTour());
+  const [showBirthday, setShowBirthday] = useState(false);
   const [readingProgress] = useState(loadReadingProgress);
   const currentDay = Math.min(readingProgress.currentDay, TOTAL_READING_DAYS);
   const readingPct = Math.round(((currentDay - 1) / TOTAL_READING_DAYS) * 100);
@@ -41,6 +44,11 @@ function HomeScreen({ onOpenTile }) {
   const feedPosts = visiblePosts(allFeedPosts, me.uid, connections);
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingRequests = connections.filter(c => c.status === "pending" && c.toUid === me.uid).length;
+
+  useEffect(() => {
+    if (showTour) return;
+    if (isTodayBirthday(me.nascimento) && !hasSeenBirthdayToday()) setShowBirthday(true);
+  }, [me.nascimento, showTour]);
 
   return (
     <div className="flex-1 overflow-y-auto pb-2 relative" style={{ background: "var(--c-bg)" }}>
@@ -232,6 +240,17 @@ function HomeScreen({ onOpenTile }) {
 
       {showTour && (
         <WelcomeTour onFinish={() => { markTourSeen(); setShowTour(false); }} />
+      )}
+
+      {showBirthday && (
+        <CelebrationOverlay
+          emoji="🎂"
+          title={`Feliz aniversário, ${firstName}!`}
+          desc="A Igreja do Nazareno A Casa celebra sua vida hoje. Que Deus continue te abençoando ricamente, em cada novo ano!"
+          buttonLabel="Obrigado(a)! 🎉"
+          accent="#D9A441"
+          onDismiss={() => { markBirthdaySeenToday(); setShowBirthday(false); }}
+        />
       )}
     </div>
   );

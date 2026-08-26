@@ -35,6 +35,7 @@ import FindDifferentGame from "../components/FindDifferentGame.jsx";
 import QuizGame from "../components/QuizGame.jsx";
 import SequenceGame from "../components/SequenceGame.jsx";
 import TrueFalseGame from "../components/TrueFalseGame.jsx";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 
 const CRAYONS = ["#E53935", "#FB8C00", "#FDD835", "#43A047", "#00897B", "#1E88E5", "#5E35B1", "#D81B60", "#6D4C41", "#FFFFFF"];
 const TABS = [
@@ -62,6 +63,7 @@ function InfantilScreen({ onBack }) {
   const [openTrueFalseId, setOpenTrueFalseId] = useState(null);
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [openBadge, setOpenBadge] = useState(null);
+  const [celebratingBadge, setCelebratingBadge] = useState(null);
   const group = AGE_GROUPS[activeGroup];
   const todayStory = todaysStoryFor(group.id);
   const groupStories = BIBLE_STORIES.filter(s => s.groupId === group.id);
@@ -137,6 +139,8 @@ function InfantilScreen({ onBack }) {
           link: { tile: "infantil" },
         }).catch(err => console.error("BADGE_NOTIFY_ERR", err.code, err.message));
       });
+      const firstNewBadge = badges.find(b => b.id === newly[0]);
+      if (firstNewBadge) setCelebratingBadge({ child: c, badge: firstNewBadge });
       updateDoc(doc(db, "kids", c.id), { notifiedBadges: arrayUnion(...newly) })
         .catch(err => console.error("BADGE_NOTIFIED_SAVE_ERR", err.code, err.message));
     });
@@ -867,6 +871,16 @@ function InfantilScreen({ onBack }) {
         );
       })()}
 
+      {celebratingBadge && (
+        <CelebrationOverlay
+          emoji={celebratingBadge.badge.emoji}
+          title="Nova medalha desbloqueada!"
+          desc={`${celebratingBadge.child.name} conquistou "${celebratingBadge.badge.label}"! ${celebratingBadge.badge.desc}`}
+          buttonLabel="Que demais! 🎉"
+          accent={group.color}
+          onDismiss={() => setCelebratingBadge(null)}
+        />
+      )}
     </div>
   );
 }
