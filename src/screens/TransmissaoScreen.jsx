@@ -18,7 +18,7 @@ function TransmissaoScreen({ onBack }) {
   const toggleLive = () => {
     if (!liveActive) {
       setLiveActive(true);
-      addNotification({ text: "🔴 A transmissão ao vivo começou! Toque para assistir." });
+      addNotification({ text: "🔴 A transmissão ao vivo começou! Toque para assistir.", link: { tile: "transmissao" } });
     } else {
       setLiveActive(false);
     }

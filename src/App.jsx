@@ -318,6 +318,7 @@ function App() {
               await addDoc(collection(db, "notifications"), {
                 toUid: uid, read: false, createdAt: serverTimestamp(),
                 text: `📋 Lembrete: amanhã (${fmtDateBR(escala.date)}) você está escalado(a) em "${escala.culto}".`,
+                link: { tile: "escala" },
               });
             } catch {}
           }
@@ -332,9 +333,9 @@ function App() {
       updateDoc(doc(db, "notifications", n.id), { read: true }).catch(() => {});
     });
   };
-  const addNotification = ({ text }) => {
+  const addNotification = ({ text, link }) => {
     if (!currentUser?.uid) return;
-    addDoc(collection(db, "notifications"), { toUid: currentUser.uid, text, read: false, createdAt: serverTimestamp() }).catch(() => {});
+    addDoc(collection(db, "notifications"), { toUid: currentUser.uid, text, read: false, createdAt: serverTimestamp(), link: link || null }).catch(() => {});
   };
 
   const [liveActive, setLiveActive] = useState(LIVE_STREAM_ACTIVE);
@@ -372,6 +373,25 @@ function App() {
   const openProfile = (uid) => { if (!uid) return; setViewingProfileUid(uid); setOpenTile("profile"); };
   const [viewingMensagemId, setViewingMensagemId] = useState(null);
   const openMensagem = (id) => { if (!id) return; setViewingMensagemId(id); setOpenTile("mensagens"); };
+  const [viewingChatTarget, setViewingChatTarget] = useState(null);
+  const openChatTarget = (target) => { if (!target) return; setViewingChatTarget(target); setOpenTile("chat"); };
+
+  // Abre a notificação no lugar certo, seja lá o que for — mensagem, conversa,
+  // pedido de amizade, escala, etc. Notificações sem "link" (mais antigas, de
+  // antes dessa função existir) caem na tela de notificações mesmo.
+  const openNotificationLink = (link) => {
+    if (!link || !link.tile) return;
+    if (link.tile === "mensagens" && link.mensagemId) { openMensagem(link.mensagemId); return; }
+    if (link.tile === "profile" && link.uid) { openProfile(link.uid); return; }
+    if (link.tile === "chat" && link.chatId) {
+      openChatTarget(link.chatType === "group"
+        ? { id: link.chatId, type: "group", name: link.chatName, photo: link.chatPhoto || null }
+        : { id: link.chatId, type: "dm", otherUid: link.otherUid, name: link.chatName });
+      return;
+    }
+    setOpenTile(link.tile);
+    setTab(link.tile);
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
@@ -498,7 +518,7 @@ function App() {
           <ShortsContext.Provider value={{ shorts, addShort, toggleLike: toggleShortLike, likeOnly: likeShortOnly, toggleSave: toggleShortSave, addComment: addShortComment, deleteShort }}>
           <ConnectionsContext.Provider value={{ connections, sendRequest: sendFriendRequest, respond: respondFriendRequest, cancelSent: cancelFriendRequest }}>
           <ChatUnreadContext.Provider value={{ hasUnread: chatHasUnread }}>
-          <NotificationsContext.Provider value={{ notifications, markAllRead: markAllNotificationsRead, addNotification }}>
+          <NotificationsContext.Provider value={{ notifications, markAllRead: markAllNotificationsRead, addNotification, openNotificationLink }}>
           <LiveContext.Provider value={{ liveActive, setLiveActive }}>
           <ThemeContext.Provider value={{ theme, setTheme, textLarge, setTextLarge }}>
           <div className="flex flex-col h-full" style={{ zoom: textLarge ? 1.1 : 1 }} data-text-large={textLarge ? "" : undefined}>
@@ -518,7 +538,7 @@ function App() {
             ) : openTile === "feed" || (tab === "feed" && !openTile) ? (
               <FeedScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "chat" || (tab === "chat" && !openTile) ? (
-              <ChatScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+              <ChatScreen initialChat={viewingChatTarget} onBack={() => { setOpenTile(null); setTab("inicio"); setViewingChatTarget(null); }} />
             ) : openTile === "estudo" || (tab === "estudo" && !openTile) ? (
               <EstudosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "infantil" || (tab === "infantil" && !openTile) ? (

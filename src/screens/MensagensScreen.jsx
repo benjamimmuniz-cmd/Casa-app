@@ -99,7 +99,7 @@ function MensagensScreen({ mensagemId, onBack }) {
           image: youtubeThumbUrl(videoId), kind: "mensagem", mensagemId: docRef.id,
         }).catch(err => console.error("MENSAGEM_FEED_POST_ERR", err.code, err.message));
 
-        broadcastNotification(`🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`, { excludeUid: me.uid })
+        broadcastNotification(`🎙️ Nova mensagem disponível: "${title}"${detalhes ? ` (${detalhes})` : ""}`, { excludeUid: me.uid, link: { tile: "mensagens", mensagemId: docRef.id } })
           .catch(err => console.error("MENSAGEM_BROADCAST_ERR", err.code, err.message));
       }
       setNewUrl(""); setNewTitle(""); setNewSpeaker(""); setNewDate("");

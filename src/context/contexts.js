@@ -6,7 +6,7 @@ export const StoryContext = createContext({ stories: [], viewedIds: new Set(), a
 
 export const ConnectionsContext = createContext({ connections: [], sendRequest: () => {}, respond: () => {}, cancelSent: () => {} });
 
-export const NotificationsContext = createContext({ notifications: [], markAllRead: () => {}, addNotification: () => {} });
+export const NotificationsContext = createContext({ notifications: [], markAllRead: () => {}, addNotification: () => {}, openNotificationLink: () => {} });
 
 export const ChatUnreadContext = createContext({ hasUnread: false });
 

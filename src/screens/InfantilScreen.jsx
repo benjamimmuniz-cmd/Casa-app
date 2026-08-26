@@ -134,6 +134,7 @@ function InfantilScreen({ onBack }) {
         if (!badge) return;
         addDoc(collection(db, "notifications"), {
           toUid: me.uid, text: `${badge.emoji} ${c.name} desbloqueou a medalha "${badge.label}"!`, read: false, createdAt: serverTimestamp(),
+          link: { tile: "infantil" },
         }).catch(err => console.error("BADGE_NOTIFY_ERR", err.code, err.message));
       });
       updateDoc(doc(db, "kids", c.id), { notifiedBadges: arrayUnion(...newly) })

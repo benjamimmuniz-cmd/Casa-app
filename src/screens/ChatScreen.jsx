@@ -25,11 +25,15 @@ function isUnreadDoc(data, myUid) {
   return readAtMs < updatedMs;
 }
 
-function ChatScreen({ onBack }) {
+function ChatScreen({ onBack, initialChat }) {
   const me = useContext(UserContext);
   const [conversations, setConversations] = useState(null);
   const [groups, setGroups] = useState(null);
-  const [openChat, setOpenChat] = useState(null); // { id, type: "dm"|"group", name, photo, otherUid?, memberCount? }
+  const [openChat, setOpenChat] = useState(initialChat || null); // { id, type: "dm"|"group", name, photo, otherUid?, memberCount? }
+
+  useEffect(() => {
+    if (initialChat) setOpenChat(initialChat);
+  }, [initialChat]);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [showChoice, setShowChoice] = useState(false);

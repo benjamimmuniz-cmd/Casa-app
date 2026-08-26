@@ -2,8 +2,8 @@ import { doc, setDoc, addDoc, collection, updateDoc, deleteDoc, serverTimestamp 
 import { db } from "../firebase.js";
 import { getChatId } from "./chatId.js";
 
-function notify(toUid, text) {
-  return addDoc(collection(db, "notifications"), { toUid, text, read: false, createdAt: serverTimestamp() });
+function notify(toUid, text, link) {
+  return addDoc(collection(db, "notifications"), { toUid, text, read: false, createdAt: serverTimestamp(), link: link || null });
 }
 
 export async function sendConnectionRequest({ myUid, myName, otherUid, otherName }) {
@@ -15,13 +15,13 @@ export async function sendConnectionRequest({ myUid, myName, otherUid, otherName
     status: "pending",
     createdAt: serverTimestamp(),
   });
-  await notify(otherUid, `${myName} te enviou um pedido de amizade.`);
+  await notify(otherUid, `${myName} te enviou um pedido de amizade.`, { tile: "amigos-solicitacoes" });
 }
 
 export async function respondConnectionRequest(connection, accept) {
   if (accept) {
     await updateDoc(doc(db, "connections", connection.id), { status: "accepted" });
-    await notify(connection.fromUid, `${connection.toName} aceitou seu pedido de amizade.`);
+    await notify(connection.fromUid, `${connection.toName} aceitou seu pedido de amizade.`, { tile: "profile", uid: connection.toUid });
   } else {
     await deleteDoc(doc(db, "connections", connection.id));
   }

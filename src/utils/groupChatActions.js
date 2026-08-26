@@ -15,6 +15,7 @@ export async function createGroupChat({ name, photo, members, createdByUid, crea
   });
   await Promise.all(members.map(m => addDoc(collection(db, "notifications"), {
     toUid: m.uid, text: `${createdByName} te adicionou no grupo "${name}".`, read: false, createdAt: serverTimestamp(),
+    link: { tile: "chat", chatType: "group", chatId: ref.id, chatName: name, chatPhoto: photo || null },
   })));
   return ref.id;
 }
@@ -29,6 +30,7 @@ export async function addMembersToGroup({ groupId, groupName, members, addedByNa
   });
   await Promise.all(members.map(m => addDoc(collection(db, "notifications"), {
     toUid: m.uid, text: `${addedByName} te adicionou no grupo "${groupName}".`, read: false, createdAt: serverTimestamp(),
+    link: { tile: "chat", chatType: "group", chatId: groupId, chatName: groupName },
   })));
 }
 

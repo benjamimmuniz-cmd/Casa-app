@@ -57,7 +57,7 @@ function EnquetesScreen({ onBack }) {
         const texto = `🗳️ Nova enquete: ${title}${form.date.trim() ? ` — ${form.date.trim()}` : ""}${form.time.trim() ? ` às ${form.time.trim()}` : ""}. Vá em Enquetes e diga se você pode participar!`;
         addPost({ author: meName, authorUid: me.uid, text: texto, kind: "enquete" })
           .catch(err => console.error("ENQUETE_FEED_POST_ERR", err.code, err.message));
-        broadcastNotification(texto, { excludeUid: me.uid })
+        broadcastNotification(texto, { excludeUid: me.uid, link: { tile: "enquetes" } })
           .catch(err => console.error("ENQUETE_BROADCAST_ERR", err.code, err.message));
       }
       setForm({ title: "", date: "", time: "" });

@@ -123,7 +123,7 @@ function CalendarioScreen({ onBack }) {
         const texto = `📅 Novo evento: ${title} — ${summarizeDays(cleanDays)}. Não perca!`;
         addPost({ author: meName, authorUid: me.uid, text: texto, image: form.image || null, kind: "evento" })
           .catch(err => console.error("EVENTO_FEED_POST_ERR", err.code, err.message));
-        broadcastNotification(texto, { excludeUid: me.uid })
+        broadcastNotification(texto, { excludeUid: me.uid, link: { tile: "calendario" } })
           .catch(err => console.error("EVENTO_BROADCAST_ERR", err.code, err.message));
       }
       setForm({ title: "", category: CATEGORIES[0].id, image: null, signupEnabled: false });

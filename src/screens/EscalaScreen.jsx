@@ -78,6 +78,7 @@ function EscalaScreen({ onBack }) {
       addDoc(collection(db, "notifications"), {
         toUid: u.uid, read: false, createdAt: serverTimestamp(),
         text: `📋 Você foi escalado(a) para ${funcao} no culto de ${fmtDateBR(aberta.date)} (${aberta.culto}).`,
+        link: { tile: "escala" },
       }).catch(() => {});
     });
     setPickerFuncao(null);

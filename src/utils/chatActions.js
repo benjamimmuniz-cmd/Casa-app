@@ -35,6 +35,7 @@ export async function sendChatMessage({ myUid, myName, otherUid, otherName, text
   });
   await addDoc(collection(db, "notifications"), {
     toUid: otherUid, text: `${myName}: ${preview || "nova mensagem"}`, read: false, createdAt: serverTimestamp(),
+    link: { tile: "chat", chatId, otherUid: myUid, chatName: myName },
   });
   return chatId;
 }

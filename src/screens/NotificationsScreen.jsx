@@ -3,7 +3,7 @@ import { Bell } from "lucide-react";
 import { NotificationsContext } from "../context/contexts.js";
 
 function NotificationsScreen({ onBack }) {
-  const { notifications, markAllRead } = useContext(NotificationsContext);
+  const { notifications, markAllRead, openNotificationLink } = useContext(NotificationsContext);
 
   useEffect(() => {
     markAllRead();
@@ -24,7 +24,9 @@ function NotificationsScreen({ onBack }) {
             <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Nenhuma notificação por enquanto.</p>
           </div>
         ) : notifications.map(n => (
-          <div key={n.id} className="flex items-start gap-3 rounded-2xl p-3.5" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <button key={n.id} onClick={() => openNotificationLink(n.link)} disabled={!n.link?.tile}
+            className="w-full flex items-start gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+            style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
               <Bell size={15} color="#4D4D4D" />
             </div>
@@ -32,7 +34,7 @@ function NotificationsScreen({ onBack }) {
               <p style={{ fontFamily: "Inter", color: "#000000" }} className="text-[13px] leading-snug">{n.text}</p>
               <p style={{ fontFamily: "IBM Plex Mono", color: "#9E9E9E" }} className="text-[10px] mt-1">{n.time}</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
