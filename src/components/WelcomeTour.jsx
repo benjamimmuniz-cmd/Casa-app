@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { BookOpen, Menu as MenuIcon, Search } from "lucide-react";
+import { LOGO_IMG } from "../assets/logo-base64.js";
 
 const STEPS = [
   {
-    emoji: "🏠",
+    logo: true,
     title: "Bem-vindo à Casa!",
-    desc: "Esse é o seu espaço na comunidade da igreja. Vamos te mostrar rapidinho onde encontrar cada coisa.",
+    desc: "Aqui, você é amado(a) e faz parte da família. Vamos te mostrar rapidinho onde encontrar cada coisa.",
   },
   {
     icon: MenuIcon,
@@ -43,8 +44,10 @@ function WelcomeTour({ onFinish }) {
         </div>
 
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#0000000F" }}>
-            {Icon ? <Icon size={28} color="#000000" /> : <span style={{ fontSize: 30 }}>{current.emoji}</span>}
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden" style={{ background: current.logo ? "transparent" : "#0000000F" }}>
+            {current.logo
+              ? <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+              : Icon ? <Icon size={28} color="#000000" /> : <span style={{ fontSize: 30 }}>{current.emoji}</span>}
           </div>
           <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[18px] mb-2">{current.title}</p>
           <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[12.5px] leading-relaxed">{current.desc}</p>
