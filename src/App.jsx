@@ -284,7 +284,7 @@ function App() {
               const notif = new Notification("Igreja do Nazareno A Casa", { body: data.text });
               notif.onclick = () => {
                 window.focus();
-                if (data.link) openNotificationLink(data.link);
+                openNotificationLink(data);
                 notif.close();
               };
             } catch (e) {}
@@ -385,10 +385,28 @@ function App() {
   const [viewingChatTarget, setViewingChatTarget] = useState(null);
   const openChatTarget = (target) => { if (!target) return; setViewingChatTarget(target); setOpenTile("chat"); };
 
+  // Notificações criadas antes de existir o campo "link" não têm pra onde ir —
+  // essa função tenta adivinhar o destino pelo texto, com base nos emojis/frases
+  // que cada tipo de notificação sempre usou, pra elas não ficarem mortas.
+  const guessLinkFromText = (text) => {
+    if (!text) return null;
+    if (text.includes("🎙️")) return { tile: "mensagens" };
+    if (text.includes("📅")) return { tile: "calendario" };
+    if (text.includes("🗳️")) return { tile: "enquetes" };
+    if (text.includes("📋")) return { tile: "escala" };
+    if (text.includes("🔴")) return { tile: "transmissao" };
+    if (text.includes("desbloqueou a medalha")) return { tile: "infantil" };
+    if (text.includes("pedido de amizade") || text.includes("aceitou seu pedido")) return { tile: "amigos" };
+    if (text.includes("te adicionou no grupo")) return { tile: "chat" };
+    if (/^.+: /.test(text)) return { tile: "chat" };
+    return null;
+  };
+
   // Abre a notificação no lugar certo, seja lá o que for — mensagem, conversa,
-  // pedido de amizade, escala, etc. Notificações sem "link" (mais antigas, de
-  // antes dessa função existir) caem na tela de notificações mesmo.
-  const openNotificationLink = (link) => {
+  // pedido de amizade, escala, etc. Aceita tanto a notificação inteira (pra
+  // poder adivinhar pelo texto se faltar link) quanto só o link.
+  const openNotificationLink = (notif) => {
+    const link = notif?.link || guessLinkFromText(notif?.text);
     if (!link || !link.tile) return;
     if (link.tile === "mensagens" && link.mensagemId) { openMensagem(link.mensagemId); return; }
     if (link.tile === "profile" && link.uid) { openProfile(link.uid); return; }

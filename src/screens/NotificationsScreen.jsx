@@ -24,7 +24,7 @@ function NotificationsScreen({ onBack }) {
             <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Nenhuma notificação por enquanto.</p>
           </div>
         ) : notifications.map(n => (
-          <button key={n.id} onClick={() => openNotificationLink(n.link)} disabled={!n.link?.tile}
+          <button key={n.id} onClick={() => openNotificationLink(n)}
             className="w-full flex items-start gap-3 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
             style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
