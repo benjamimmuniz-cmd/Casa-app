@@ -59,6 +59,8 @@ const NotificationsScreen = React.lazy(() => import("./screens/NotificationsScre
 const AdminScreen = React.lazy(() => import("./screens/AdminScreen.jsx"));
 const PersonProfileScreen = React.lazy(() => import("./screens/PersonProfileScreen.jsx"));
 const BuscaScreen = React.lazy(() => import("./screens/BuscaScreen.jsx"));
+const PoliticaPrivacidadeScreen = React.lazy(() => import("./screens/PoliticaPrivacidadeScreen.jsx"));
+const TermosUsoScreen = React.lazy(() => import("./screens/TermosUsoScreen.jsx"));
 
 function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
@@ -598,6 +600,10 @@ function App() {
               <DiretorioScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "busca" || (tab === "busca" && !openTile) ? (
               <BuscaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} onOpenTile={(id) => { setOpenTile(id); setTab(id); }} />
+            ) : openTile === "privacidade" ? (
+              <PoliticaPrivacidadeScreen onBack={() => { setOpenTile(null); setTab("perfil"); }} />
+            ) : openTile === "termos" ? (
+              <TermosUsoScreen onBack={() => { setOpenTile(null); setTab("perfil"); }} />
             ) : openTile === "notificacoes" ? (
               <NotificationsScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "admin" ? (
@@ -605,7 +611,7 @@ function App() {
             ) : openTile === "profile" ? (
               <PersonProfileScreen uid={viewingProfileUid} onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "perfil" || (tab === "perfil" && !openTile) ? (
-              <PerfilScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} onLogout={handleLogout} />
+              <PerfilScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} onLogout={handleLogout} onOpenTile={(id) => { setOpenTile(id); setTab(id); }} />
             ) : openTile ? (
               <StubScreen tabId={openTile} onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : tab === "inicio" ? (

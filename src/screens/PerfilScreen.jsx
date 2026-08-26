@@ -3,14 +3,17 @@ import {
   Baby,
   Bell,
   BellOff,
+  BookOpenCheck,
   CalendarDays,
   Camera,
   Car,
   Check,
+  ChevronRight,
   MessageCircle,
   Moon,
   Pencil,
   Phone,
+  ShieldCheck,
   Sun,
   Tag,
   Type as TextIcon,
@@ -21,7 +24,7 @@ import { UserContext, ThemeContext, FeedContext } from "../context/contexts.js";
 import { colorFor, fmtDateBR, initials } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
 
-function PerfilScreen({ onBack, onLogout }) {
+function PerfilScreen({ onBack, onLogout, onOpenTile }) {
   const user = useContext(UserContext);
   const { theme, setTheme, textLarge, setTextLarge } = useContext(ThemeContext);
   const { posts } = useContext(FeedContext);
@@ -386,6 +389,21 @@ function PerfilScreen({ onBack, onLogout }) {
             <div className="w-5 h-5 rounded-full bg-white transition-transform"
               style={{ transform: user.notificacoesAtivas ? "translateX(20px)" : "translateX(0)" }} />
           </div>
+        </button>
+      </div>
+
+      <div className="px-6 mb-5 flex flex-col gap-2.5">
+        <button onClick={() => onOpenTile?.("privacidade")}
+          className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <ShieldCheck size={16} color="var(--c-muted)" />
+          <span style={{ fontFamily: "Inter", color: "var(--c-text)" }} className="text-[13px] flex-1">Política de Privacidade</span>
+          <ChevronRight size={15} color="var(--c-faint)" />
+        </button>
+        <button onClick={() => onOpenTile?.("termos")}
+          className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <BookOpenCheck size={16} color="var(--c-muted)" />
+          <span style={{ fontFamily: "Inter", color: "var(--c-text)" }} className="text-[13px] flex-1">Termos de Uso</span>
+          <ChevronRight size={15} color="var(--c-faint)" />
         </button>
       </div>
 

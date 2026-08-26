@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Baby, Check, Eye, EyeOff, Plus } from "lucide-react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, setDoc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase.js";
 import { compressImage } from "../utils/imageCompress.js";
@@ -30,6 +30,7 @@ function mapAuthError(code) {
     case "auth/invalid-credential": return "E-mail ou senha incorretos.";
     case "auth/network-request-failed": return "Sem conexão com a internet. Tente novamente.";
     case "auth/too-many-requests": return "Muitas tentativas. Aguarde um pouco e tente de novo.";
+    case "auth/missing-email": return "Digite seu e-mail ali em cima primeiro.";
     case "permission-denied": return "Sem permissão para acessar seus dados. Fale com a liderança da igreja.";
     default: return "Algo deu errado. Tente novamente.";
   }
@@ -43,6 +44,8 @@ function AuthScreen({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ nome: "", nascimento: "", email: "", telefone: "", senha: "", confirmaSenha: "", profissao: "", membro: null, receberMensagens: true, photo: null });
   const [loginForm, setLoginForm] = useState({ email: "", senha: "" });
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const [step, setStep] = useState("form"); // form | filhos
   const [pendingUser, setPendingUser] = useState(null);
@@ -165,6 +168,21 @@ function AuthScreen({ onSuccess }) {
       setError(mapAuthError(e.code));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setError("");
+    setResetSent(false);
+    if (!loginForm.email.trim()) { setError(mapAuthError("auth/missing-email")); return; }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, loginForm.email.trim());
+      setResetSent(true);
+    } catch (e) {
+      setError(mapAuthError(e.code));
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -351,9 +369,16 @@ function AuthScreen({ onSuccess }) {
 
             <label style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11px] block mb-1.5">Senha</label>
             <PasswordField value={loginForm.senha} onChange={e => setLoginForm(f => ({ ...f, senha: e.target.value }))} placeholder="Sua senha"
-              className="w-full px-4 py-3 rounded-xl mb-5 outline-none text-[13px]"
+              className="w-full px-4 py-3 rounded-xl mb-2 outline-none text-[13px]"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
 
+            <button onClick={handleResetPassword} disabled={resetLoading} className="text-[11.5px] mb-5 block" style={{ fontFamily: "Inter", color: "#616161" }}>
+              {resetLoading ? "Enviando..." : "Esqueci minha senha"}
+            </button>
+
+            {resetSent && (
+              <p style={{ fontFamily: "Inter", color: "#4B7D5C" }} className="text-[12px] mb-4 text-center">Enviamos um link pra redefinir sua senha no e-mail informado.</p>
+            )}
             {error && <p style={{ fontFamily: "Inter", color: "#8A8A8A" }} className="text-[12px] mb-4 text-center">{error}</p>}
 
             <button onClick={handleLogin} disabled={loading}
