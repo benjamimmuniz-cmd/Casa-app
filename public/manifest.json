@@ -1,0 +1,17 @@
+{
+  "name": "Igreja do Nazareno A Casa",
+  "short_name": "A Casa",
+  "description": "App da comunidade da Igreja do Nazareno A Casa — sua caminhada diária com Jesus, com sua igreja ao lado.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0E1120",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

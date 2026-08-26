@@ -529,7 +529,12 @@ function App() {
   return (
     <div className="w-full min-h-[100svh] flex items-center justify-center" style={{ background: "#0E1120" }}>
       <style>{FONTS}</style>
-      <div data-theme={theme} className="relative w-full h-[100svh] overflow-hidden sm:w-[375px] sm:h-[780px] sm:rounded-[2.5rem] sm:border-[8px] sm:border-black" style={{ background: "#000000", boxShadow: "0 30px 60px rgba(0,0,0,0.5)", transform: "translateZ(0)" }}>
+      <div data-theme={theme}
+        className="relative w-full h-[100svh] overflow-hidden sm:rounded-[2.5rem] sm:border-[8px] sm:border-black
+          sm:w-[min(92vw,420px)] sm:h-[min(92svh,860px)]
+          lg:w-[min(60vw,480px)] lg:h-[min(90svh,920px)]
+          xl:w-[min(46vw,540px)] xl:h-[min(88svh,960px)]"
+        style={{ background: "#000000", boxShadow: "0 30px 60px rgba(0,0,0,0.5)", transform: "translateZ(0)" }}>
         {stage === "loading" ? (
           <div className="w-full h-full flex items-center justify-center" style={{ background: "#000000" }} />
         ) : stage === "intro" ? (
