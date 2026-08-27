@@ -71,6 +71,7 @@ function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
   const [hasNewVersion, setHasNewVersion] = useState(false);
   const [presencaConfirmed, setPresencaConfirmed] = useState(false);
+  const [autoKidsCheckin, setAutoKidsCheckin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [feedPosts, setFeedPosts] = useState([]);
   useEffect(() => {
@@ -470,6 +471,22 @@ function App() {
     window.history.replaceState({}, "", url.toString());
   }, [currentUser?.uid]);
 
+  // Check-in rapido de kids por QR: a mesma ideia da presenca da congregacao,
+  // mas o QR fica na recepcao da Area Infantil — o responsavel escaneia com o
+  // proprio celular e cai direto no fluxo de check-in do(s) filho(s) dele,
+  // sem precisar navegar ate Meus Filhos manualmente.
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("kidscheckin") !== "1") return;
+    setAutoKidsCheckin(true);
+    setOpenTile("meusfilhos");
+    setTab("meusfilhos");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("kidscheckin");
+    window.history.replaceState({}, "", url.toString());
+  }, [currentUser?.uid]);
+
   // Avisa quando uma versao nova do app foi publicada (sem service worker,
   // entao a unica forma de saber e comparar o bundle carregado com o que o
   // servidor esta servindo agora). Checa periodicamente e quando a aba volta
@@ -639,7 +656,7 @@ function App() {
             ) : openTile === "infantil" || (tab === "infantil" && !openTile) ? (
               <InfantilScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "meusfilhos" || (tab === "meusfilhos" && !openTile) ? (
-              <MeusFilhosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+              <MeusFilhosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} autoCheckin={autoKidsCheckin} onAutoCheckinConsumed={() => setAutoKidsCheckin(false)} />
             ) : openTile === "checkin" || (tab === "checkin" && !openTile) ? (
               <CheckinScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "presenca" || (tab === "presenca" && !openTile) ? (

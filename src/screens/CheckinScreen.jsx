@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Baby, ChevronRight, ClipboardList, ShieldCheck, UserCheck, X } from "lucide-react";
+import { Baby, ChevronRight, ClipboardList, QrCode, ShieldCheck, UserCheck, X } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { collection, addDoc, doc, getDocs, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
@@ -26,6 +27,8 @@ function CheckinScreen({ onBack }) {
   const [checkinSearch, setCheckinSearch] = useState("");
   const [freqSearch, setFreqSearch] = useState("");
   const [confirmCheckoutFor, setConfirmCheckoutFor] = useState(null);
+  const [showQr, setShowQr] = useState(false);
+  const kidsCheckinQrUrl = `${window.location.origin}/?kidscheckin=1`;
 
   const [childForm, setChildForm] = useState(EMPTY_CHILD);
   const [responsavel, setResponsavel] = useState(null);
@@ -159,6 +162,23 @@ function CheckinScreen({ onBack }) {
       {activeTab === "checkin" && (
         <>
           <div className="px-6 mb-4">
+            <button onClick={() => setShowQr(v => !v)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-3" style={{ background: showQr ? "#2FA8A0" : "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+              <QrCode size={15} color={showQr ? "#FFFFFF" : "#2FA8A0"} />
+              <span style={{ fontFamily: "Inter", color: showQr ? "#FFFFFF" : "#3A2E22", fontWeight: 600 }} className="text-[12.5px]">
+                {showQr ? "Esconder QR de check-in" : "Mostrar QR de check-in"}
+              </span>
+            </button>
+            {showQr && (
+              <div className="rounded-2xl p-6 mb-3 flex flex-col items-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
+                <div className="p-4 rounded-2xl mb-3" style={{ background: "#FFFFFF", border: "1px solid #F0EAD9" }}>
+                  <QRCodeSVG value={kidsCheckinQrUrl} size={190} bgColor="#FFFFFF" fgColor="#3A2E22" level="M" />
+                </div>
+                <p style={{ fontFamily: "Inter", color: "#B0A18A" }} className="text-[11px] text-center">
+                  O responsável escaneia com o próprio celular e já cai no check-in do filho, pronto pra imprimir a etiqueta.
+                </p>
+              </div>
+            )}
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.1)" }}>
               <ShieldCheck size={15} color="#9A8B76" />
               <input value={checkinSearch} onChange={e => setCheckinSearch(e.target.value)} placeholder="Buscar criança por nome"

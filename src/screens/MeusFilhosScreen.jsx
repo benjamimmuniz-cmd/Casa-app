@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Baby, ChevronRight, Heart, Printer, ShieldCheck, Users, X } from "lucide-react";
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
@@ -14,28 +14,58 @@ const generateCheckinCode = () => String(Math.floor(1000 + Math.random() * 9000)
 // Tela própria "Meus Filhos" — cadastro, detalhes e check-in de segurança dos
 // seus filhos, fora da Área Infantil pra ficar de acesso mais rápido, como
 // pedido. A mesma lista/cadastro que já existe dentro de Área Infantil.
-function MeusFilhosScreen({ onBack }) {
+function MeusFilhosScreen({ onBack, autoCheckin, onAutoCheckinConsumed }) {
   const me = useContext(UserContext);
   const [children, setChildren] = useState([]);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
   const [showAddChild, setShowAddChild] = useState(false);
   const [openChildId, setOpenChildId] = useState(null);
   const [childForm, setChildForm] = useState({ name: "", age: "", diet: "", neurodivergente: false, childPhoto: null, parentsPhoto: null });
   const [childFormError, setChildFormError] = useState("");
   const [savingChild, setSavingChild] = useState(false);
   const [showPrintLabel, setShowPrintLabel] = useState(false);
+  const [autoCheckinArmed, setAutoCheckinArmed] = useState(() => !!autoCheckin);
+  const [showAutoPicker, setShowAutoPicker] = useState(false);
+  const autoPrintForRef = useRef(null);
 
   useEffect(() => {
-    if (!me.uid) { setChildren([]); return; }
+    if (autoCheckin) onAutoCheckinConsumed?.();
+  }, []);
+
+  useEffect(() => {
+    if (!me.uid) { setChildren([]); setChildrenLoaded(true); return; }
     const q = query(collection(db, "kids"), where("parentUid", "==", me.uid));
     const unsub = onSnapshot(q, snap => {
       setChildren(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, () => {});
+      setChildrenLoaded(true);
+    }, () => setChildrenLoaded(true));
     return () => unsub();
   }, [me.uid]);
 
   useEffect(() => { setShowPrintLabel(false); }, [openChildId]);
 
   const openChild = children.find(c => c.id === openChildId);
+
+  const startAutoCheckin = (childId) => {
+    autoPrintForRef.current = childId;
+    doCheckin(childId);
+    setOpenChildId(childId);
+    setShowAutoPicker(false);
+  };
+
+  useEffect(() => {
+    if (!autoCheckinArmed || !childrenLoaded) return;
+    setAutoCheckinArmed(false);
+    if (children.length === 1) startAutoCheckin(children[0].id);
+    else if (children.length > 1) setShowAutoPicker(true);
+  }, [autoCheckinArmed, childrenLoaded, children]);
+
+  useEffect(() => {
+    if (openChild?.checkinActive && autoPrintForRef.current === openChild?.id) {
+      setShowPrintLabel(true);
+      autoPrintForRef.current = null;
+    }
+  }, [openChild?.checkinActive, openChild?.id]);
 
   const handleChildPhoto = (e) => {
     const file = e.target.files?.[0];
@@ -341,6 +371,31 @@ function MeusFilhosScreen({ onBack }) {
               style={{ background: "#4B7D5C", color: "#FFFFFF", fontFamily: "Inter", opacity: savingChild ? 0.7 : 1 }}>
               {savingChild ? "Cadastrando..." : "Cadastrar criança"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {showAutoPicker && (
+        <div className="fixed inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowAutoPicker(false)}>
+          <div className="w-full rounded-t-3xl p-6" style={{ background: "#FFF8EE" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#3A2E22" }} className="text-[17px] mb-1">Check-in rápido</p>
+            <p style={{ fontFamily: "Inter", color: "#9A8B76" }} className="text-[12.5px] mb-4">Qual criança está fazendo check-in agora?</p>
+            <div className="flex flex-col gap-2">
+              {children.map(c => (
+                <button key={c.id} onClick={() => startAutoCheckin(c.id)}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
+                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(180,140,80,0.08)" }}>
+                  {c.childPhoto ? (
+                    <img src={c.childPhoto} alt={c.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: colorFor(c.name) }}>
+                      <span style={{ fontFamily: "Fraunces", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">{initials(c.name)}</span>
+                    </div>
+                  )}
+                  <p style={{ fontFamily: "Inter", color: "#3A2E22", fontWeight: 600 }} className="text-[13px]">{c.name}</p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
