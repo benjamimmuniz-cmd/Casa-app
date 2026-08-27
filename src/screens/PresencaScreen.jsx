@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { BarChart3, QrCode, ShieldCheck, Users } from "lucide-react";
+import { BarChart3, QrCode, ShieldCheck, UserX, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
@@ -27,9 +27,44 @@ function PresencaScreen({ onBack }) {
     return () => unsub();
   }, [isStaff]);
 
-  const today = useMemo(() =>
-    all.filter(p => p.dateLabel === todayL).sort((a, b) => (b.at?.toMillis?.() || 0) - (a.at?.toMillis?.() || 0)),
-    [all, todayL]);
+  const todayByCulto = useMemo(() => {
+    const list = all.filter(p => p.dateLabel === todayL);
+    const map = new Map();
+    list.forEach(p => {
+      const key = p.culto || "Culto";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(p);
+    });
+    return [...map.entries()].map(([culto, people]) => ({
+      culto,
+      people: people.sort((a, b) => (b.at?.toMillis?.() || 0) - (a.at?.toMillis?.() || 0)),
+    }));
+  }, [all, todayL]);
+  const todayTotal = useMemo(() => todayByCulto.reduce((s, g) => s + g.people.length, 0), [todayByCulto]);
+
+  const porCulto = useMemo(() => {
+    const map = new Map();
+    all.forEach(p => {
+      const key = p.culto || "Culto";
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return [...map.entries()].sort((a, b) => b[1] - a[1]);
+  }, [all]);
+
+  const quemSumiu = useMemo(() => {
+    const lastByUid = new Map();
+    all.forEach(p => {
+      const ms = p.at?.toMillis?.() || 0;
+      const cur = lastByUid.get(p.uid);
+      if (!cur || ms > cur.ms) lastByUid.set(p.uid, { uid: p.uid, name: p.name, ms });
+    });
+    const THRESHOLD_MS = 21 * 24 * 60 * 60 * 1000; // 3 semanas
+    const now = Date.now();
+    return [...lastByUid.values()]
+      .filter(p => p.ms && now - p.ms > THRESHOLD_MS)
+      .map(p => ({ ...p, days: Math.floor((now - p.ms) / (24 * 60 * 60 * 1000)) }))
+      .sort((a, b) => b.days - a.days);
+  }, [all]);
 
   const porMes = useMemo(() => {
     const counts = new Map();
@@ -59,9 +94,11 @@ function PresencaScreen({ onBack }) {
     const map = new Map();
     all.forEach(p => {
       const dt = p.at?.toDate?.();
-      const key = dt ? `${String(dt.getDate()).padStart(2, "0")}/${String(dt.getMonth() + 1).padStart(2, "0")}/${dt.getFullYear()}` : p.dateLabel;
+      const cultoShort = (p.culto || "").replace("Culto de domingo · ", "");
+      const key = `${dt ? dt.toDateString() : p.dateLabel}_${p.cultoKey || p.culto || ""}`;
+      const label = cultoShort ? `${p.dateLabel} · ${cultoShort}` : p.dateLabel;
       const ms = dt ? dt.getTime() : 0;
-      const entry = map.get(key) || { label: p.dateLabel, ms, count: 0 };
+      const entry = map.get(key) || { label, ms, count: 0 };
       entry.count += 1;
       if (ms > entry.ms) entry.ms = ms;
       map.set(key, entry);
@@ -120,21 +157,28 @@ function PresencaScreen({ onBack }) {
 
           <div className="px-6 pb-10">
             <p style={{ fontFamily: "Inter", color: "#4D4D4D", fontWeight: 600 }} className="text-[12px] mb-3 flex items-center gap-1.5">
-              <Users size={13} /> Presentes hoje ({today.length})
+              <Users size={13} /> Presentes hoje ({todayTotal})
             </p>
-            {today.length === 0 ? (
+            {todayByCulto.length === 0 ? (
               <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
                 <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Ninguém marcou presença ainda hoje.</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                {today.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                    <Avatar name={p.name} uid={p.uid} size={36} fontSize={10.5} />
-                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1">{p.name}</p>
+              todayByCulto.map(group => (
+                <div key={group.culto} className="mb-5">
+                  <p style={{ fontFamily: "Inter", color: "#9E9E9E", fontWeight: 600 }} className="text-[10.5px] uppercase tracking-wide mb-2">
+                    {group.culto} ({group.people.length})
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {group.people.map(p => (
+                      <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                        <Avatar name={p.name} uid={p.uid} size={36} fontSize={10.5} />
+                        <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px] flex-1">{p.name}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
         </>
@@ -201,9 +245,9 @@ function PresencaScreen({ onBack }) {
 
           <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Presença por dia (últimos)</p>
           {porDia.length === 0 ? (
-            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Nada registrado ainda.</p>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] mb-6">Nada registrado ainda.</p>
           ) : (
-            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="rounded-2xl p-4 mb-6 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               {(() => {
                 const max = Math.max(1, ...porDia.map(d => d.count));
                 return porDia.map(d => (
@@ -218,6 +262,47 @@ function PresencaScreen({ onBack }) {
                   </div>
                 ));
               })()}
+            </div>
+          )}
+
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Presença por culto</p>
+          {porCulto.length === 0 ? (
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] mb-6">Nada registrado ainda.</p>
+          ) : (
+            <div className="rounded-2xl p-4 mb-6 flex flex-col gap-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              {porCulto.map(([culto, count]) => {
+                const max = porCulto[0][1];
+                return (
+                  <div key={culto}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{culto}</p>
+                      <p style={{ fontFamily: "IBM Plex Mono", color: "#707070" }} className="text-[11px]">{count}</p>
+                    </div>
+                    <div className="w-full h-2 rounded-full" style={{ background: "#F2F2F2" }}>
+                      <div className="h-full rounded-full" style={{ width: `${(count / max) * 100}%`, background: "#3B7D8A" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3 flex items-center gap-1.5">
+            <UserX size={13} /> Quem sumiu (3+ semanas sem presença)
+          </p>
+          {quemSumiu.length === 0 ? (
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px]">Ninguém com ausência longa registrada ainda.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {quemSumiu.map(p => (
+                <div key={p.uid} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <Avatar name={p.name} uid={p.uid} size={36} fontSize={10.5} />
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[13px]">{p.name}</p>
+                    <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[10.5px]">Última presença há {p.days} dias</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
