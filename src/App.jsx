@@ -4,6 +4,7 @@ import {
   Clapperboard,
   HandCoins,
   Home,
+  RefreshCw,
   ShoppingBag
 } from "lucide-react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -13,6 +14,7 @@ import { FeedContext, UserContext, StoryContext, ConnectionsContext, Notificatio
 import { loadTheme, saveTheme } from "./utils/themeStore.js";
 import { loadTextLarge, saveTextLarge } from "./utils/textSizeStore.js";
 import { timeAgo, fmtDateBR } from "./utils/helpers.js";
+import { checkForNewVersion } from "./utils/versionCheck.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
@@ -64,6 +66,7 @@ const TermosUsoScreen = React.lazy(() => import("./screens/TermosUsoScreen.jsx")
 
 function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
+  const [hasNewVersion, setHasNewVersion] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [feedPosts, setFeedPosts] = useState([]);
   useEffect(() => {
@@ -448,6 +451,18 @@ function App() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [currentUser?.uid]);
 
+  // Avisa quando uma versao nova do app foi publicada (sem service worker,
+  // entao a unica forma de saber e comparar o bundle carregado com o que o
+  // servidor esta servindo agora). Checa periodicamente e quando a aba volta
+  // a ficar visivel — a pessoa pode recarregar na hora que quiser.
+  useEffect(() => {
+    const check = () => { checkForNewVersion().then(isNew => { if (isNew) setHasNewVersion(true); }); };
+    const interval = setInterval(check, 5 * 60 * 1000);
+    const onVisible = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
+
   // Diretorio de usuarios sob demanda: em vez de escutar a colecao "users" inteira
   // (o que le todo mundo, toda sessao, mesmo so pra mostrar 3 avatares na tela),
   // busca so o perfil de quem realmente aparece, uma vez, e guarda em cache.
@@ -549,6 +564,14 @@ function App() {
           lg:w-[min(60vw,480px)] lg:h-[min(90svh,920px)]
           xl:w-[min(46vw,540px)] xl:h-[min(88svh,960px)]"
         style={{ background: "#000000", boxShadow: "0 30px 60px rgba(0,0,0,0.5)", transform: "translateZ(0)" }}>
+        {hasNewVersion && (
+          <button onClick={() => window.location.reload()}
+            className="absolute top-3 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform"
+            style={{ background: "#1A1A1A", boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}>
+            <RefreshCw size={13} color="#F2F2F2" />
+            <span style={{ fontFamily: "Inter", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">Nova versão disponível — Atualizar</span>
+          </button>
+        )}
         {stage === "loading" ? (
           <div className="w-full h-full flex items-center justify-center" style={{ background: "#000000" }} />
         ) : stage === "intro" ? (
