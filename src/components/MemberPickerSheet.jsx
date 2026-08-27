@@ -6,16 +6,19 @@ import { UserContext } from "../context/contexts.js";
 import { colorFor, initials } from "../utils/helpers.js";
 
 // Bottom sheet reutilizável pra escolher um membro cadastrado — usado pra iniciar
-// conversas no Chat e pra encaminhar posts do Feed.
-function MemberPickerSheet({ title, onClose, onPick, excludeSelf = true }) {
+// conversas no Chat e pra encaminhar posts do Feed. "allowedUids", quando
+// informado (ex: só amigos aceitos), restringe a lista a esses uids também.
+function MemberPickerSheet({ title, onClose, onPick, excludeSelf = true, allowedUids, emptyMessage }) {
   const me = useContext(UserContext);
   const [members, setMembers] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     getDocs(collection(db, "users")).then(snap => {
-      const list = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-      setMembers(excludeSelf ? list.filter(u => u.uid !== me.uid) : list);
+      let list = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      if (excludeSelf) list = list.filter(u => u.uid !== me.uid);
+      if (allowedUids) list = list.filter(u => allowedUids.has(u.uid));
+      setMembers(list);
     }).catch(err => {
       console.error("MEMBER_PICKER_ERR", err.code, err.message);
       setError(err.message);
@@ -35,7 +38,7 @@ function MemberPickerSheet({ title, onClose, onPick, excludeSelf = true }) {
             <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] text-center py-6">Carregando...</p>
           ) : members.length === 0 ? (
             <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[12px] text-center py-6">
-              {error ? `Erro ao carregar: ${error}` : "Ninguém mais cadastrado ainda."}
+              {error ? `Erro ao carregar: ${error}` : (emptyMessage || "Ninguém mais cadastrado ainda.")}
             </p>
           ) : members.map(u => (
             <button key={u.uid} onClick={() => onPick(u)}

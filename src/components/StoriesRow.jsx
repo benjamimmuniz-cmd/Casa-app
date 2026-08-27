@@ -1,18 +1,20 @@
 import React, { useContext, useRef, useState } from "react";
 import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, SquarePen, X } from "lucide-react";
-import { StoryContext, UserContext } from "../context/contexts.js";
+import { StoryContext, UserContext, ConnectionsContext } from "../context/contexts.js";
 import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
 import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
 import { uploadVideo } from "../utils/mediaUpload.js";
+import { friendUidsOf } from "../utils/helpers.js";
 
 function StoriesRow({ onPublish, onShorts }) {
   const meUser = useContext(UserContext);
   const me = meUser.name || "Você";
-  // Stories são da comunidade inteira da igreja, não só de quem já é "amigo"
-  // — antes ficava escondido pra quem não tinha pedido de amizade aceito.
-  const { stories, viewedIds, addStory, markViewed } = useContext(StoryContext);
+  const { stories: allStories, viewedIds, addStory, markViewed } = useContext(StoryContext);
+  const { connections } = useContext(ConnectionsContext);
+  const friends = friendUidsOf(meUser.uid, connections);
+  const stories = allStories.filter(s => !s.authorUid || s.authorUid === meUser.uid || friends.has(s.authorUid));
   const [viewerGroup, setViewerGroup] = useState(null);
   const [showChoice, setShowChoice] = useState(false);
   const [showPhotoSource, setShowPhotoSource] = useState(false);

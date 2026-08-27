@@ -2,8 +2,8 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCheck, ImageIcon, Send, Smile, SquarePen, UserPlus, Users, X } from "lucide-react";
 import { collection, doc, getDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { UserContext } from "../context/contexts.js";
-import { timeAgo } from "../utils/helpers.js";
+import { UserContext, ConnectionsContext } from "../context/contexts.js";
+import { timeAgo, friendUidsOf } from "../utils/helpers.js";
 import { sendChatMessage, markChatRead, setTyping, deleteChatMessage } from "../utils/chatActions.js";
 import { addMembersToGroup, createGroupChat, removeMemberFromGroup, sendGroupMessage, updateGroupPhoto } from "../utils/groupChatActions.js";
 import { getChatId } from "../utils/chatId.js";
@@ -27,6 +27,8 @@ function isUnreadDoc(data, myUid) {
 
 function ChatScreen({ onBack, initialChat }) {
   const me = useContext(UserContext);
+  const { connections } = useContext(ConnectionsContext);
+  const friends = friendUidsOf(me.uid, connections);
   const [conversations, setConversations] = useState(null);
   const [groups, setGroups] = useState(null);
   const [openChat, setOpenChat] = useState(initialChat || null); // { id, type: "dm"|"group", name, photo, otherUid?, memberCount? }
@@ -562,7 +564,8 @@ function ChatScreen({ onBack, initialChat }) {
       )}
 
       {showNewChat && (
-        <MemberPickerSheet title="Nova conversa" onClose={() => setShowNewChat(false)} onPick={startChat} />
+        <MemberPickerSheet title="Nova conversa" onClose={() => setShowNewChat(false)} onPick={startChat}
+          allowedUids={friends} emptyMessage="Você ainda não tem amigos aceitos. Peça amizade em Amigos pra poder conversar." />
       )}
 
       {showNewGroupPick && (
