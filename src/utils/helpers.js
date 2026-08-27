@@ -194,10 +194,12 @@ export function friendUidsOf(myUid, connections) {
   return set;
 }
 
-// Só mostra posts de quem já é amigo (ou os próprios) — quem não aceitou o pedido
-// ainda não pode ver as publicações um do outro.
+// O Feed é da comunidade inteira da igreja, não só de quem já é "amigo" —
+// antes isso escondia posts de quem ainda não tinha aceitado pedido de
+// amizade um do outro, o que não fazia sentido com a igreja toda usando
+// o app. "connections" não é mais usado aqui, mas o parâmetro fica pra não
+// quebrar quem já chama essa função.
 export function visiblePosts(posts, myUid, connections) {
-  const friends = friendUidsOf(myUid, connections);
-  return posts.filter(p => !p.authorUid || p.authorUid === myUid || friends.has(p.authorUid));
+  return posts;
 }
 
