@@ -14,6 +14,7 @@ import { FeedContext, UserContext } from "../context/contexts.js";
 import { fmtPrice, timeAgo } from "../utils/helpers.js";
 import { PRODUCT_COLORS } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
+import PostCarousel from "../components/PostCarousel.jsx";
 import { createPedido, generateOrderCode } from "../utils/storeActions.js";
 import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
@@ -47,7 +48,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
   const [orderDone, setOrderDone] = useState(false);
   const [lastOrderCode, setLastOrderCode] = useState(null);
-  const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "", whatsapp: "" });
+  const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], images: [], stock: "", whatsapp: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
 
@@ -104,18 +105,24 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   };
 
   const handlePhotoPick = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => compressImage(reader.result, 900, 0.72).then(img => setForm(f => ({ ...f, image: img })));
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => compressImage(reader.result, 900, 0.72).then(img => setForm(f => ({ ...f, images: [...f.images, img] })));
+      reader.readAsDataURL(file);
+    });
     e.target.value = "";
+  };
+
+  const removeFormImage = (idx) => {
+    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
   const closeAddSheet = () => {
     setShowAdd(false);
     setEditingProductId(null);
-    setForm({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "", whatsapp: "" });
+    setForm({ name: "", price: "", desc: "", category: categories[0], images: [], stock: "", whatsapp: "" });
     setFormError("");
   };
 
@@ -131,7 +138,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   };
 
   const openEditProduct = (p) => {
-    setForm({ name: p.name, price: String(p.price).replace(".", ","), desc: p.desc === "Sem descrição." ? "" : p.desc, category: p.category, image: p.image, stock: String(p.stock), whatsapp: p.whatsapp ? p.whatsapp.replace(/^55/, "") : "" });
+    setForm({ name: p.name, price: String(p.price).replace(".", ","), desc: p.desc === "Sem descrição." ? "" : p.desc, category: p.category, images: p.images && p.images.length ? p.images : (p.image ? [p.image] : []), stock: String(p.stock), whatsapp: p.whatsapp ? p.whatsapp.replace(/^55/, "") : "" });
     setEditingProductId(p.id);
     setOpenProductId(null);
     setShowAdd(true);
@@ -151,7 +158,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     if (editingProductId) {
       try {
         await updateProduct(editingProductId, {
-          name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, image: form.image, stock, whatsapp: whatsapp || null,
+          name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, images: form.images, image: form.images[0] || null, stock, whatsapp: whatsapp || null,
         });
         closeAddSheet();
       } catch (err) {
@@ -164,13 +171,13 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     try {
       const color = PRODUCT_COLORS[products.length % PRODUCT_COLORS.length];
       await addProduct({
-        name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, color, image: form.image, stock, author: meName, whatsapp: whatsapp || null,
+        name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, color, images: form.images, image: form.images[0] || null, stock, author: meName, whatsapp: whatsapp || null,
       });
       if (postToFeed) {
         addPost({
           author: meName,
           text: `Novidade na ${title}: ${form.name.trim()} — ${fmtPrice(price)}${form.desc.trim() ? `\n${form.desc.trim()}` : ""}`,
-          image: form.image,
+          image: form.images[0] || null,
           kind: title === "Casa Cantina" ? "cardapio" : "produto",
         }).catch(err => console.error("PRODUCT_FEED_POST_ERR", err.code, err.message));
       }
@@ -333,16 +340,21 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
       {product && (
         <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setOpenProductId(null)}>
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-3">
-              {product.image ? (
-                <img src={product.image} alt={product.name} className="w-24 h-24 rounded-2xl object-cover" />
-              ) : (
+            {(product.images && product.images.length ? product.images : (product.image ? [product.image] : [])).length > 0 ? (
+              <div className="relative rounded-2xl overflow-hidden mb-3" style={{ width: "100%", height: 220 }}>
+                <PostCarousel images={product.images && product.images.length ? product.images : [product.image]} />
+                <button onClick={() => setOpenProductId(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10" style={{ background: "rgba(0,0,0,0.5)" }}>
+                  <X size={14} color="#FFFFFF" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between mb-3">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: product.color + "1E" }}>
                   <ShoppingBag size={24} color={product.color} />
                 </div>
-              )}
-              <button onClick={() => setOpenProductId(null)}><X size={18} color="#9E9E9E" /></button>
-            </div>
+                <button onClick={() => setOpenProductId(null)}><X size={18} color="#9E9E9E" /></button>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1" style={{ fontFamily: "IBM Plex Mono", background: product.color + "1A", color: product.color }}>
                 <Tag size={10} /> {product.category}
@@ -386,16 +398,21 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px] mb-4">{editingProductId ? "Editar item" : "Novo item"}</p>
 
-            <label className="flex items-center gap-3 mb-4 cursor-pointer">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
-                {form.image ? <img src={form.image} alt="Prévia" className="w-full h-full object-cover" /> : <ShoppingBag size={20} color="#9E9E9E" />}
-              </div>
-              <div>
-                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{form.image ? "Trocar foto" : "Adicionar foto"}</p>
-                <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">Assim quem compra vê o produto de verdade</p>
-              </div>
-              <input type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
-            </label>
+            <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11.5px] mb-2">Fotos do produto (pode adicionar várias)</p>
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+              {form.images.map((img, idx) => (
+                <div key={idx} className="relative shrink-0 rounded-2xl overflow-hidden" style={{ width: 64, height: 64 }}>
+                  <img src={img} alt="Prévia" className="w-full h-full object-cover" />
+                  <button onClick={() => removeFormImage(idx)} className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
+                    <X size={9} color="#F2F2F2" />
+                  </button>
+                </div>
+              ))}
+              <label className="shrink-0 rounded-2xl flex items-center justify-center cursor-pointer" style={{ width: 64, height: 64, background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
+                <ShoppingBag size={18} color="#9E9E9E" />
+                <input type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
+              </label>
+            </div>
 
             <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nome do item"
               className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
