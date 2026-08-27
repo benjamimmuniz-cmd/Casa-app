@@ -207,7 +207,7 @@ export const CATEGORIES_STORE = ["Livros", "Vestuário", "Música", "Eventos", "
 
 export const CATEGORIES_CANTINA = ["Salgados", "Doces", "Bebidas", "Combos"];
 
-export const STORE_WHATSAPP = "5511999999999"; // número do responsável — trocar pelo real
+export const STORE_WHATSAPP = "5581996840938"; // número pra teste — trocar depois pelo do responsável da loja
 
 // Transmissão ao vivo (YouTube). Trocar o link antes de cada culto e virar LIVE_STREAM_ACTIVE
 // para true enquanto estiver no ar — como não há servidor, esses valores vêm junto do app
