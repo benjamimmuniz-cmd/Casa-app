@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext, createContext } from "r
 import {
   BookOpen,
   Clapperboard,
+  CheckCircle2,
   HandCoins,
   Home,
   RefreshCw,
@@ -15,6 +16,7 @@ import { loadTheme, saveTheme } from "./utils/themeStore.js";
 import { loadTextLarge, saveTextLarge } from "./utils/textSizeStore.js";
 import { timeAgo, fmtDateBR } from "./utils/helpers.js";
 import { checkForNewVersion } from "./utils/versionCheck.js";
+import { markAttendance } from "./utils/attendanceActions.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
@@ -36,6 +38,7 @@ const TransitoScreen = React.lazy(() => import("./screens/TransitoScreen.jsx"));
 const DiretorioScreen = React.lazy(() => import("./screens/DiretorioScreen.jsx"));
 const MeusFilhosScreen = React.lazy(() => import("./screens/MeusFilhosScreen.jsx"));
 const CheckinScreen = React.lazy(() => import("./screens/CheckinScreen.jsx"));
+const PresencaScreen = React.lazy(() => import("./screens/PresencaScreen.jsx"));
 const CriancasScreen = React.lazy(() => import("./screens/CriancasScreen.jsx"));
 const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
 const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
@@ -67,6 +70,7 @@ const TermosUsoScreen = React.lazy(() => import("./screens/TermosUsoScreen.jsx")
 function App() {
   const [stage, setStage] = useState("loading"); // loading | intro | auth | app
   const [hasNewVersion, setHasNewVersion] = useState(false);
+  const [presencaConfirmed, setPresencaConfirmed] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [feedPosts, setFeedPosts] = useState([]);
   useEffect(() => {
@@ -451,6 +455,21 @@ function App() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [currentUser?.uid]);
 
+  // Presenca por QR: a pessoa escaneia com o proprio celular um QR que abre
+  // o app com "?presenca=1" na URL — se ja estiver logada, marca a presenca
+  // dela na hora e limpa a URL pra nao marcar de novo num refresh.
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("presenca") !== "1") return;
+    markAttendance(currentUser.uid, currentUser.nome || "Alguém da igreja")
+      .then(() => { setPresencaConfirmed(true); setTimeout(() => setPresencaConfirmed(false), 5000); })
+      .catch(err => console.error("PRESENCA_MARK_ERR", err.code, err.message));
+    const url = new URL(window.location.href);
+    url.searchParams.delete("presenca");
+    window.history.replaceState({}, "", url.toString());
+  }, [currentUser?.uid]);
+
   // Avisa quando uma versao nova do app foi publicada (sem service worker,
   // entao a unica forma de saber e comparar o bundle carregado com o que o
   // servidor esta servindo agora). Checa periodicamente e quando a aba volta
@@ -564,6 +583,13 @@ function App() {
           lg:w-[min(60vw,480px)] lg:h-[min(90svh,920px)]
           xl:w-[min(46vw,540px)] xl:h-[min(88svh,960px)]"
         style={{ background: "#000000", boxShadow: "0 30px 60px rgba(0,0,0,0.5)", transform: "translateZ(0)" }}>
+        {presencaConfirmed && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-4 py-2.5 rounded-full"
+            style={{ background: "#2F7D4A", boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}>
+            <CheckCircle2 size={14} color="#F2F2F2" />
+            <span style={{ fontFamily: "Inter", color: "#F2F2F2", fontWeight: 600 }} className="text-[12px]">Presença confirmada!</span>
+          </div>
+        )}
         {hasNewVersion && (
           <button onClick={() => window.location.reload()}
             className="absolute top-3 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform"
@@ -616,6 +642,8 @@ function App() {
               <MeusFilhosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "checkin" || (tab === "checkin" && !openTile) ? (
               <CheckinScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "presenca" || (tab === "presenca" && !openTile) ? (
+              <PresencaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "criancas" || (tab === "criancas" && !openTile) ? (
               <CriancasScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "calendario" || (tab === "calendario" && !openTile) ? (
