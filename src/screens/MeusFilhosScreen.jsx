@@ -196,7 +196,7 @@ function MeusFilhosScreen({ onBack }) {
                 #casa-print-label { position: fixed; top: 0; left: 0; }
                 #casa-print-label > *:first-child { break-after: page; page-break-after: always; }
                 .casa-no-print { display: none !important; }
-                @page { size: 50mm 30mm; margin: 0; }
+                @page { size: 80mm 30mm; margin: 0; }
               }
             `}</style>
             <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
