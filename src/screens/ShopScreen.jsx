@@ -1,22 +1,39 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import {
   Minus,
+  Receipt,
   ShoppingBag,
   ShoppingCart,
   Tag,
   Trash2,
   X
 } from "lucide-react";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { FeedContext, UserContext } from "../context/contexts.js";
-import { fmtPrice } from "../utils/helpers.js";
+import { fmtPrice, timeAgo } from "../utils/helpers.js";
 import { PRODUCT_COLORS } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
+import { createPedido } from "../utils/storeActions.js";
+import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
 function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock, updateProduct, deleteProduct, categories, accent, waNumber, layout = "grid" }) {
   const me = useContext(UserContext);
   const meName = me.name || "Alguém da igreja";
   const { addPost } = useContext(FeedContext);
-  const [cart, setCart] = useState({});
+  const cartStorageKey = `casa-app:cart:${title}`;
+  const [cart, setCart] = useState(() => {
+    try {
+      if (isCartExpired(title)) { clearCartStarted(title); localStorage.removeItem(cartStorageKey); return {}; }
+      const saved = localStorage.getItem(cartStorageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [cartExpiredMsg, setCartExpiredMsg] = useState(false);
+  const [activeTab, setActiveTab] = useState("produtos");
+  const [pedidos, setPedidos] = useState([]);
   const [openProductId, setOpenProductId] = useState(null);
   const [showCart, setShowCart] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -27,6 +44,36 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
 
+  useEffect(() => {
+    try {
+      if (Object.values(cart).some(q => q > 0)) localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+      else localStorage.removeItem(cartStorageKey);
+    } catch {}
+  }, [cart]);
+
+  useEffect(() => {
+    if (!me.uid) return;
+    const unsub = onSnapshot(query(collection(db, "pedidos"), where("buyerUid", "==", me.uid)), snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.store === title);
+      list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      setPedidos(list);
+    }, err => console.error("PEDIDOS_LOAD_ERR", err.code, err.message));
+    return () => unsub();
+  }, [me.uid, title]);
+
+  useEffect(() => {
+    const check = () => {
+      if (!isCartExpired(title)) return;
+      setCart(prev => (Object.values(prev).some(q => q > 0) ? {} : prev));
+      clearCartStarted(title);
+      setCartExpiredMsg(true);
+      setTimeout(() => setCartExpiredMsg(false), 4000);
+    };
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, [title]);
+
   const product = products.find(p => p.id === openProductId);
   const cartCount = Object.values(cart).reduce((s, q) => s + q, 0);
   const cartTotal = Object.entries(cart).reduce((s, [id, q]) => {
@@ -36,11 +83,16 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
 
   const addToCart = (id, delta = 1) => {
     setCart(prev => {
+      const wasEmpty = !Object.values(prev).some(q => q > 0);
       const p = products.find(pr => pr.id === id);
       const current = prev[id] || 0;
       const next = Math.max(0, current + delta);
       const capped = p ? Math.min(next, p.stock) : next;
-      return { ...prev, [id]: capped };
+      const updated = { ...prev, [id]: capped };
+      const isEmptyNow = !Object.values(updated).some(q => q > 0);
+      if (wasEmpty && !isEmptyNow) markCartStarted(title);
+      if (isEmptyNow) clearCartStarted(title);
+      return updated;
     });
   };
 
@@ -132,17 +184,25 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
 
   const finalizeOrder = () => {
     const items = Object.entries(cart).filter(([, q]) => q > 0);
+    const orderItems = [];
     items.forEach(([id, qty]) => {
       const p = products.find(pr => pr.id === id);
-      if (p) updateStock(id, Math.max(0, p.stock - qty));
+      if (p) {
+        updateStock(id, Math.max(0, p.stock - qty));
+        orderItems.push({ id, name: p.name, qty, price: p.price });
+      }
     });
+    createPedido({ store: title, buyerUid: me.uid, buyerName: meName, items: orderItems, total: cartTotal })
+      .catch(err => console.error("PEDIDO_CREATE_ERR", err.code, err.message));
     notifyWhatsApp(items, cartTotal);
     setOrderDone(true);
     setCart({});
+    clearCartStarted(title);
   };
 
   return (
-    <div className="flex-1 overflow-y-auto relative" style={{ background: "#F2F2F2" }}>
+    <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "#F2F2F2" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2 flex items-center justify-between">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Início</button>
         <button onClick={() => setShowCart(true)} className="relative">
@@ -154,12 +214,49 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           )}
         </button>
       </div>
-      <div className="px-6 mt-1 mb-5">
+      <div className="px-6 mt-1 mb-4">
         <h1 style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[22px]">{title}</h1>
         <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mt-1">{subtitle}</p>
       </div>
 
-      {layout === "grid" ? (
+      {cartExpiredMsg && (
+        <div className="mx-6 mb-4 px-4 py-2.5 rounded-2xl flex items-center gap-2" style={{ background: "#00000008" }}>
+          <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11.5px]">Seu carrinho expirou após 24h sem finalizar e os itens voltaram a ficar disponíveis.</span>
+        </div>
+      )}
+
+      <div className="px-6 mb-5 flex items-center gap-2">
+        <button onClick={() => setActiveTab("produtos")}
+          className="px-4 py-2 rounded-full text-[12px] font-semibold"
+          style={{ fontFamily: "Inter", background: activeTab === "produtos" ? "#000000" : "#FFFFFF", color: activeTab === "produtos" ? "#FFFFFF" : "#4D4D4D", border: activeTab === "produtos" ? "none" : "1px solid #D6D6D6" }}>
+          Produtos
+        </button>
+        <button onClick={() => setActiveTab("pedidos")}
+          className="px-4 py-2 rounded-full text-[12px] font-semibold flex items-center gap-1.5"
+          style={{ fontFamily: "Inter", background: activeTab === "pedidos" ? "#000000" : "#FFFFFF", color: activeTab === "pedidos" ? "#FFFFFF" : "#4D4D4D", border: activeTab === "pedidos" ? "none" : "1px solid #D6D6D6" }}>
+          <Receipt size={12} /> Meus Pedidos
+        </button>
+      </div>
+
+      {activeTab === "pedidos" ? (
+        <div className="px-6 pb-28 flex flex-col gap-3">
+          {pedidos.length === 0 ? (
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] text-center py-8">Você ainda não fez nenhum pedido aqui.</p>
+          ) : pedidos.map(ped => (
+            <div key={ped.id} className="rounded-2xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <span style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[14px]">{fmtPrice(ped.total)}</span>
+                <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">{timeAgo(ped.createdAt)}</span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {(ped.items || []).map((it, idx) => (
+                  <p key={idx} style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11.5px]">{it.qty}x {it.name}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : layout === "grid" ? (
         <div className="px-6 pb-28 grid grid-cols-2 gap-3">
           {products.map(p => (
             <button key={p.id} onClick={() => setOpenProductId(p.id)}
@@ -204,6 +301,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           ))}
         </div>
       )}
+      </div>
 
       <button onClick={() => { closeAddSheet(); setShowAdd(true); }}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-transform"

@@ -10,6 +10,7 @@ import {
   Play,
   Send,
   Share2,
+  Smile,
   Trash2,
   Video,
   X
@@ -28,6 +29,8 @@ import AudioPlayButton from "../components/AudioPlayButton.jsx";
 import MusicPickerSheet from "../components/MusicPickerSheet.jsx";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import StoriesRow from "../components/StoriesRow.jsx";
+
+const EMOJIS = ["😀","😂","😍","🙏","👍","🙌","❤️","🔥","🎉","😢","😮","🤔","👏","✝️","🕊️","😇","🙋","👋","🤗","😅","🥲","😊","💪","✨","📖","🎶","😴","😎","😭","🥳"];
 
 function FeedScreen({ onBack }) {
   const meUser = useContext(UserContext);
@@ -53,6 +56,7 @@ function FeedScreen({ onBack }) {
   const [showMusicPicker, setShowMusicPicker] = useState(false);
   const [openComments, setOpenComments] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
+  const [showCommentEmoji, setShowCommentEmoji] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showPhotoSource, setShowPhotoSource] = useState(false);
   const galleryInputRef = useRef(null);
@@ -199,7 +203,8 @@ function FeedScreen({ onBack }) {
   const commentPost = posts.find(p => p.id === openComments);
 
   return (
-    <div className="flex-1 overflow-y-auto relative" style={{ background: "var(--c-bg)" }}>
+    <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "var(--c-bg)" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "var(--c-muted)" }}>← Início</button>
       </div>
@@ -281,112 +286,6 @@ function FeedScreen({ onBack }) {
           </button>
         </div>
       </div>
-
-      {showMusicPicker && (
-        <MusicPickerSheet onClose={() => setShowMusicPicker(false)} onSelect={(track) => { setMusicTrack(track); setShowMusicPicker(false); }} />
-      )}
-
-      {showPhotoSource && (
-        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowPhotoSource(false)}>
-          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
-            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Adicionar foto</p>
-            <button onClick={() => { setShowPhotoSource(false); cameraInputRef.current?.click(); }}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
-                <Camera size={18} color="var(--c-text)" />
-              </div>
-              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Tirar foto</p>
-            </button>
-            <button onClick={() => { setShowPhotoSource(false); galleryInputRef.current?.click(); }}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
-                <ImageIcon size={18} color="var(--c-text)" />
-              </div>
-              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Escolher da galeria</p>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {shareSheetPost && (
-        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShareSheetPost(null)}>
-          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
-            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Compartilhar post</p>
-            <button onClick={() => { setForwardTarget(shareSheetPost); setShareSheetPost(null); }}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#3E5FBF1E" }}>
-                <Send size={16} color="var(--c-accent-2)" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Enviar no chat</p>
-                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Encaminha pra alguém da igreja</p>
-              </div>
-            </button>
-            <button onClick={() => shareNative(shareSheetPost)}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)", marginBottom: shareSheetPost.authorUid === meUid ? 10 : 0 }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
-                <Share2 size={16} color="var(--c-text)" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Compartilhar</p>
-                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Fora do app</p>
-              </div>
-            </button>
-            {shareSheetPost.authorUid === meUid && (
-              <button onClick={() => { setDeleteConfirmPost(shareSheetPost); setShareSheetPost(null); }}
-                className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#B33B3B1E" }}>
-                  <Trash2 size={16} color="#B33B3B" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p style={{ fontFamily: "Inter", fontWeight: 600, color: "#B33B3B" }} className="text-[13.5px]">Excluir publicação</p>
-                  <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Você postou isso, pode remover</p>
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {forwardTarget && (
-        <MemberPickerSheet title="Encaminhar pra quem?" onClose={() => setForwardTarget(null)} onPick={forwardToMember} />
-      )}
-
-      {deleteConfirmPost && (
-        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setDeleteConfirmPost(null)}>
-          <div className="w-full rounded-t-3xl p-6" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
-            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-1.5">Excluir essa publicação?</p>
-            <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] mb-5">Não tem como desfazer depois.</p>
-            <div className="flex gap-2.5">
-              <button onClick={() => setDeleteConfirmPost(null)}
-                className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "var(--c-surface)", color: "var(--c-text-2)" }}>
-                Cancelar
-              </button>
-              <button onClick={confirmDeletePost}
-                className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "#B33B3B", color: "#FFFFFF" }}>
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />
-
-      {forwardDone && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-full z-50" style={{ background: "var(--c-accent)" }}>
-          <span style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[12px] font-semibold">Enviado! ✓</span>
-        </div>
-      )}
-
-      {framingIndex !== null && (
-        <ImageFramer
-          image={images[framingIndex]}
-          position={imagePositions[framingIndex] || { x: 50, y: 50 }}
-          onChange={pos => setImagePositions(prev => prev.map((p, i) => i === framingIndex ? pos : p))}
-          onDone={() => setFramingIndex(null)}
-        />
-      )}
 
       <div className="px-5 pb-10 flex flex-col gap-7">
         {posts.map(p => {
@@ -564,13 +463,120 @@ function FeedScreen({ onBack }) {
           );
         })}
       </div>
+      </div>
+
+      {showMusicPicker && (
+        <MusicPickerSheet onClose={() => setShowMusicPicker(false)} onSelect={(track) => { setMusicTrack(track); setShowMusicPicker(false); }} />
+      )}
+
+      {showPhotoSource && (
+        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowPhotoSource(false)}>
+          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Adicionar foto</p>
+            <button onClick={() => { setShowPhotoSource(false); cameraInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <Camera size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Tirar foto</p>
+            </button>
+            <button onClick={() => { setShowPhotoSource(false); galleryInputRef.current?.click(); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <ImageIcon size={18} color="var(--c-text)" />
+              </div>
+              <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Escolher da galeria</p>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {shareSheetPost && (
+        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShareSheetPost(null)}>
+          <div className="w-full rounded-t-3xl p-5" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-4 px-1">Compartilhar post</p>
+            <button onClick={() => { setForwardTarget(shareSheetPost); setShareSheetPost(null); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#3E5FBF1E" }}>
+                <Send size={16} color="var(--c-accent-2)" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Enviar no chat</p>
+                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Encaminha pra alguém da igreja</p>
+              </div>
+            </button>
+            <button onClick={() => shareNative(shareSheetPost)}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)", marginBottom: shareSheetPost.authorUid === meUid ? 10 : 0 }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#0000000F" }}>
+                <Share2 size={16} color="var(--c-text)" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Compartilhar</p>
+                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Fora do app</p>
+              </div>
+            </button>
+            {shareSheetPost.authorUid === meUid && (
+              <button onClick={() => { setDeleteConfirmPost(shareSheetPost); setShareSheetPost(null); }}
+                className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#B33B3B1E" }}>
+                  <Trash2 size={16} color="#B33B3B" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p style={{ fontFamily: "Inter", fontWeight: 600, color: "#B33B3B" }} className="text-[13.5px]">Excluir publicação</p>
+                  <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Você postou isso, pode remover</p>
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {forwardTarget && (
+        <MemberPickerSheet title="Encaminhar pra quem?" onClose={() => setForwardTarget(null)} onPick={forwardToMember} />
+      )}
+
+      {deleteConfirmPost && (
+        <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setDeleteConfirmPost(null)}>
+          <div className="w-full rounded-t-3xl p-6" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px] mb-1.5">Excluir essa publicação?</p>
+            <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[12px] mb-5">Não tem como desfazer depois.</p>
+            <div className="flex gap-2.5">
+              <button onClick={() => setDeleteConfirmPost(null)}
+                className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "var(--c-surface)", color: "var(--c-text-2)" }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDeletePost}
+                className="flex-1 py-3.5 rounded-full font-semibold text-[13.5px]" style={{ fontFamily: "Inter", background: "#B33B3B", color: "#FFFFFF" }}>
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />
+
+      {forwardDone && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-full z-50" style={{ background: "var(--c-accent)" }}>
+          <span style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[12px] font-semibold">Enviado! ✓</span>
+        </div>
+      )}
+
+      {framingIndex !== null && (
+        <ImageFramer
+          image={images[framingIndex]}
+          position={imagePositions[framingIndex] || { x: 50, y: 50 }}
+          onChange={pos => setImagePositions(prev => prev.map((p, i) => i === framingIndex ? pos : p))}
+          onDone={() => setFramingIndex(null)}
+        />
+      )}
 
       {commentPost && (
-        <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setOpenComments(null)}>
+        <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => { setOpenComments(null); setShowCommentEmoji(false); }}>
           <div className="w-full rounded-t-3xl flex flex-col" style={{ background: "var(--c-bg)", maxHeight: "85%" }} onClick={e => e.stopPropagation()}>
             <div className="px-6 pt-6 pb-3 flex items-center justify-between">
               <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "var(--c-text)" }} className="text-[16px]">Comentários</p>
-              <button onClick={() => setOpenComments(null)}><X size={18} color="var(--c-faint)" /></button>
+              <button onClick={() => { setOpenComments(null); setShowCommentEmoji(false); }}><X size={18} color="var(--c-faint)" /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-3">
               {commentPost.comments.length === 0 ? (
@@ -589,8 +595,19 @@ function FeedScreen({ onBack }) {
                 </div>
               )}
             </div>
-            <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: "1px solid var(--c-border)" }}>
+            {showCommentEmoji && (
+              <div className="px-6 pt-3 pb-1 grid grid-cols-8 gap-1" style={{ borderTop: "1px solid var(--c-border)" }}>
+                {EMOJIS.map(em => (
+                  <button key={em} onClick={() => setCommentDraft(prev => prev + em)} className="text-[19px] py-1 rounded-lg active:scale-90 transition-transform">{em}</button>
+                ))}
+              </div>
+            )}
+            <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: showCommentEmoji ? "none" : "1px solid var(--c-border)" }}>
+              <button onClick={() => setShowCommentEmoji(v => !v)} className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: showCommentEmoji ? "var(--c-active-bg)" : "transparent" }}>
+                <Smile size={19} color="var(--c-muted)" />
+              </button>
               <input value={commentDraft} onChange={e => setCommentDraft(e.target.value)} placeholder="Escreva um comentário..."
+                onFocus={() => setShowCommentEmoji(false)}
                 onKeyDown={e => e.key === "Enter" && addComment(commentPost.id)}
                 className="flex-1 px-4 py-2.5 rounded-full outline-none text-[13px]"
                 style={{ fontFamily: "Inter", background: "var(--c-surface)", border: "1px solid var(--c-border)", color: "var(--c-text)" }} />
