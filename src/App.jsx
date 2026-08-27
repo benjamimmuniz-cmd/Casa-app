@@ -488,6 +488,19 @@ function App() {
     window.history.replaceState({}, "", url.toString());
   }, [currentUser?.uid]);
 
+  // Atalho pro aparelho fixo da Estacao de Impressao: abrindo com "?estacao=1"
+  // ja cai direto na tela de escutar check-ins, sem precisar navegar.
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("estacao") !== "1") return;
+    setOpenTile("estacaoimpressao");
+    setTab("estacaoimpressao");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("estacao");
+    window.history.replaceState({}, "", url.toString());
+  }, [currentUser?.uid]);
+
   // Avisa quando uma versao nova do app foi publicada (sem service worker,
   // entao a unica forma de saber e comparar o bundle carregado com o que o
   // servidor esta servindo agora). Checa periodicamente e quando a aba volta
