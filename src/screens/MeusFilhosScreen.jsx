@@ -196,9 +196,10 @@ function MeusFilhosScreen({ onBack }) {
               @media print {
                 body * { visibility: hidden; }
                 #casa-print-label, #casa-print-label * { visibility: visible; }
-                #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6mm; }
+                #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4mm; }
+                #casa-print-label > * { transform: scale(0.7); transform-origin: top center; }
                 .casa-no-print { display: none !important; }
-                @page { size: auto; margin: 8mm; }
+                @page { size: auto; margin: 6mm; }
               }
             `}</style>
             <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
