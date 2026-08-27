@@ -14,7 +14,7 @@ import { FeedContext, UserContext } from "../context/contexts.js";
 import { fmtPrice, timeAgo } from "../utils/helpers.js";
 import { PRODUCT_COLORS } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
-import { createPedido } from "../utils/storeActions.js";
+import { createPedido, generateOrderCode } from "../utils/storeActions.js";
 import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
 function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock, updateProduct, deleteProduct, categories, accent, waNumber, layout = "grid" }) {
@@ -40,6 +40,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [editingProductId, setEditingProductId] = useState(null);
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
   const [orderDone, setOrderDone] = useState(false);
+  const [lastOrderCode, setLastOrderCode] = useState(null);
   const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
@@ -172,12 +173,12 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     }
   };
 
-  const notifyWhatsApp = (items, total) => {
+  const notifyWhatsApp = (items, total, code) => {
     const lines = items.map(([id, qty]) => {
       const p = products.find(pr => pr.id === id);
       return p ? `• ${qty}x ${p.name} — ${fmtPrice(p.price * qty)}` : "";
     }).filter(Boolean).join("\n");
-    const msg = `Novo pedido em ${title}:\n${lines}\n\nTotal: ${fmtPrice(total)}`;
+    const msg = `Novo pedido em ${title} — Pedido #${code}:\n${lines}\n\nTotal: ${fmtPrice(total)}`;
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
   };
@@ -192,9 +193,11 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
         orderItems.push({ id, name: p.name, qty, price: p.price });
       }
     });
-    createPedido({ store: title, buyerUid: me.uid, buyerName: meName, items: orderItems, total: cartTotal })
+    const code = generateOrderCode();
+    createPedido({ store: title, buyerUid: me.uid, buyerName: meName, items: orderItems, total: cartTotal, code })
       .catch(err => console.error("PEDIDO_CREATE_ERR", err.code, err.message));
-    notifyWhatsApp(items, cartTotal);
+    notifyWhatsApp(items, cartTotal, code);
+    setLastOrderCode(code);
     setOrderDone(true);
     setCart({});
     clearCartStarted(title);
@@ -245,7 +248,12 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           ) : pedidos.map(ped => (
             <div key={ped.id} className="rounded-2xl p-4" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div className="flex items-center justify-between mb-2">
-                <span style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[14px]">{fmtPrice(ped.total)}</span>
+                <div className="flex items-center gap-2">
+                  <span style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[14px]">{fmtPrice(ped.total)}</span>
+                  {ped.code && (
+                    <span className="px-2 py-0.5 rounded-full" style={{ fontFamily: "IBM Plex Mono", background: "#00000008", color: "#4D4D4D", fontSize: 10 }}>#{ped.code}</span>
+                  )}
+                </div>
                 <span style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px]">{timeAgo(ped.createdAt)}</span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -419,12 +427,18 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
       )}
 
       {showCart && (
-        <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => { setShowCart(false); setOrderDone(false); }}>
+        <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => { setShowCart(false); setOrderDone(false); setLastOrderCode(null); }}>
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px] mb-4">Seu carrinho</p>
             {orderDone ? (
               <div className="py-6 text-center">
-                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px] mb-2">Pedido registrado! 🎉</p>
+                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px] mb-3">Pedido registrado! 🎉</p>
+                {lastOrderCode && (
+                  <div className="inline-block px-5 py-3 rounded-2xl mb-3" style={{ background: "#00000008", border: "1px dashed #D6D6D6" }}>
+                    <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10px] mb-0.5">Apresente esse código na loja</p>
+                    <p style={{ fontFamily: "IBM Plex Mono", color: "#000000", fontWeight: 600 }} className="text-[22px]">#{lastOrderCode}</p>
+                  </div>
+                )}
                 <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Abrimos o WhatsApp do responsável com os detalhes do pedido pra combinar pagamento e retirada.</p>
               </div>
             ) : cartCount === 0 ? (
