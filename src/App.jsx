@@ -434,6 +434,20 @@ function App() {
     return () => unsub();
   }, []);
 
+  // Heartbeat de presenca: atualiza lastActive periodicamente enquanto o app
+  // esta aberto e logado, pra outras pessoas verem "online" no Chat. Nao tem
+  // deteccao real de desconexao (Firestore sozinho nao oferece isso, so
+  // Realtime Database) — "online" e uma aproximacao por atividade recente.
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const beat = () => updateDoc(doc(db, "users", currentUser.uid), { lastActive: serverTimestamp() }).catch(() => {});
+    beat();
+    const interval = setInterval(beat, 45000);
+    const onVisible = () => { if (document.visibilityState === "visible") beat(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, [currentUser?.uid]);
+
   // Diretorio de usuarios sob demanda: em vez de escutar a colecao "users" inteira
   // (o que le todo mundo, toda sessao, mesmo so pra mostrar 3 avatares na tela),
   // busca so o perfil de quem realmente aparece, uma vez, e guarda em cache.

@@ -4,6 +4,7 @@ import { collection, doc, getDoc, query, where, orderBy, onSnapshot } from "fire
 import { db } from "../firebase.js";
 import { UserContext, ConnectionsContext } from "../context/contexts.js";
 import { timeAgo, friendUidsOf } from "../utils/helpers.js";
+import { isOnline } from "../utils/presence.js";
 import { sendChatMessage, markChatRead, setTyping, deleteChatMessage } from "../utils/chatActions.js";
 import { addMembersToGroup, createGroupChat, removeMemberFromGroup, sendGroupMessage, updateGroupPhoto } from "../utils/groupChatActions.js";
 import { getChatId } from "../utils/chatId.js";
@@ -122,6 +123,7 @@ function ChatScreen({ onBack, initialChat }) {
   }, [items, chatTab]);
 
   const [chatMeta, setChatMeta] = useState(null);
+  const [otherLastActive, setOtherLastActive] = useState(null);
 
   useEffect(() => {
     if (!openChat) { setChatMeta(null); return; }
@@ -134,6 +136,12 @@ function ChatScreen({ onBack, initialChat }) {
     markChatRead(base, openChat.id, me.uid);
     return () => { unsub(); unsubMeta(); setTyping(base, openChat.id, me.uid, false); };
   }, [openChat?.id, openChat?.type]);
+
+  useEffect(() => {
+    if (!openChat || openChat.type === "group" || !openChat.otherUid) { setOtherLastActive(null); return; }
+    const unsub = onSnapshot(doc(db, "users", openChat.otherUid), snap => setOtherLastActive(snap.data()?.lastActive || null), () => {});
+    return () => unsub();
+  }, [openChat?.otherUid, openChat?.type]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -328,6 +336,11 @@ function ChatScreen({ onBack, initialChat }) {
                 <p style={{ fontFamily: "Inter", color: "var(--c-accent-2)" }} className="text-[10.5px] truncate">{typingLabel}</p>
               ) : isGroup ? (
                 <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">{openChat.memberCount} pessoas · ver membros</p>
+              ) : isOnline(otherLastActive) ? (
+                <p style={{ fontFamily: "Inter", color: "#4B9B5C" }} className="text-[10.5px] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#4B9B5C" }} />
+                  Online
+                </p>
               ) : null}
             </div>
           </button>
