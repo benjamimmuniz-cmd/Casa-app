@@ -39,6 +39,7 @@ const DiretorioScreen = React.lazy(() => import("./screens/DiretorioScreen.jsx")
 const MeusFilhosScreen = React.lazy(() => import("./screens/MeusFilhosScreen.jsx"));
 const CheckinScreen = React.lazy(() => import("./screens/CheckinScreen.jsx"));
 const PresencaScreen = React.lazy(() => import("./screens/PresencaScreen.jsx"));
+const EstacaoImpressaoScreen = React.lazy(() => import("./screens/EstacaoImpressaoScreen.jsx"));
 const CriancasScreen = React.lazy(() => import("./screens/CriancasScreen.jsx"));
 const EstudosScreen = React.lazy(() => import("./screens/EstudosScreen.jsx"));
 const EvangelismoScreen = React.lazy(() => import("./screens/EvangelismoScreen.jsx"));
@@ -659,6 +660,8 @@ function App() {
               <MeusFilhosScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} autoCheckin={autoKidsCheckin} onAutoCheckinConsumed={() => setAutoKidsCheckin(false)} />
             ) : openTile === "checkin" || (tab === "checkin" && !openTile) ? (
               <CheckinScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
+            ) : openTile === "estacaoimpressao" || (tab === "estacaoimpressao" && !openTile) ? (
+              <EstacaoImpressaoScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "presenca" || (tab === "presenca" && !openTile) ? (
               <PresencaScreen onBack={() => { setOpenTile(null); setTab("inicio"); }} />
             ) : openTile === "criancas" || (tab === "criancas" && !openTile) ? (

@@ -36,6 +36,7 @@ import {
   Car,
   Contact,
   ShieldCheck,
+  Printer,
   Search,
 } from "lucide-react";
 
@@ -57,6 +58,7 @@ export const TILES = [
   { id: "infantil", label: "Infantil", icon: Baby, color: "#787878" },
   { id: "meusfilhos", label: "Meus Filhos", icon: Users, color: "#4B7D5C" },
   { id: "checkin", label: "Check-in", icon: ShieldCheck, color: "#2FA8A0" },
+  { id: "estacaoimpressao", label: "Estação de Impressão", icon: Printer, color: "#2FA8A0" },
   { id: "presenca", label: "Presença", icon: UserCheck, color: "#3B7D8A" },
   { id: "criancas", label: "Buscar Crianças", icon: Search, color: "#6D8A5C" },
   { id: "discipulado", label: "Discipulado", icon: Users, color: "#707070" },
@@ -90,7 +92,7 @@ export const TILES = [
 export const MENU_GROUPS = [
   { label: "Buscar", ids: ["busca"] },
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
-  { label: "Casa Kids", ids: ["infantil", "meusfilhos", "checkin", "criancas"] },
+  { label: "Casa Kids", ids: ["infantil", "meusfilhos", "checkin", "estacaoimpressao", "criancas"] },
   { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "amigos", "aniversariantes", "diretorio"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
@@ -112,6 +114,7 @@ export const TAB_LABELS = {
   diretorio: "Diretório de Membros",
   meusfilhos: "Meus Filhos",
   checkin: "Check-in",
+  estacaoimpressao: "Estação de Impressão",
   presenca: "Presença",
   criancas: "Buscar Crianças",
   busca: "Buscar",
@@ -149,6 +152,7 @@ export const TAB_DESCRIPTIONS = {
   diretorio: "Busque qualquer membro cadastrado por nome ou profissão e veja o perfil dele, mesmo sem ser amigo ainda.",
   meusfilhos: "Cadastre seus filhos, veja os detalhes de cada um e faça o check-in de segurança na hora de deixá-los na Área Infantil.",
   checkin: "Check-in/check-out de segurança, cadastro de criança nova e marcação de presença — tudo num lugar só. Acesso da Junta e Liderança.",
+  estacaoimpressao: "Deixe aberta no aparelho ligado na impressora térmica — abre a impressão da etiqueta sozinha quando alguém faz check-in escaneando o QR. Acesso da Junta e Liderança.",
   presenca: "Mostre o QR pra congregação escanear na entrada e acompanhe quem marcou presença no culto de hoje. Acesso da Junta e Liderança.",
   criancas: "Busque qualquer criança cadastrada por nome e veja a ficha dela, com responsável e restrição alimentar. Acesso da Junta e Liderança.",
   busca: "Busca única do app: encontre pessoas, mensagens, produtos da loja/cantina e eventos, tudo num lugar só.",
