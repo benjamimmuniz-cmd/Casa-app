@@ -32,9 +32,10 @@ function HomeScreen({ onOpenTile }) {
   const [showBirthday, setShowBirthday] = useState(false);
   const [anniversaryYears, setAnniversaryYears] = useState(null);
   const [readingProgress] = useState(loadReadingProgress);
-  const currentDay = Math.min(readingProgress.currentDay, TOTAL_READING_DAYS);
+  const activeReadingPlan = readingProgress[readingProgress.activePlan];
+  const currentDay = Math.min(activeReadingPlan.currentDay, TOTAL_READING_DAYS);
   const readingPct = Math.round(((currentDay - 1) / TOTAL_READING_DAYS) * 100);
-  const todaysReadingLabel = formatReadingLabel(getDayReading(currentDay));
+  const todaysReadingLabel = formatReadingLabel(getDayReading(currentDay, readingProgress.activePlan));
   const me = useContext(UserContext);
   const firstName = (me.name || "Visitante").split(" ")[0];
   const allFeedPosts = useContext(FeedContext).posts;
