@@ -8,7 +8,7 @@ function postToPlayer(iframe, func) {
   iframe?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*");
 }
 
-function ShortItem({ s, muted, onToggleLike, onLike, onOpenComments, onShare, onToggleSave, onDelete, liked, saved, isOwn }) {
+function ShortItem({ s, muted, isActive, onActiveChange, onToggleLike, onLike, onOpenComments, onShare, onToggleSave, onDelete, liked, saved, isOwn }) {
   const iframeRef = useRef(null);
   const containerRef = useRef(null);
   const [burst, setBurst] = useState(false);
@@ -29,16 +29,24 @@ function ShortItem({ s, muted, onToggleLike, onLike, onOpenComments, onShare, on
     if (!container) return;
     const io = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        postToPlayer(iframeRef.current, entry.isIntersecting && entry.intersectionRatio > 0.6 ? "playVideo" : "pauseVideo");
+        if (entry.isIntersecting && entry.intersectionRatio > 0.6) onActiveChange(s.id);
       });
     }, { threshold: [0, 0.6, 1] });
     io.observe(container);
     return () => io.disconnect();
-  }, []);
+  }, [s.id, onActiveChange]);
+
+  // O video so pode tocar/ter som quando ele e o item ativo — mesmo que o
+  // comando de pausa de um item que saiu de tela chegue atrasado (a API do
+  // YouTube demora a ficar pronta as vezes), ele nunca fica com som ligado
+  // por engano, evitando dois audios tocando ao mesmo tempo.
+  useEffect(() => {
+    postToPlayer(iframeRef.current, isActive ? "playVideo" : "pauseVideo");
+  }, [isActive]);
 
   useEffect(() => {
-    postToPlayer(iframeRef.current, muted ? "mute" : "unMute");
-  }, [muted]);
+    postToPlayer(iframeRef.current, isActive && !muted ? "unMute" : "mute");
+  }, [isActive, muted]);
 
   return (
     <div ref={containerRef} className="relative w-full shrink-0" style={{ height: "100%", scrollSnapAlign: "start", scrollSnapStop: "always" }}>
@@ -91,6 +99,7 @@ function ShortsScreen({ onBack }) {
   const ME = me.name || "Você";
   const { shorts, addShort, toggleLike: ctxToggleLike, likeOnly: ctxLikeOnly, toggleSave: ctxToggleSave, addComment: ctxAddComment, deleteShort } = useContext(ShortsContext);
   const [muted, setMuted] = useState(true);
+  const [activeShortId, setActiveShortId] = useState(null);
   const [openComments, setOpenComments] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -143,6 +152,10 @@ function ShortsScreen({ onBack }) {
 
   const commentShort = shorts.find(s => s.id === openComments);
 
+  useEffect(() => {
+    if (shorts.length && !shorts.some(s => s.id === activeShortId)) setActiveShortId(shorts[0].id);
+  }, [shorts, activeShortId]);
+
   return (
     <div className="flex-1 relative overflow-hidden" style={{ background: "#000000" }}>
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-5 pt-6 pb-3" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)" }}>
@@ -175,7 +188,7 @@ function ShortsScreen({ onBack }) {
       ) : (
         <div className="absolute inset-0 flex flex-col overflow-y-auto" style={{ scrollSnapType: "y mandatory" }}>
           {shorts.map(s => (
-            <ShortItem key={s.id} s={s} muted={muted} isOwn={s.authorUid === me.uid}
+            <ShortItem key={s.id} s={s} muted={muted} isActive={s.id === activeShortId} onActiveChange={setActiveShortId} isOwn={s.authorUid === me.uid}
               liked={s.likes.includes(ME)} saved={(s.saved || []).includes(ME)}
               onToggleLike={toggleLike} onLike={likeOnly} onOpenComments={setOpenComments} onShare={shareShort} onToggleSave={toggleSave} onDelete={setDeleteConfirmShort} />
           ))}
