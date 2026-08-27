@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 
 // Carrossel de imagens estilo Instagram: swipe horizontal com snap + bolinhas indicadoras.
-function PostCarousel({ images, positions, onImageClick }) {
+function PostCarousel({ images, positions, onImageClick, fit = "cover" }) {
   const [index, setIndex] = useState(0);
   const trackRef = useRef(null);
 
@@ -18,7 +18,7 @@ function PostCarousel({ images, positions, onImageClick }) {
         className="absolute inset-0 flex overflow-x-auto"
         style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
         {images.map((img, i) => (
-          <img key={i} src={img} alt="" className="w-full h-full object-cover shrink-0"
+          <img key={i} src={img} alt="" className={`w-full h-full shrink-0 ${fit === "contain" ? "object-contain" : "object-cover"}`}
             onClick={onImageClick ? (e) => { e.stopPropagation(); onImageClick(img); } : undefined}
             style={{ scrollSnapAlign: "start", objectPosition: positions?.[i] || "50% 50%" }} />
         ))}

@@ -15,6 +15,7 @@ import { fmtPrice, timeAgo } from "../utils/helpers.js";
 import { PRODUCT_COLORS } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
 import PostCarousel from "../components/PostCarousel.jsx";
+import ImageLightbox from "../components/ImageLightbox.jsx";
 import { createPedido, generateOrderCode } from "../utils/storeActions.js";
 import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
@@ -48,6 +49,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
   const [orderDone, setOrderDone] = useState(false);
   const [lastOrderCode, setLastOrderCode] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
   const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], images: [], stock: "", whatsapp: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
@@ -341,8 +343,8 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
         <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setOpenProductId(null)}>
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
             {(product.images && product.images.length ? product.images : (product.image ? [product.image] : [])).length > 0 ? (
-              <div className="relative rounded-2xl overflow-hidden mb-3" style={{ width: "100%", height: 220 }}>
-                <PostCarousel images={product.images && product.images.length ? product.images : [product.image]} />
+              <div className="relative rounded-2xl overflow-hidden mb-3" style={{ width: "100%", height: 220, background: "#E8E8E8" }}>
+                <PostCarousel images={product.images && product.images.length ? product.images : [product.image]} fit="contain" onImageClick={setLightboxImage} />
                 <button onClick={() => setOpenProductId(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10" style={{ background: "rgba(0,0,0,0.5)" }}>
                   <X size={14} color="#FFFFFF" />
                 </button>
@@ -538,6 +540,8 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           </div>
         </div>
       )}
+
+      <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />
     </div>
   );
 }
