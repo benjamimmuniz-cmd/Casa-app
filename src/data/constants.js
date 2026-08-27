@@ -246,7 +246,7 @@ export const MUSIC_LIBRARY = [
   { id: "m4", title: "Worship (Chill Background)", artist: "chill_background", source: "Pixabay", url: "/music/worship-chill-background.mp3" },
 ];
 
-export const CANTINA_WHATSAPP = "5511999999999";
+export const CANTINA_WHATSAPP = "5581996840938"; // número pra teste — trocar depois pelo do responsável da cantina
 
 export const ME_FEED = "Benjamim";
 
