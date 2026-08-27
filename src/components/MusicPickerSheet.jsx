@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Search, X } from "lucide-react";
-import { MUSIC_LIBRARY } from "../data/constants.js";
 import { searchMusic } from "../utils/musicSearch.js";
 import AudioPlayButton from "./AudioPlayButton.jsx";
 
@@ -25,7 +24,7 @@ function MusicPickerSheet({ onClose, onSelect }) {
   }, [query]);
 
   const searching = query.trim().length > 0;
-  const list = searching ? results : MUSIC_LIBRARY;
+  const list = searching ? results : [];
 
   return (
     <div className="absolute inset-0 flex items-end z-50" style={{ background: "rgba(0,0,0,0.45)" }} onClick={onClose}>
@@ -33,9 +32,7 @@ function MusicPickerSheet({ onClose, onSelect }) {
         <div className="px-6 pt-6 pb-1 flex items-center justify-between">
           <div>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px]">Escolher música</p>
-            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mt-0.5">
-              {searching ? "Prévias de 30s de qualquer música" : "Recomendadas · livres de direitos autorais"}
-            </p>
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[11px] mt-0.5">Prévias de 30s de qualquer música</p>
           </div>
           <button onClick={onClose}><X size={18} color="#9E9E9E" /></button>
         </div>
@@ -60,6 +57,9 @@ function MusicPickerSheet({ onClose, onSelect }) {
           )}
           {!loading && !error && searching && list.length === 0 && (
             <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] text-center py-6">Nenhuma música encontrada.</p>
+          )}
+          {!loading && !error && !searching && (
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] text-center py-6">Busque uma música ou artista pra usar.</p>
           )}
           {!loading && !error && list.map(track => (
             <div key={track.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF" }}>

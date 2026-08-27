@@ -239,13 +239,6 @@ export const READING_ACHIEVEMENTS = [
   { days: 365, title: "Bíblia Completa", desc: "Concluiu o plano de leitura inteiro", icon: Crown, color: "#B3902B" },
 ];
 
-export const MUSIC_LIBRARY = [
-  { id: "m1", title: "Worship Is Worship", artist: "AudioDollar", source: "Pixabay", url: "/music/worship-is-worship.mp3" },
-  { id: "m2", title: "Worship", artist: "moodmode", source: "Pixabay", url: "/music/worship-moodmode.mp3" },
-  { id: "m3", title: "Christian Worship Instrumental", artist: "andriig", source: "Pixabay", url: "/music/christian-worship-instrumental.mp3" },
-  { id: "m4", title: "Worship (Chill Background)", artist: "chill_background", source: "Pixabay", url: "/music/worship-chill-background.mp3" },
-];
-
 export const CANTINA_WHATSAPP = "5581996840938"; // número pra teste — trocar depois pelo do responsável da cantina
 
 export const ME_FEED = "Benjamim";
