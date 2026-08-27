@@ -3,6 +3,7 @@ import { Bookmark, Clapperboard, Home, MessageCircle, Plus, Send, Share2, Trash2
 import { ShortsContext, UserContext } from "../context/contexts.js";
 import Avatar from "../components/Avatar.jsx";
 import { extractYoutubeId, youtubeEmbedUrl, youtubeThumbUrl } from "../utils/youtube.js";
+import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 
 function postToPlayer(iframe, func) {
   iframe?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*");
@@ -107,6 +108,8 @@ function ShortsScreen({ onBack }) {
   const [newText, setNewText] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [deleteConfirmShort, setDeleteConfirmShort] = useState(null);
+  const [commentError, setCommentError] = useState("");
+  const [publishError, setPublishError] = useState("");
 
   const confirmDeleteShort = async () => {
     if (!deleteConfirmShort) return;
@@ -129,6 +132,8 @@ function ShortsScreen({ onBack }) {
 
   const addComment = (id) => {
     if (!commentDraft.trim()) return;
+    setCommentError("");
+    if (containsBlockedContent(commentDraft)) { setCommentError(BLOCKED_CONTENT_MESSAGE); return; }
     ctxAddComment(id, { id: "c" + Date.now(), author: ME, text: commentDraft.trim() });
     setCommentDraft("");
   };
@@ -137,6 +142,8 @@ function ShortsScreen({ onBack }) {
 
   const publish = async () => {
     if (!videoId || publishing) return;
+    setPublishError("");
+    if (containsBlockedContent(newText)) { setPublishError(BLOCKED_CONTENT_MESSAGE); return; }
     setPublishing(true);
     try {
       await addShort({ author: ME, authorUid: me.uid, videoId, sourceUrl: newUrl.trim(), text: newText.trim() });
@@ -219,9 +226,12 @@ function ShortsScreen({ onBack }) {
             {newUrl.trim() && !videoId && (
               <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mb-3 -mt-1.5">Não reconheci esse link do YouTube.</p>
             )}
-            <textarea value={newText} onChange={e => setNewText(e.target.value)} placeholder="Escreva uma legenda..." rows={2}
-              className="w-full px-4 py-3 rounded-xl mb-4 outline-none text-[13px] resize-none"
+            <textarea value={newText} onChange={e => { setNewText(e.target.value); setPublishError(""); }} placeholder="Escreva uma legenda..." rows={2}
+              className="w-full px-4 py-3 rounded-xl mb-1 outline-none text-[13px] resize-none"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+            {publishError && (
+              <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mb-3">{publishError}</p>
+            )}
             <button onClick={publish} disabled={!videoId || publishing}
               className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
               style={{ background: videoId && !publishing ? "#000000" : "#E3E3E3", color: videoId && !publishing ? "#FFFFFF" : "#9E9E9E", fontFamily: "Inter" }}>
@@ -255,8 +265,11 @@ function ShortsScreen({ onBack }) {
                 </div>
               )}
             </div>
+            {commentError && (
+              <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] px-6 pt-2">{commentError}</p>
+            )}
             <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: "1px solid #D6D6D6" }}>
-              <input value={commentDraft} onChange={e => setCommentDraft(e.target.value)} placeholder="Escreva um comentário..."
+              <input value={commentDraft} onChange={e => { setCommentDraft(e.target.value); setCommentError(""); }} placeholder="Escreva um comentário..."
                 onKeyDown={e => e.key === "Enter" && addComment(commentShort.id)}
                 className="flex-1 px-4 py-2.5 rounded-full outline-none text-[13px]"
                 style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />

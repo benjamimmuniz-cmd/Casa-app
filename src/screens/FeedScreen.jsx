@@ -24,6 +24,7 @@ import { KIND_LABELS, ME_FEED } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
 import { uploadVideo } from "../utils/mediaUpload.js";
 import { visiblePosts } from "../utils/helpers.js";
+import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 import { sendChatMessage } from "../utils/chatActions.js";
 import AudioPlayButton from "../components/AudioPlayButton.jsx";
 import MusicPickerSheet from "../components/MusicPickerSheet.jsx";
@@ -57,6 +58,8 @@ function FeedScreen({ onBack }) {
   const [openComments, setOpenComments] = useState(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [showCommentEmoji, setShowCommentEmoji] = useState(false);
+  const [contentError, setContentError] = useState("");
+  const [commentError, setCommentError] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [showPhotoSource, setShowPhotoSource] = useState(false);
   const galleryInputRef = useRef(null);
@@ -103,6 +106,8 @@ function FeedScreen({ onBack }) {
 
   const publish = async () => {
     if (!text.trim() && !images.length && !videoFile && !musicTrack) return;
+    setContentError("");
+    if (containsBlockedContent(text)) { setContentError(BLOCKED_CONTENT_MESSAGE); return; }
     setPublishing(true);
     let videoUrl = null;
     if (videoFile) {
@@ -196,6 +201,8 @@ function FeedScreen({ onBack }) {
 
   const addComment = (postId) => {
     if (!commentDraft.trim()) return;
+    setCommentError("");
+    if (containsBlockedContent(commentDraft)) { setCommentError(BLOCKED_CONTENT_MESSAGE); return; }
     ctxAddComment(postId, { id: "c" + Date.now(), author: ME_FEED, text: commentDraft.trim() });
     setCommentDraft("");
   };
@@ -218,7 +225,7 @@ function FeedScreen({ onBack }) {
       <div className="mx-6 rounded-3xl p-4 mb-6" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
         <div className="flex items-start gap-3">
           <Avatar name={ME_FEED} uid={meUid} size={36} fontSize={11} />
-          <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Compartilhe algo com a igreja..." rows={2}
+          <textarea value={text} onChange={e => { setText(e.target.value); setContentError(""); }} placeholder="Compartilhe algo com a igreja..." rows={2}
             className="flex-1 outline-none text-[13px] resize-none bg-transparent"
             style={{ fontFamily: "Inter", color: "var(--c-text)" }} />
         </div>
@@ -285,6 +292,9 @@ function FeedScreen({ onBack }) {
             {publishing ? (uploadProgress !== null ? `Enviando ${Math.round(uploadProgress * 100)}%...` : "Publicando...") : "Publicar"}
           </button>
         </div>
+        {contentError && (
+          <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] mt-2">{contentError}</p>
+        )}
       </div>
 
       <div className="px-5 pb-10 flex flex-col gap-7">
@@ -602,11 +612,14 @@ function FeedScreen({ onBack }) {
                 ))}
               </div>
             )}
+            {commentError && (
+              <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] px-6 pt-2">{commentError}</p>
+            )}
             <div className="px-6 py-4 flex items-center gap-2" style={{ borderTop: showCommentEmoji ? "none" : "1px solid var(--c-border)" }}>
               <button onClick={() => setShowCommentEmoji(v => !v)} className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: showCommentEmoji ? "var(--c-active-bg)" : "transparent" }}>
                 <Smile size={19} color="var(--c-muted)" />
               </button>
-              <input value={commentDraft} onChange={e => setCommentDraft(e.target.value)} placeholder="Escreva um comentário..."
+              <input value={commentDraft} onChange={e => { setCommentDraft(e.target.value); setCommentError(""); }} placeholder="Escreva um comentário..."
                 onFocus={() => setShowCommentEmoji(false)}
                 onKeyDown={e => e.key === "Enter" && addComment(commentPost.id)}
                 className="flex-1 px-4 py-2.5 rounded-full outline-none text-[13px]"

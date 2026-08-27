@@ -5,6 +5,7 @@ import { db } from "../firebase.js";
 import { UserContext, ConnectionsContext } from "../context/contexts.js";
 import { timeAgo, friendUidsOf } from "../utils/helpers.js";
 import { isOnline } from "../utils/presence.js";
+import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 import { sendChatMessage, markChatRead, setTyping, deleteChatMessage } from "../utils/chatActions.js";
 import { addMembersToGroup, createGroupChat, removeMemberFromGroup, sendGroupMessage, updateGroupPhoto } from "../utils/groupChatActions.js";
 import { getChatId } from "../utils/chatId.js";
@@ -39,6 +40,7 @@ function ChatScreen({ onBack, initialChat }) {
   }, [initialChat]);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
+  const [sendError, setSendError] = useState("");
   const [showChoice, setShowChoice] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showNewGroupPick, setShowNewGroupPick] = useState(false);
@@ -240,6 +242,8 @@ function ChatScreen({ onBack, initialChat }) {
 
   const send = async () => {
     if (!draft.trim() || !openChat) return;
+    if (containsBlockedContent(draft)) { setSendError(BLOCKED_CONTENT_MESSAGE); return; }
+    setSendError("");
     const text = draft.trim();
     const replyTo = replyTarget ? buildReplySnapshot(replyTarget) : null;
     setDraft("");
@@ -263,6 +267,7 @@ function ChatScreen({ onBack, initialChat }) {
   const wasTypingRef = useRef(false);
   const handleDraftChange = (val) => {
     setDraft(val);
+    setSendError("");
     if (!openChat) return;
     const base = openChat.type === "group" ? "chatGroups" : "chats";
     if (val.trim() && !wasTypingRef.current) {
@@ -446,6 +451,9 @@ function ChatScreen({ onBack, initialChat }) {
           </div>
         )}
 
+        {sendError && (
+          <p style={{ fontFamily: "Inter", color: "#B33B3B" }} className="text-[11px] px-6 pt-3">{sendError}</p>
+        )}
         <div className="px-6 py-4 flex items-center gap-2 shrink-0" style={{ borderTop: replyTarget ? "none" : "1px solid var(--c-border)" }}>
           {!recordingAudio && (
             <>

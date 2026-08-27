@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Eye, Music, Send, Trash2, X } from "lucide-react";
 import { colorFor, timeAgo } from "../utils/helpers.js";
+import { containsBlockedContent } from "../utils/contentFilter.js";
 import { UserContext, StoryContext, ProfileNavContext } from "../context/contexts.js";
 import { sendChatMessage } from "../utils/chatActions.js";
 import Avatar from "./Avatar.jsx";
@@ -87,6 +88,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
 
   const sendReply = async () => {
     if (!reply.trim() || !story.authorUid || sent) return;
+    if (containsBlockedContent(reply)) return;
     const text = reply.trim();
     setReply("");
     setSent(true);

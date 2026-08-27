@@ -7,6 +7,7 @@ import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
 import { uploadVideo } from "../utils/mediaUpload.js";
 import { friendUidsOf } from "../utils/helpers.js";
+import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 
 function StoriesRow({ onPublish, onShorts }) {
   const meUser = useContext(UserContext);
@@ -42,6 +43,10 @@ function StoriesRow({ onPublish, onShorts }) {
   // Storage/Blaze estar configurado — assim continua funcionando sem depender disso.
   const publishEditedStory = async ({ zoom, focus, overlays, musicName, musicUrl }) => {
     setPhotoStoryError("");
+    if ((overlays || []).some(o => o.type === "text" && containsBlockedContent(o.content))) {
+      setPhotoStoryError(BLOCKED_CONTENT_MESSAGE);
+      return;
+    }
     setPhotoStoryPublishing(true);
     try {
       await addStory({ author: me, image: editingImage, text: "", zoom, focus, overlays, musicName, musicUrl });
