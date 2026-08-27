@@ -34,6 +34,6 @@ export async function searchMusic(query) {
       lastErr = err;
     }
   }
-  console.error("MUSIC_SEARCH_ERR", lastErr?.message);
-  throw new Error("Falha na busca de música");
+  console.error("MUSIC_SEARCH_ERR", lastErr?.name, lastErr?.message);
+  throw new Error(`Falha na busca (${lastErr?.name || "erro"}: ${lastErr?.message || "desconhecido"})`);
 }

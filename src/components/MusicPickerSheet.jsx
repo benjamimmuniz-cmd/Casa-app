@@ -17,7 +17,7 @@ function MusicPickerSheet({ onClose, onSelect }) {
     const timeout = setTimeout(() => {
       searchMusic(term)
         .then(setResults)
-        .catch(() => setError("Não consegui buscar agora. Tenta de novo."))
+        .catch(err => setError(err.message || "Não consegui buscar agora. Tenta de novo."))
         .finally(() => setLoading(false));
     }, 400);
     return () => clearTimeout(timeout);
