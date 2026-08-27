@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, ImageIcon, Reply, Send, Smile, SquarePen, UserPlus, Users, X } from "lucide-react";
+import { Check, CheckCheck, CornerUpLeft, ImageIcon, Reply, Send, Smile, SquarePen, UserPlus, Users, X } from "lucide-react";
 import { collection, doc, getDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext, ConnectionsContext } from "../context/contexts.js";
@@ -351,7 +351,12 @@ function ChatScreen({ onBack, initialChat }) {
               seen = otherUids.length > 0 && otherUids.every(uid => (readAtMap[uid]?.toMillis?.() || 0) >= msgMs);
             }
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              <div key={m.id} className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
+                {!mine && (
+                  <button onClick={() => setReplyTarget(m)} className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+                    <CornerUpLeft size={14} color="var(--c-faint)" />
+                  </button>
+                )}
                 <div className="max-w-[78%] rounded-2xl px-3.5 py-2 select-none"
                   onPointerDown={() => startPressTimer(m)}
                   onPointerUp={cancelPressTimer}
@@ -395,6 +400,11 @@ function ChatScreen({ onBack, initialChat }) {
                     {mine && (seen ? <CheckCheck size={12} color="#7EC0FF" /> : <Check size={12} color="rgba(255,255,255,0.6)" />)}
                   </div>
                 </div>
+                {mine && (
+                  <button onClick={() => setReplyTarget(m)} className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+                    <CornerUpLeft size={14} color="var(--c-faint)" />
+                  </button>
+                )}
               </div>
             );
           })}
