@@ -42,7 +42,7 @@ export async function updateGroupPhoto(groupId, photo) {
   await updateDoc(doc(db, "chatGroups", groupId), { photo });
 }
 
-export async function sendGroupMessage({ groupId, myUid, myName, text, image, audio, sharedPost }) {
+export async function sendGroupMessage({ groupId, myUid, myName, text, image, audio, sharedPost, replyTo }) {
   const preview = text?.trim() || (sharedPost ? `📎 post de ${sharedPost.author}` : (audio ? "🎤 Áudio" : (image ? "📷 Foto" : "")));
   await updateDoc(doc(db, "chatGroups", groupId), {
     updatedAt: serverTimestamp(),
@@ -52,6 +52,6 @@ export async function sendGroupMessage({ groupId, myUid, myName, text, image, au
   });
   await addDoc(collection(db, "chatGroups", groupId, "messages"), {
     senderUid: myUid, senderName: myName, text: text?.trim() || "",
-    image: image || null, audio: audio || null, sharedPost: sharedPost || null, createdAt: serverTimestamp(),
+    image: image || null, audio: audio || null, sharedPost: sharedPost || null, replyTo: replyTo || null, createdAt: serverTimestamp(),
   });
 }

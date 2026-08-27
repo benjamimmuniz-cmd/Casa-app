@@ -17,7 +17,7 @@ export function deleteChatMessage(base, chatId, messageId) {
 
 // Garante que a conversa exista e adiciona a mensagem — usado tanto pelo Chat
 // quanto pelo "encaminhar" de um post do Feed.
-export async function sendChatMessage({ myUid, myName, otherUid, otherName, text, sharedPost, image, audio }) {
+export async function sendChatMessage({ myUid, myName, otherUid, otherName, text, sharedPost, image, audio, replyTo }) {
   const chatId = getChatId(myUid, otherUid);
   const chatRef = doc(db, "chats", chatId);
   const preview = text?.trim() || (sharedPost ? `📎 post de ${sharedPost.author}` : (audio ? "🎤 Áudio" : (image ? "📷 Foto" : "")));
@@ -31,7 +31,7 @@ export async function sendChatMessage({ myUid, myName, otherUid, otherName, text
   }, { merge: true });
   await addDoc(collection(db, "chats", chatId, "messages"), {
     senderUid: myUid, senderName: myName, text: text?.trim() || "",
-    image: image || null, audio: audio || null, sharedPost: sharedPost || null, createdAt: serverTimestamp(),
+    image: image || null, audio: audio || null, sharedPost: sharedPost || null, replyTo: replyTo || null, createdAt: serverTimestamp(),
   });
   await addDoc(collection(db, "notifications"), {
     toUid: otherUid, text: `${myName}: ${preview || "nova mensagem"}`, read: false, createdAt: serverTimestamp(),

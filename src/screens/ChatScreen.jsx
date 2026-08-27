@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, ImageIcon, Send, Smile, SquarePen, UserPlus, Users, X } from "lucide-react";
+import { Check, CheckCheck, ImageIcon, Reply, Send, Smile, SquarePen, UserPlus, Users, X } from "lucide-react";
 import { collection, doc, getDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase.js";
 import { UserContext, ConnectionsContext } from "../context/contexts.js";
@@ -54,15 +54,22 @@ function ChatScreen({ onBack, initialChat }) {
   const [recordingAudio, setRecordingAudio] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+  const [actionTarget, setActionTarget] = useState(null);
+  const [replyTarget, setReplyTarget] = useState(null);
   const bottomRef = useRef(null);
   const photoInputRef = useRef(null);
   const pressTimerRef = useRef(null);
 
   const startPressTimer = (m) => {
     clearTimeout(pressTimerRef.current);
-    pressTimerRef.current = setTimeout(() => setDeleteTarget(m), 450);
+    pressTimerRef.current = setTimeout(() => setActionTarget(m), 450);
   };
   const cancelPressTimer = () => clearTimeout(pressTimerRef.current);
+
+  const buildReplySnapshot = (m) => ({
+    id: m.id, senderName: m.senderName, text: m.text || "",
+    image: m.image || null, audio: !!m.audio, sharedPost: !!m.sharedPost,
+  });
 
   const confirmDeleteMessage = async () => {
     if (!deleteTarget || !openChat) return;
@@ -226,14 +233,16 @@ function ChatScreen({ onBack, initialChat }) {
   const send = async () => {
     if (!draft.trim() || !openChat) return;
     const text = draft.trim();
+    const replyTo = replyTarget ? buildReplySnapshot(replyTarget) : null;
     setDraft("");
     setShowEmoji(false);
-    setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text, createdAt: null }]);
+    setReplyTarget(null);
+    setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text, replyTo, createdAt: null }]);
     try {
       if (openChat.type === "group") {
-        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text });
+        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text, replyTo });
       } else {
-        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text });
+        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text, replyTo });
       }
     } catch (err) {
       console.error("SEND_ERR", err.code, err.message);
@@ -263,12 +272,14 @@ function ChatScreen({ onBack, initialChat }) {
   // Storage/Blaze estar configurado — assim continua funcionando sem depender disso.
   const sendAudio = async (audioDataUrl, duration) => {
     if (!openChat) return;
-    setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", audio: audioDataUrl, audioDuration: duration, createdAt: null }]);
+    const replyTo = replyTarget ? buildReplySnapshot(replyTarget) : null;
+    setReplyTarget(null);
+    setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", audio: audioDataUrl, audioDuration: duration, replyTo, createdAt: null }]);
     try {
       if (openChat.type === "group") {
-        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", audio: audioDataUrl });
+        await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", audio: audioDataUrl, replyTo });
       } else {
-        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", audio: audioDataUrl });
+        await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", audio: audioDataUrl, replyTo });
       }
     } catch (err) {
       console.error("SEND_AUDIO_ERR", err.code, err.message);
@@ -282,12 +293,14 @@ function ChatScreen({ onBack, initialChat }) {
     const reader = new FileReader();
     reader.onload = async () => {
       const image = await compressImage(reader.result);
-      setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", image, createdAt: null }]);
+      const replyTo = replyTarget ? buildReplySnapshot(replyTarget) : null;
+      setReplyTarget(null);
+      setMessages(prev => [...prev, { id: "pending" + Date.now(), senderUid: me.uid, senderName: me.name, text: "", image, replyTo, createdAt: null }]);
       try {
         if (openChat.type === "group") {
-          await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", image });
+          await sendGroupMessage({ groupId: openChat.id, myUid: me.uid, myName: me.name, text: "", image, replyTo });
         } else {
-          await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", image });
+          await sendChatMessage({ myUid: me.uid, myName: me.name, otherUid: openChat.otherUid, otherName: openChat.name, text: "", image, replyTo });
         }
       } catch (err) {
         console.error("SEND_IMG_ERR", err.code, err.message);
@@ -340,17 +353,25 @@ function ChatScreen({ onBack, initialChat }) {
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div className="max-w-[78%] rounded-2xl px-3.5 py-2 select-none"
-                  onPointerDown={() => mine && startPressTimer(m)}
+                  onPointerDown={() => startPressTimer(m)}
                   onPointerUp={cancelPressTimer}
                   onPointerLeave={cancelPressTimer}
                   onPointerCancel={cancelPressTimer}
-                  onContextMenu={(e) => mine && e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   style={{
                     background: mine ? "var(--c-accent)" : "var(--c-surface)", boxShadow: mine ? "none" : "0 1px 3px var(--c-shadow)",
                     WebkitTouchCallout: "none", WebkitUserSelect: "none", touchAction: "pan-y",
                   }}>
                   {isGroup && !mine && (
                     <p style={{ fontFamily: "Inter", color: "var(--c-accent-2)", fontWeight: 600 }} className="text-[10.5px] mb-0.5">{m.senderName}</p>
+                  )}
+                  {m.replyTo && (
+                    <div className="rounded-lg px-2.5 py-1.5 mb-1.5" style={{ background: mine ? "rgba(255,255,255,0.16)" : "var(--c-surface-2)", borderLeft: `2px solid ${mine ? "rgba(255,255,255,0.5)" : "var(--c-accent-2)"}` }}>
+                      <p style={{ fontFamily: "Inter", color: mine ? "#FFFFFF" : "var(--c-accent-2)", fontWeight: 600 }} className="text-[10px]">{m.replyTo.senderName}</p>
+                      <p style={{ fontFamily: "Inter", color: mine ? "rgba(255,255,255,0.8)" : "var(--c-text-2)" }} className="text-[10.5px] truncate">
+                        {m.replyTo.text || (m.replyTo.image ? "📷 Foto" : m.replyTo.audio ? "🎤 Áudio" : m.replyTo.sharedPost ? "📎 Post compartilhado" : "")}
+                      </p>
+                    </div>
                   )}
                   {m.sharedPost && (
                     <div className="rounded-xl p-2.5 mb-1.5" style={{ background: "rgba(255,255,255,0.12)" }}>
@@ -388,7 +409,21 @@ function ChatScreen({ onBack, initialChat }) {
           </div>
         )}
 
-        <div className="px-6 py-4 flex items-center gap-2 shrink-0" style={{ borderTop: "1px solid var(--c-border)" }}>
+        {replyTarget && (
+          <div className="px-6 pt-3 flex items-center gap-2.5 shrink-0" style={{ borderTop: "1px solid var(--c-border)" }}>
+            <div className="flex-1 min-w-0 rounded-lg px-3 py-2" style={{ background: "var(--c-surface)", borderLeft: "2px solid var(--c-accent-2)" }}>
+              <p style={{ fontFamily: "Inter", color: "var(--c-accent-2)", fontWeight: 600 }} className="text-[10.5px]">
+                Respondendo a {replyTarget.senderUid === me.uid ? "você mesmo" : replyTarget.senderName}
+              </p>
+              <p style={{ fontFamily: "Inter", color: "var(--c-text-2)" }} className="text-[11px] truncate">
+                {replyTarget.text || (replyTarget.image ? "📷 Foto" : replyTarget.audio ? "🎤 Áudio" : replyTarget.sharedPost ? "📎 Post compartilhado" : "")}
+              </p>
+            </div>
+            <button onClick={() => setReplyTarget(null)} className="shrink-0"><X size={16} color="var(--c-faint)" /></button>
+          </div>
+        )}
+
+        <div className="px-6 py-4 flex items-center gap-2 shrink-0" style={{ borderTop: replyTarget ? "none" : "1px solid var(--c-border)" }}>
           {!recordingAudio && (
             <>
               <button onClick={() => setShowEmoji(v => !v)} className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: showEmoji ? "var(--c-active-bg)" : "transparent" }}>
@@ -413,6 +448,25 @@ function ChatScreen({ onBack, initialChat }) {
             <VoiceRecorder onSend={sendAudio} onRecordingChange={setRecordingAudio} />
           )}
         </div>
+
+        {actionTarget && (
+          <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setActionTarget(null)}>
+            <div className="w-full rounded-t-3xl p-3" style={{ background: "var(--c-bg)" }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => { setReplyTarget(actionTarget); setActionTarget(null); }}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left">
+                <Reply size={17} color="var(--c-text)" />
+                <span style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13.5px]">Responder</span>
+              </button>
+              {actionTarget.senderUid === me.uid && (
+                <button onClick={() => { setDeleteTarget(actionTarget); setActionTarget(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left">
+                  <X size={17} color="#B33B3B" />
+                  <span style={{ fontFamily: "Inter", color: "#B33B3B", fontWeight: 600 }} className="text-[13.5px]">Excluir</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {deleteTarget && (
           <div className="absolute inset-0 flex items-end z-40" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => { setDeleteTarget(null); setDeleteError(""); }}>
