@@ -17,6 +17,12 @@ import { compressImage } from "../utils/imageCompress.js";
 import { createPedido, generateOrderCode } from "../utils/storeActions.js";
 import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
+function sanitizeWhatsApp(raw) {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("55") ? digits : "55" + digits;
+}
+
 function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock, updateProduct, deleteProduct, categories, accent, waNumber, layout = "grid" }) {
   const me = useContext(UserContext);
   const meName = me.name || "Alguém da igreja";
@@ -41,7 +47,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
   const [orderDone, setOrderDone] = useState(false);
   const [lastOrderCode, setLastOrderCode] = useState(null);
-  const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "" });
+  const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "", whatsapp: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
 
@@ -109,7 +115,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const closeAddSheet = () => {
     setShowAdd(false);
     setEditingProductId(null);
-    setForm({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "" });
+    setForm({ name: "", price: "", desc: "", category: categories[0], image: null, stock: "", whatsapp: "" });
     setFormError("");
   };
 
@@ -125,7 +131,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   };
 
   const openEditProduct = (p) => {
-    setForm({ name: p.name, price: String(p.price).replace(".", ","), desc: p.desc === "Sem descrição." ? "" : p.desc, category: p.category, image: p.image, stock: String(p.stock) });
+    setForm({ name: p.name, price: String(p.price).replace(".", ","), desc: p.desc === "Sem descrição." ? "" : p.desc, category: p.category, image: p.image, stock: String(p.stock), whatsapp: p.whatsapp ? p.whatsapp.replace(/^55/, "") : "" });
     setEditingProductId(p.id);
     setOpenProductId(null);
     setShowAdd(true);
@@ -140,10 +146,12 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     let stock = parseInt(form.stock, 10);
     if (form.stock.trim() === "" || isNaN(stock) || stock < 0) stock = 0;
 
+    const whatsapp = sanitizeWhatsApp(form.whatsapp);
+
     if (editingProductId) {
       try {
         await updateProduct(editingProductId, {
-          name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, image: form.image, stock,
+          name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, image: form.image, stock, whatsapp: whatsapp || null,
         });
         closeAddSheet();
       } catch (err) {
@@ -156,7 +164,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     try {
       const color = PRODUCT_COLORS[products.length % PRODUCT_COLORS.length];
       await addProduct({
-        name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, color, image: form.image, stock, author: meName,
+        name: form.name.trim(), price, desc: form.desc.trim() || "Sem descrição.", category: form.category, color, image: form.image, stock, author: meName, whatsapp: whatsapp || null,
       });
       if (postToFeed) {
         addPost({
@@ -173,30 +181,35 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     }
   };
 
-  const notifyWhatsApp = (items, total, code) => {
+  const notifyWhatsApp = (items, total, code, number) => {
     const lines = items.map(([id, qty]) => {
       const p = products.find(pr => pr.id === id);
       return p ? `• ${qty}x ${p.name} — ${fmtPrice(p.price * qty)}` : "";
     }).filter(Boolean).join("\n");
     const msg = `Novo pedido em ${title} — Pedido #${code}:\n${lines}\n\nTotal: ${fmtPrice(total)}`;
-    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
   };
 
   const finalizeOrder = () => {
     const items = Object.entries(cart).filter(([, q]) => q > 0);
     const orderItems = [];
+    const bySeller = {};
     items.forEach(([id, qty]) => {
       const p = products.find(pr => pr.id === id);
       if (p) {
         updateStock(id, Math.max(0, p.stock - qty));
         orderItems.push({ id, name: p.name, qty, price: p.price });
+        const sellerNumber = p.whatsapp || waNumber;
+        if (!bySeller[sellerNumber]) bySeller[sellerNumber] = { items: [], total: 0 };
+        bySeller[sellerNumber].items.push([id, qty]);
+        bySeller[sellerNumber].total += p.price * qty;
       }
     });
     const code = generateOrderCode();
     createPedido({ store: title, buyerUid: me.uid, buyerName: meName, items: orderItems, total: cartTotal, code })
       .catch(err => console.error("PEDIDO_CREATE_ERR", err.code, err.message));
-    notifyWhatsApp(items, cartTotal, code);
+    Object.entries(bySeller).forEach(([number, group]) => notifyWhatsApp(group.items, group.total, code, number));
     setLastOrderCode(code);
     setOrderDone(true);
     setCart({});
@@ -395,6 +408,10 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
                 className="flex-1 px-4 py-3 rounded-xl outline-none text-[13px]"
                 style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
             </div>
+            <input value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value.replace(/\D/g, "") })} placeholder="Seu WhatsApp (ex: 81996840938)" inputMode="numeric"
+              className="w-full px-4 py-3 rounded-xl mb-1 outline-none text-[13px]"
+              style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+            <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10.5px] mb-3">Pedidos desse item vão direto pro seu WhatsApp. Se deixar em branco, vai pro número padrão da {title}.</p>
             <textarea value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} placeholder="Descrição" rows={3}
               className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px] resize-none"
               style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
