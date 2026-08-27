@@ -222,7 +222,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
         </div>
       )}
 
-      <div className="absolute inset-0 flex" style={{ top: 70, bottom: isOwnStory || !story.authorUid ? 0 : 122 }}>
+      <div className="absolute inset-0 flex" style={{ top: 70, bottom: isOwnStory ? 56 : (!story.authorUid ? 0 : 122) }}>
         <button className="flex-1" onClick={goPrev} style={{ background: "transparent" }} />
         <button className="flex-1" onClick={goNext} style={{ background: "transparent" }} />
       </div>
