@@ -187,19 +187,16 @@ function MeusFilhosScreen({ onBack }) {
         const respLast = respRest.join(" ");
         const childGroup = AGE_GROUPS.find(g => g.id === groupIdForAge(openChild.age));
         const qrValue = `CASA-CHECKIN:${openChild.id}:${openChild.checkinCode}`;
-        const checkinAt = openChild.checkinAt?.toDate?.() || new Date();
-        const dateLabel = checkinAt.toLocaleDateString("pt-BR");
-        const timeLabel = checkinAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
         return (
           <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: "#FFF8EE" }}>
             <style>{`
               @media print {
                 body * { visibility: hidden; }
                 #casa-print-label, #casa-print-label * { visibility: visible; }
-                #casa-print-label { position: fixed; top: 0; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4mm; }
-                #casa-print-label > * { transform: scale(0.7); transform-origin: top center; }
+                #casa-print-label { position: fixed; top: 0; left: 0; }
+                #casa-print-label > *:first-child { break-after: page; page-break-after: always; }
                 .casa-no-print { display: none !important; }
-                @page { size: auto; margin: 6mm; }
+                @page { size: 50mm 30mm; margin: 0; }
               }
             `}</style>
             <div className="casa-no-print px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
@@ -214,11 +211,11 @@ function MeusFilhosScreen({ onBack }) {
                 <CheckinLabelCard
                   kicker="Criança" nameLeft={firstName} nameRight={lastName} code={openChild.checkinCode} qrValue={qrValue}
                   groupEmoji={childGroup?.emoji} diet={openChild.diet} neuro={openChild.neurodivergente}
-                  footerLeft={`Turma ${childGroup?.label || ""}`} dateLabel={dateLabel} timeLabel={timeLabel} />
+                  footerLeft={`Turma ${childGroup?.label || ""}`} />
                 <CheckinLabelCard
                   kicker="Responsável" nameLeft={respFirst} nameRight={respLast} code={openChild.checkinCode} qrValue={qrValue}
                   groupEmoji={childGroup?.emoji} diet={openChild.diet} neuro={openChild.neurodivergente}
-                  footerLeft={`Buscar: ${openChild.name}`} dateLabel={dateLabel} timeLabel={timeLabel} />
+                  footerLeft={`Buscar: ${openChild.name}`} />
               </div>
             </div>
           </div>
