@@ -49,16 +49,6 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   }, [activeTab]);
   const [pedidos, setPedidos] = useState([]);
   const [openProductId, setOpenProductId] = useState(null);
-  const showCartStorageKey = `casa-app:showCart:${title}`;
-  const [showCart, setShowCart] = useState(() => {
-    try { return localStorage.getItem(showCartStorageKey) === "1"; } catch { return false; }
-  });
-  useEffect(() => {
-    try {
-      if (showCart) localStorage.setItem(showCartStorageKey, "1");
-      else localStorage.removeItem(showCartStorageKey);
-    } catch {}
-  }, [showCart]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
@@ -245,7 +235,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
       <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2 flex items-center justify-between">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Início</button>
-        <button onClick={() => setShowCart(true)} className="relative">
+        <button onClick={() => setActiveTab("carrinho")} className="relative">
           <ShoppingCart size={19} color="#000000" />
           {cartCount > 0 && (
             <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: accent }}>
@@ -276,9 +266,73 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
           style={{ fontFamily: "Inter", background: activeTab === "pedidos" ? "#000000" : "#FFFFFF", color: activeTab === "pedidos" ? "#FFFFFF" : "#4D4D4D", border: activeTab === "pedidos" ? "none" : "1px solid #D6D6D6" }}>
           <Receipt size={12} /> Meus Pedidos
         </button>
+        <button onClick={() => setActiveTab("carrinho")}
+          className="px-4 py-2 rounded-full text-[12px] font-semibold flex items-center gap-1.5"
+          style={{ fontFamily: "Inter", background: activeTab === "carrinho" ? "#000000" : "#FFFFFF", color: activeTab === "carrinho" ? "#FFFFFF" : "#4D4D4D", border: activeTab === "carrinho" ? "none" : "1px solid #D6D6D6" }}>
+          <ShoppingCart size={12} /> Carrinho{cartCount > 0 ? ` (${cartCount})` : ""}
+        </button>
       </div>
 
-      {activeTab === "pedidos" ? (
+      {activeTab === "carrinho" ? (
+        <div className="px-6 pb-28">
+          {orderDone ? (
+            <div className="py-6 text-center">
+              <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px] mb-3">Pedido registrado! 🎉</p>
+              {lastOrderCode && (
+                <div className="inline-block px-5 py-3 rounded-2xl mb-3" style={{ background: "#00000008", border: "1px dashed #D6D6D6" }}>
+                  <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10px] mb-0.5">Apresente esse código na loja</p>
+                  <p style={{ fontFamily: "IBM Plex Mono", color: "#000000", fontWeight: 600 }} className="text-[22px]">#{lastOrderCode}</p>
+                </div>
+              )}
+              <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-4">Abrimos o WhatsApp do responsável com os detalhes do pedido pra combinar pagamento e retirada.</p>
+              <button onClick={() => { setOrderDone(false); setLastOrderCode(null); }}
+                className="px-5 py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "#000000", color: "#FFFFFF" }}>
+                Voltar ao carrinho
+              </button>
+            </div>
+          ) : cartCount === 0 ? (
+            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] text-center py-8">Seu carrinho está vazio.</p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-3 mb-5">
+                {Object.entries(cart).filter(([, q]) => q > 0).map(([id, qty]) => {
+                  const p = products.find(pr => pr.id === id);
+                  if (!p) return null;
+                  return (
+                    <div key={id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: p.color + "1E" }}>
+                        <ShoppingBag size={16} color={p.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] truncate">{p.name}</p>
+                        <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">{fmtPrice(p.price)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => addToCart(id, -1)} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#E3E3E3" }}>
+                          <Minus size={11} color="#000000" />
+                        </button>
+                        <span style={{ fontFamily: "IBM Plex Mono", color: "#000000" }} className="text-[12px] w-4 text-center">{qty}</span>
+                        <button onClick={() => addToCart(id, 1)} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#E3E3E3" }}>
+                          <span style={{ color: "#000000", fontSize: 12 }}>+</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between mb-5 pt-3 px-1" style={{ borderTop: "1px solid #D6D6D6" }}>
+                <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[13px]">Total</span>
+                <span style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px]">{fmtPrice(cartTotal)}</span>
+              </div>
+              <button onClick={finalizeOrder}
+                className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
+                style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
+                Finalizar pedido
+              </button>
+            </>
+          )}
+        </div>
+      ) : activeTab === "pedidos" ? (
         <div className="px-6 pb-28 flex flex-col gap-3">
           {pedidos.length === 0 ? (
             <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[12px] text-center py-8">Você ainda não fez nenhum pedido aqui.</p>
@@ -473,66 +527,6 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
               style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
               {editingProductId ? "Salvar alterações" : "Cadastrar"}
             </button>
-          </div>
-        </div>
-      )}
-
-      {showCart && (
-        <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => { setShowCart(false); setOrderDone(false); setLastOrderCode(null); }}>
-          <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
-            <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px] mb-4">Seu carrinho</p>
-            {orderDone ? (
-              <div className="py-6 text-center">
-                <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[16px] mb-3">Pedido registrado! 🎉</p>
-                {lastOrderCode && (
-                  <div className="inline-block px-5 py-3 rounded-2xl mb-3" style={{ background: "#00000008", border: "1px dashed #D6D6D6" }}>
-                    <p style={{ fontFamily: "Inter", color: "#9E9E9E" }} className="text-[10px] mb-0.5">Apresente esse código na loja</p>
-                    <p style={{ fontFamily: "IBM Plex Mono", color: "#000000", fontWeight: 600 }} className="text-[22px]">#{lastOrderCode}</p>
-                  </div>
-                )}
-                <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px]">Abrimos o WhatsApp do responsável com os detalhes do pedido pra combinar pagamento e retirada.</p>
-              </div>
-            ) : cartCount === 0 ? (
-              <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] text-center py-8">Seu carrinho está vazio.</p>
-            ) : (
-              <>
-                <div className="flex flex-col gap-3 mb-5">
-                  {Object.entries(cart).filter(([, q]) => q > 0).map(([id, qty]) => {
-                    const p = products.find(pr => pr.id === id);
-                    if (!p) return null;
-                    return (
-                      <div key={id} className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: p.color + "1E" }}>
-                          <ShoppingBag size={16} color={p.color} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] truncate">{p.name}</p>
-                          <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">{fmtPrice(p.price)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => addToCart(id, -1)} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#E3E3E3" }}>
-                            <Minus size={11} color="#000000" />
-                          </button>
-                          <span style={{ fontFamily: "IBM Plex Mono", color: "#000000" }} className="text-[12px] w-4 text-center">{qty}</span>
-                          <button onClick={() => addToCart(id, 1)} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#E3E3E3" }}>
-                            <span style={{ color: "#000000", fontSize: 12 }}>+</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between mb-5 pt-3" style={{ borderTop: "1px solid #D6D6D6" }}>
-                  <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[13px]">Total</span>
-                  <span style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px]">{fmtPrice(cartTotal)}</span>
-                </div>
-                <button onClick={finalizeOrder}
-                  className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
-                  style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
-                  Finalizar pedido
-                </button>
-              </>
-            )}
           </div>
         </div>
       )}
