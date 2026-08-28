@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState } from "react";
-import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, SquarePen, Type as TypeIcon, X } from "lucide-react";
+import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, Smile, SquarePen, Type as TypeIcon, X } from "lucide-react";
 import { StoryContext, UserContext, ConnectionsContext } from "../context/contexts.js";
 import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
@@ -8,6 +8,9 @@ import { compressImage } from "../utils/imageCompress.js";
 import { uploadVideo } from "../utils/mediaUpload.js";
 import { friendUidsOf, colorFor } from "../utils/helpers.js";
 import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
+
+const TEXT_STORY_COLORS = ["#3A2E22", "#8A4B6D", "#2FA8A0", "#3E5FBF", "#5A4BC7", "#B33B3B", "#5C6B45", "#8A6D3B"];
+const EMOJIS = ["😀","😂","😍","🙏","👍","🙌","❤️","🔥","🎉","😢","😮","🤔","👏","✝️","🕊️","😇","🙋","👋","🤗","😅","🥲","😊","💪","✨","📖","🎶","😴","😎","😭","🥳"];
 
 function StoriesRow({ onPublish, onShorts }) {
   const meUser = useContext(UserContext);
@@ -28,6 +31,8 @@ function StoriesRow({ onPublish, onShorts }) {
   const [photoStoryPublishing, setPhotoStoryPublishing] = useState(false);
   const [showTextStory, setShowTextStory] = useState(false);
   const [textStoryContent, setTextStoryContent] = useState("");
+  const [textStoryBgColor, setTextStoryBgColor] = useState(TEXT_STORY_COLORS[0]);
+  const [showTextStoryEmoji, setShowTextStoryEmoji] = useState(false);
   const [textStoryError, setTextStoryError] = useState("");
   const [textStoryPublishing, setTextStoryPublishing] = useState(false);
   const storyPhotoInputRef = useRef(null);
@@ -68,9 +73,10 @@ function StoriesRow({ onPublish, onShorts }) {
     if (containsBlockedContent(textStoryContent)) { setTextStoryError(BLOCKED_CONTENT_MESSAGE); return; }
     setTextStoryPublishing(true);
     try {
-      await addStory({ author: me, text: textStoryContent.trim() });
+      await addStory({ author: me, text: textStoryContent.trim(), bgColor: textStoryBgColor });
       setShowTextStory(false);
       setTextStoryContent("");
+      setShowTextStoryEmoji(false);
     } catch (err) {
       console.error("STORY_TEXT_PUBLISH_ERR", err.code, err.message);
       setTextStoryError("Não consegui publicar agora. Tenta de novo.");
@@ -262,14 +268,24 @@ function StoriesRow({ onPublish, onShorts }) {
       )}
 
       {showTextStory && (
-        <div className="absolute inset-0 z-50 flex flex-col" style={{ background: `linear-gradient(160deg, ${colorFor(me)}, #000000)` }}>
+        <div className="absolute inset-0 z-50 flex flex-col" style={{ background: `linear-gradient(160deg, ${textStoryBgColor}, #000000)` }}>
           <div className="flex items-center justify-between px-5 pt-6 pb-3">
-            <button onClick={() => { setShowTextStory(false); setTextStoryContent(""); setTextStoryError(""); }}><X size={22} color="#FFFFFF" /></button>
+            <button onClick={() => { setShowTextStory(false); setTextStoryContent(""); setTextStoryError(""); setShowTextStoryEmoji(false); setTextStoryBgColor(TEXT_STORY_COLORS[0]); }}><X size={22} color="#FFFFFF" /></button>
             <p style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[13px] font-semibold">Story de texto</p>
             <div style={{ width: 22 }} />
           </div>
+
+          <div className="px-5 pb-3 flex items-center justify-center gap-2">
+            {TEXT_STORY_COLORS.map(c => (
+              <button key={c} onClick={() => setTextStoryBgColor(c)}
+                className="w-7 h-7 rounded-full shrink-0 active:scale-90 transition-transform"
+                style={{ background: c, border: textStoryBgColor === c ? "2px solid #FFFFFF" : "2px solid rgba(255,255,255,0.25)" }} />
+            ))}
+          </div>
+
           <div className="flex-1 flex items-center justify-center px-8">
             <textarea autoFocus value={textStoryContent} onChange={e => setTextStoryContent(e.target.value)}
+              onFocus={() => setShowTextStoryEmoji(false)}
               placeholder="Escreva algo..." rows={5} maxLength={280}
               className="w-full text-center outline-none resize-none bg-transparent"
               style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#FFFFFF", fontSize: 26, lineHeight: 1.35 }} />
@@ -277,9 +293,21 @@ function StoriesRow({ onPublish, onShorts }) {
           {textStoryError && (
             <p style={{ fontFamily: "Inter", color: "#FF8A73" }} className="text-[12px] text-center px-5 mb-2">{textStoryError}</p>
           )}
-          <div className="px-5 pb-8 pt-2">
+          {showTextStoryEmoji && (
+            <div className="px-5 pt-2 pb-1 grid grid-cols-8 gap-1" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+              {EMOJIS.map(em => (
+                <button key={em} onClick={() => setTextStoryContent(prev => prev + em)} className="text-[19px] py-1 rounded-lg active:scale-90 transition-transform">{em}</button>
+              ))}
+            </div>
+          )}
+          <div className="px-5 pb-8 pt-2 flex items-center gap-2.5">
+            <button onClick={() => setShowTextStoryEmoji(v => !v)}
+              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: showTextStoryEmoji ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)" }}>
+              <Smile size={19} color="#FFFFFF" />
+            </button>
             <button onClick={publishTextStory} disabled={!textStoryContent.trim() || textStoryPublishing}
-              className="w-full py-4 rounded-full font-semibold text-[15px] active:scale-[0.98] transition-transform"
+              className="flex-1 py-4 rounded-full font-semibold text-[15px] active:scale-[0.98] transition-transform"
               style={{ background: "#FFFFFF", color: "#000000", fontFamily: "Inter", opacity: textStoryContent.trim() ? 1 : 0.6 }}>
               {textStoryPublishing ? "Publicando..." : "Publicar story"}
             </button>

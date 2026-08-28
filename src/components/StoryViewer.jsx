@@ -206,7 +206,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
               transform: `scale(${story.zoom || 1})`, transformOrigin: "center",
             }} />
         ) : (
-          <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${colorFor(story.author)}, #000000)` }} />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${story.bgColor || colorFor(story.author)}, #000000)` }} />
         )}
         {story.text && (
           <p style={{ fontFamily: "Fraunces", color: "#FFFFFF", fontWeight: 600 }} className="relative text-[22px] leading-snug text-center" >

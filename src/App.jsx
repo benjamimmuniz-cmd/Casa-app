@@ -154,20 +154,20 @@ function App() {
     return () => unsub();
   }, []);
 
-  const addStory = async ({ author, image, video, text, zoom, focus, overlays, musicName, musicUrl }) => {
+  const addStory = async ({ author, image, video, text, zoom, focus, overlays, musicName, musicUrl, bgColor }) => {
     const authorUid = currentUser?.uid || null;
     const optimisticId = "pending" + Date.now();
     setStories(prev => [{
       id: optimisticId, author, authorUid, image: image || null, video: video || null, text: text || "",
       zoom: zoom || 1, focus: focus || { x: 50, y: 50 }, overlays: overlays || [],
-      musicName: musicName || "", musicUrl: musicUrl || null,
+      musicName: musicName || "", musicUrl: musicUrl || null, bgColor: bgColor || null,
       createdAt: null, time: "agora",
     }, ...prev]);
     try {
       await addDoc(collection(db, "stories"), {
         author, authorUid, image: image || null, video: video || null, text: text || "",
         zoom: zoom || 1, focus: focus || { x: 50, y: 50 }, overlays: overlays || [],
-        musicName: musicName || "", musicUrl: musicUrl || null,
+        musicName: musicName || "", musicUrl: musicUrl || null, bgColor: bgColor || null,
         createdAt: serverTimestamp(),
       });
     } catch (err) {
