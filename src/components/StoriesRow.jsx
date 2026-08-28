@@ -1,12 +1,12 @@
 import React, { useContext, useRef, useState } from "react";
-import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, SquarePen, X } from "lucide-react";
+import { Camera, Clapperboard, CircleDot, Film, ImageIcon, Plus, SquarePen, Type as TypeIcon, X } from "lucide-react";
 import { StoryContext, UserContext, ConnectionsContext } from "../context/contexts.js";
 import StoryViewer from "./StoryViewer.jsx";
 import StoryEditor from "./StoryEditor.jsx";
 import Avatar from "./Avatar.jsx";
 import { compressImage } from "../utils/imageCompress.js";
 import { uploadVideo } from "../utils/mediaUpload.js";
-import { friendUidsOf } from "../utils/helpers.js";
+import { friendUidsOf, colorFor } from "../utils/helpers.js";
 import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 
 function StoriesRow({ onPublish, onShorts }) {
@@ -26,6 +26,10 @@ function StoriesRow({ onPublish, onShorts }) {
   const [videoProgress, setVideoProgress] = useState(null);
   const [photoStoryError, setPhotoStoryError] = useState("");
   const [photoStoryPublishing, setPhotoStoryPublishing] = useState(false);
+  const [showTextStory, setShowTextStory] = useState(false);
+  const [textStoryContent, setTextStoryContent] = useState("");
+  const [textStoryError, setTextStoryError] = useState("");
+  const [textStoryPublishing, setTextStoryPublishing] = useState(false);
   const storyPhotoInputRef = useRef(null);
   const storyCameraInputRef = useRef(null);
   const storyVideoInputRef = useRef(null);
@@ -56,6 +60,22 @@ function StoriesRow({ onPublish, onShorts }) {
       setPhotoStoryError(err.message || "Não consegui publicar o story. Tenta de novo.");
     }
     setPhotoStoryPublishing(false);
+  };
+
+  const publishTextStory = async () => {
+    setTextStoryError("");
+    if (!textStoryContent.trim() || textStoryPublishing) return;
+    if (containsBlockedContent(textStoryContent)) { setTextStoryError(BLOCKED_CONTENT_MESSAGE); return; }
+    setTextStoryPublishing(true);
+    try {
+      await addStory({ author: me, text: textStoryContent.trim() });
+      setShowTextStory(false);
+      setTextStoryContent("");
+    } catch (err) {
+      console.error("STORY_TEXT_PUBLISH_ERR", err.code, err.message);
+      setTextStoryError("Não consegui publicar agora. Tenta de novo.");
+    }
+    setTextStoryPublishing(false);
   };
 
   const handleStoryVideoPick = (e) => {
@@ -160,6 +180,16 @@ function StoriesRow({ onPublish, onShorts }) {
                 <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Aparece no topo, em bolinha</p>
               </div>
             </button>
+            <button onClick={() => { setShowChoice(false); setShowTextStory(true); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#3E5FBF1E" }}>
+                <TypeIcon size={18} color="#3E5FBF" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontFamily: "Inter", fontWeight: 600, color: "var(--c-text)" }} className="text-[13.5px]">Story de texto</p>
+                <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[11px]">Só um texto, sem foto</p>
+              </div>
+            </button>
             <button onClick={() => { setShowChoice(false); storyVideoInputRef.current?.click(); }}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl mb-2.5 text-left active:scale-[0.98] transition-transform" style={{ background: "var(--c-surface)" }}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "#5C6B451E" }}>
@@ -229,6 +259,32 @@ function StoriesRow({ onPublish, onShorts }) {
       {editingImage && (
         <StoryEditor image={editingImage} onCancel={() => setEditingImage(null)} onPublish={publishEditedStory}
           publishing={photoStoryPublishing} publishError={photoStoryError} />
+      )}
+
+      {showTextStory && (
+        <div className="absolute inset-0 z-50 flex flex-col" style={{ background: `linear-gradient(160deg, ${colorFor(me)}, #000000)` }}>
+          <div className="flex items-center justify-between px-5 pt-6 pb-3">
+            <button onClick={() => { setShowTextStory(false); setTextStoryContent(""); setTextStoryError(""); }}><X size={22} color="#FFFFFF" /></button>
+            <p style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[13px] font-semibold">Story de texto</p>
+            <div style={{ width: 22 }} />
+          </div>
+          <div className="flex-1 flex items-center justify-center px-8">
+            <textarea autoFocus value={textStoryContent} onChange={e => setTextStoryContent(e.target.value)}
+              placeholder="Escreva algo..." rows={5} maxLength={280}
+              className="w-full text-center outline-none resize-none bg-transparent"
+              style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#FFFFFF", fontSize: 26, lineHeight: 1.35 }} />
+          </div>
+          {textStoryError && (
+            <p style={{ fontFamily: "Inter", color: "#FF8A73" }} className="text-[12px] text-center px-5 mb-2">{textStoryError}</p>
+          )}
+          <div className="px-5 pb-8 pt-2">
+            <button onClick={publishTextStory} disabled={!textStoryContent.trim() || textStoryPublishing}
+              className="w-full py-4 rounded-full font-semibold text-[15px] active:scale-[0.98] transition-transform"
+              style={{ background: "#FFFFFF", color: "#000000", fontFamily: "Inter", opacity: textStoryContent.trim() ? 1 : 0.6 }}>
+              {textStoryPublishing ? "Publicando..." : "Publicar story"}
+            </button>
+          </div>
+        </div>
       )}
 
       {videoPreview && (
