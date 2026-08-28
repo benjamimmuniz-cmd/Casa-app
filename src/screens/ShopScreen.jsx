@@ -16,6 +16,7 @@ import { PRODUCT_COLORS } from "../data/constants.js";
 import { compressImage } from "../utils/imageCompress.js";
 import PostCarousel from "../components/PostCarousel.jsx";
 import ImageLightbox from "../components/ImageLightbox.jsx";
+import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 import { createPedido, generateOrderCode } from "../utils/storeActions.js";
 import { markCartStarted, clearCartStarted, isCartExpired } from "../utils/cartExpiry.js";
 
@@ -54,6 +55,7 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);
   const [orderDone, setOrderDone] = useState(false);
   const [lastOrderCode, setLastOrderCode] = useState(null);
+  const [celebration, setCelebration] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [form, setForm] = useState({ name: "", price: "", desc: "", category: categories[0], images: [], stock: "", whatsapp: "" });
   const [postToFeed, setPostToFeed] = useState(true);
@@ -226,6 +228,8 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
     Object.entries(bySeller).forEach(([number, group]) => notifyWhatsApp(group.items, group.total, code, number));
     setLastOrderCode(code);
     setOrderDone(true);
+    const totalQty = orderItems.reduce((s, i) => s + i.qty, 0);
+    setCelebration(orderItems.length === 1 ? `"${orderItems[0].name}"` : `${totalQty} itens`);
     setCart({});
     clearCartStarted(title);
   };
@@ -563,6 +567,17 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
       )}
 
       <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />
+
+      {celebration && (
+        <CelebrationOverlay
+          icon={ShoppingBag}
+          accent={accent}
+          title="Pedido garantido! 🎉"
+          desc={`Você acabou de adquirir ${celebration} na ${title}. Confira o código de retirada aqui embaixo.`}
+          buttonLabel="Show!"
+          onDismiss={() => setCelebration(null)}
+        />
+      )}
     </div>
   );
 }
