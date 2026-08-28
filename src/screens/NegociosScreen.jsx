@@ -7,8 +7,25 @@ import { colorFor, initials, fmtPrice, timeAgo } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
 import { containsBlockedContent, BLOCKED_CONTENT_MESSAGE } from "../utils/contentFilter.js";
 import Avatar from "../components/Avatar.jsx";
+import PostCarousel from "../components/PostCarousel.jsx";
+import ImageLightbox from "../components/ImageLightbox.jsx";
 
 const CATEGORIES = ["Produto", "Serviço"];
+
+// Agrupa as divulgações de um mesmo prestador em seções: Produtos primeiro,
+// depois os Serviços separados por tipo (ex: Limpeza, Elétrica), pra ficar
+// organizado quando a mesma pessoa oferece mais de uma coisa.
+function buildSections(items) {
+  const order = [];
+  const map = new Map();
+  items.forEach(i => {
+    const key = i.category === "Serviço" ? (i.subcategory || "Serviços") : "Produtos";
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key).push(i);
+  });
+  order.sort((a, b) => (a === "Produtos" ? -1 : b === "Produtos" ? 1 : 0));
+  return order.map(key => ({ label: key, items: map.get(key) }));
+}
 
 function sanitizeWhatsApp(raw) {
   const digits = (raw || "").replace(/\D/g, "");
@@ -26,11 +43,12 @@ function NegociosScreen({ onBack, sellerUid }) {
   const [viewSellerUid, setViewSellerUid] = useState(sellerUid || null);
   const [openId, setOpenId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ title: "", desc: "", price: "", category: CATEGORIES[0], image: null, whatsapp: "" });
+  const [form, setForm] = useState({ title: "", desc: "", price: "", category: CATEGORIES[0], subcategory: "", images: [], whatsapp: "" });
   const [postToFeed, setPostToFeed] = useState(true);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, "negocios"), orderBy("createdAt", "desc"));
@@ -54,40 +72,47 @@ function NegociosScreen({ onBack, sellerUid }) {
   const viewingSeller = viewSellerUid ? sellersMap.get(viewSellerUid) : null;
 
   const handlePhotoPick = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => compressImage(reader.result, 900, 0.72).then(img => setForm(f => ({ ...f, image: img })));
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => compressImage(reader.result, 900, 0.72).then(img => setForm(f => ({ ...f, images: [...f.images, img] })));
+      reader.readAsDataURL(file);
+    });
     e.target.value = "";
+  };
+
+  const removeFormImage = (idx) => {
+    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
   const closeAdd = () => {
     setShowAdd(false);
-    setForm({ title: "", desc: "", price: "", category: CATEGORIES[0], image: null, whatsapp: "" });
+    setForm({ title: "", desc: "", price: "", category: CATEGORIES[0], subcategory: "", images: [], whatsapp: "" });
     setFormError("");
   };
 
   const publish = async () => {
     setFormError("");
     if (!form.title.trim()) { setFormError("Digite o nome do produto ou serviço."); return; }
-    if (containsBlockedContent(form.title) || containsBlockedContent(form.desc)) { setFormError(BLOCKED_CONTENT_MESSAGE); return; }
+    if (containsBlockedContent(form.title) || containsBlockedContent(form.desc) || containsBlockedContent(form.subcategory)) { setFormError(BLOCKED_CONTENT_MESSAGE); return; }
     setSaving(true);
     try {
       const priceNum = form.price.trim() ? parseFloat(form.price.replace(",", ".")) : null;
       const price = priceNum !== null && !isNaN(priceNum) ? priceNum : null;
       const whatsapp = sanitizeWhatsApp(form.whatsapp);
+      const subcategory = form.category === "Serviço" ? (form.subcategory.trim() || null) : null;
       await addDoc(collection(db, "negocios"), {
         authorUid: me.uid, authorName: me.name, authorPhoto: me.photo || null,
         title: form.title.trim(), desc: form.desc.trim(), price,
-        category: form.category, image: form.image || null, whatsapp: whatsapp || null,
+        category: form.category, subcategory, images: form.images, image: form.images[0] || null, whatsapp: whatsapp || null,
         createdAt: serverTimestamp(),
       });
       if (postToFeed) {
         addPost({
           author: me.name, authorUid: me.uid,
           text: `📣 ${me.name} está divulgando: ${form.title.trim()}${price !== null ? ` — ${fmtPrice(price)}` : ""}`,
-          image: form.image || null, kind: "negocio", negocioSellerUid: me.uid,
+          image: form.images[0] || null, kind: "negocio", negocioSellerUid: me.uid,
         }).catch(err => console.error("NEGOCIO_FEED_POST_ERR", err.code, err.message));
       }
       closeAdd();
@@ -133,22 +158,32 @@ function NegociosScreen({ onBack, sellerUid }) {
                 <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mt-0.5">{viewingSeller.items.length} {viewingSeller.items.length === 1 ? "divulgação" : "divulgações"}</p>
               </div>
             </div>
-            <div className="px-6 pb-28 grid grid-cols-2 gap-3">
-              {viewingSeller.items.map(l => (
-                <button key={l.id} onClick={() => setOpenId(l.id)}
-                  className="rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform"
-                  style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                  <div className="w-full flex items-center justify-center overflow-hidden" style={{ height: 84, background: l.image ? "#E8E8E8" : "#3B7D8A1E" }}>
-                    {l.image ? <img src={l.image} alt={l.title} className="w-full h-full object-cover" /> : <Briefcase size={24} color="#3B7D8A" />}
+            <div className="px-6 pb-28 flex flex-col gap-5">
+              {buildSections(viewingSeller.items).map(section => (
+                <div key={section.label}>
+                  <p style={{ fontFamily: "IBM Plex Mono", color: "#707070" }} className="text-[10.5px] uppercase tracking-wide mb-2.5">{section.label}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {section.items.map(l => {
+                      const thumb = (l.images && l.images[0]) || l.image;
+                      return (
+                        <button key={l.id} onClick={() => setOpenId(l.id)}
+                          className="rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform"
+                          style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                          <div className="w-full flex items-center justify-center overflow-hidden" style={{ height: 84, background: thumb ? "#E8E8E8" : "#3B7D8A1E" }}>
+                            {thumb ? <img src={thumb} alt={l.title} className="w-full h-full object-cover" /> : <Briefcase size={24} color="#3B7D8A" />}
+                          </div>
+                          <div className="p-3">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontFamily: "IBM Plex Mono", background: "#3B7D8A1A", color: "#3B7D8A" }}>{l.subcategory ? `${l.category} · ${l.subcategory}` : l.category}</span>
+                            <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] mt-1.5 leading-tight">{l.title}</p>
+                            {l.price !== null && l.price !== undefined && (
+                              <p style={{ fontFamily: "Fraunces", color: "#000000", fontWeight: 600 }} className="text-[14px] mt-1">{fmtPrice(l.price)}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="p-3">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontFamily: "IBM Plex Mono", background: "#3B7D8A1A", color: "#3B7D8A" }}>{l.category}</span>
-                    <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] mt-1.5 leading-tight">{l.title}</p>
-                    {l.price !== null && l.price !== undefined && (
-                      <p style={{ fontFamily: "Fraunces", color: "#000000", fontWeight: 600 }} className="text-[14px] mt-1">{fmtPrice(l.price)}</p>
-                    )}
-                  </div>
-                </button>
+                </div>
               ))}
             </div>
           </>
@@ -195,18 +230,23 @@ function NegociosScreen({ onBack, sellerUid }) {
       {open && (
         <div className="absolute inset-0 flex items-end" style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setOpenId(null)}>
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-3">
-              {open.image ? (
-                <img src={open.image} alt={open.title} className="w-24 h-24 rounded-2xl object-cover" />
-              ) : (
+            {(open.images && open.images.length ? open.images : (open.image ? [open.image] : [])).length > 0 ? (
+              <div className="relative rounded-2xl overflow-hidden mb-3" style={{ width: "100%", height: 220, background: "#E8E8E8" }}>
+                <PostCarousel images={open.images && open.images.length ? open.images : [open.image]} fit="contain" onImageClick={setLightboxImage} />
+                <button onClick={() => setOpenId(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10" style={{ background: "rgba(0,0,0,0.5)" }}>
+                  <X size={14} color="#FFFFFF" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between mb-3">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "#3B7D8A1E" }}>
                   <Briefcase size={24} color="#3B7D8A" />
                 </div>
-              )}
-              <button onClick={() => setOpenId(null)}><X size={18} color="#9E9E9E" /></button>
-            </div>
+                <button onClick={() => setOpenId(null)}><X size={18} color="#9E9E9E" /></button>
+              </div>
+            )}
             <span className="text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1" style={{ fontFamily: "IBM Plex Mono", background: "#3B7D8A1A", color: "#3B7D8A" }}>
-              <Tag size={10} /> {open.category}
+              <Tag size={10} /> {open.subcategory ? `${open.category} · ${open.subcategory}` : open.category}
             </span>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[19px] mt-2">{open.title}</p>
             {open.price !== null && open.price !== undefined && (
@@ -244,16 +284,21 @@ function NegociosScreen({ onBack, sellerUid }) {
           <div className="w-full rounded-t-3xl p-6 max-h-[85%] overflow-y-auto" style={{ background: "#F2F2F2" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontFamily: "Fraunces", fontWeight: 600, color: "#000000" }} className="text-[17px] mb-4">Divulgar produto ou serviço</p>
 
-            <label className="flex items-center gap-3 mb-4 cursor-pointer">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
-                {form.image ? <img src={form.image} alt="Prévia" className="w-full h-full object-cover" /> : <ImageIcon size={20} color="#9E9E9E" />}
-              </div>
-              <div>
-                <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px]">{form.image ? "Trocar foto" : "Adicionar foto"}</p>
-                <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[11px]">Opcional, mas ajuda a vender</p>
-              </div>
-              <input type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
-            </label>
+            <p style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[11.5px] mb-2">Fotos (pode adicionar várias)</p>
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+              {form.images.map((img, idx) => (
+                <div key={idx} className="relative shrink-0 rounded-2xl overflow-hidden" style={{ width: 64, height: 64 }}>
+                  <img src={img} alt="Prévia" className="w-full h-full object-cover" />
+                  <button onClick={() => removeFormImage(idx)} className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
+                    <X size={9} color="#F2F2F2" />
+                  </button>
+                </div>
+              ))}
+              <label className="shrink-0 rounded-2xl flex items-center justify-center cursor-pointer" style={{ width: 64, height: 64, background: "#E8E8E8", border: "1px dashed #D6D6D6" }}>
+                <ImageIcon size={18} color="#9E9E9E" />
+                <input type="file" accept="image/*" multiple onChange={handlePhotoPick} className="hidden" />
+              </label>
+            </div>
 
             <div className="flex gap-2 mb-3">
               {CATEGORIES.map(c => (
@@ -264,6 +309,12 @@ function NegociosScreen({ onBack, sellerUid }) {
                 </button>
               ))}
             </div>
+
+            {form.category === "Serviço" && (
+              <input value={form.subcategory} onChange={e => setForm({ ...form, subcategory: e.target.value })} placeholder="Tipo de serviço (ex: Limpeza, Elétrica, Aulas...)"
+                className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
+                style={{ fontFamily: "Inter", background: "#FFFFFF", border: "1px solid #D6D6D6", color: "#000000" }} />
+            )}
 
             <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Nome do produto ou serviço"
               className="w-full px-4 py-3 rounded-xl mb-3 outline-none text-[13px]"
@@ -315,6 +366,8 @@ function NegociosScreen({ onBack, sellerUid }) {
           </div>
         </div>
       )}
+
+      <ImageLightbox src={lightboxImage} onClose={() => setLightboxImage(null)} />
     </div>
   );
 }
