@@ -291,17 +291,24 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
               </button>
             </div>
           ) : cartCount === 0 ? (
-            <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] text-center py-8">Seu carrinho está vazio.</p>
+            <div className="text-center py-8">
+              <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] mb-4">Seu carrinho está vazio.</p>
+              <button onClick={() => setActiveTab("produtos")}
+                className="px-5 py-2.5 rounded-full text-[12px] font-semibold" style={{ fontFamily: "Inter", background: "#000000", color: "#FFFFFF" }}>
+                Continuar comprando
+              </button>
+            </div>
           ) : (
             <>
               <div className="flex flex-col gap-3 mb-5">
                 {Object.entries(cart).filter(([, q]) => q > 0).map(([id, qty]) => {
                   const p = products.find(pr => pr.id === id);
                   if (!p) return null;
+                  const thumb = (p.images && p.images[0]) || p.image;
                   return (
                     <div key={id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: p.color + "1E" }}>
-                        <ShoppingBag size={16} color={p.color} />
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: thumb ? "#E8E8E8" : p.color + "1E" }}>
+                        {thumb ? <img src={thumb} alt={p.name} className="w-full h-full object-cover" /> : <ShoppingBag size={16} color={p.color} />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p style={{ fontFamily: "Inter", color: "#000000", fontWeight: 600 }} className="text-[12.5px] truncate">{p.name}</p>
@@ -328,6 +335,11 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
                 className="w-full py-3.5 rounded-full font-semibold text-[14px] active:scale-[0.98] transition-transform"
                 style={{ background: "#000000", color: "#FFFFFF", fontFamily: "Inter" }}>
                 Finalizar pedido
+              </button>
+              <button onClick={() => setActiveTab("produtos")}
+                className="w-full py-3 rounded-full font-semibold text-[12.5px] mt-2.5"
+                style={{ fontFamily: "Inter", background: "transparent", color: "#4D4D4D" }}>
+                Continuar comprando
               </button>
             </>
           )}
