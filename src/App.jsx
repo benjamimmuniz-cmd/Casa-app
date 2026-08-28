@@ -17,6 +17,7 @@ import { loadTextLarge, saveTextLarge } from "./utils/textSizeStore.js";
 import { timeAgo, fmtDateBR } from "./utils/helpers.js";
 import { checkForNewVersion } from "./utils/versionCheck.js";
 import { markAttendance } from "./utils/attendanceActions.js";
+import { storeInviteCode } from "./utils/inviteCode.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
@@ -75,6 +76,20 @@ function App() {
   const [presencaConfirmed, setPresencaConfirmed] = useState(false);
   const [autoKidsCheckin, setAutoKidsCheckin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Captura o codigo de convite ("?convite=uid") antes mesmo do login, pra
+  // ficar guardado ate a pessoa terminar o cadastro.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("convite");
+    if (code) {
+      storeInviteCode(code);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("convite");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
+
   const [feedPosts, setFeedPosts] = useState([]);
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));

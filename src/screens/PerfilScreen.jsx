@@ -17,6 +17,7 @@ import {
   Sun,
   Tag,
   Type as TextIcon,
+  UserPlus,
 } from "lucide-react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebase.js";
@@ -400,6 +401,16 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
       </div>
 
       <div className="px-6 mb-5 flex flex-col gap-2.5">
+        <button onClick={() => {
+          const link = `${window.location.origin}/?convite=${user.uid}`;
+          const msg = `Vem pra Casa! 🏠 Baixa o app da nossa igreja: ${link}`;
+          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+        }}
+          className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+          <UserPlus size={16} color="var(--c-muted)" />
+          <span style={{ fontFamily: "Inter", color: "var(--c-text)" }} className="text-[13px] flex-1">Convidar alguém pra Casa</span>
+          <ChevronRight size={15} color="var(--c-faint)" />
+        </button>
         <button onClick={() => onOpenTile?.("privacidade")}
           className="w-full flex items-center gap-3 rounded-2xl p-3.5 text-left" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
           <ShieldCheck size={16} color="var(--c-muted)" />

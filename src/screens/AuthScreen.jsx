@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswor
 import { doc, setDoc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase.js";
 import { compressImage } from "../utils/imageCompress.js";
+import { getInviteCode, clearInviteCode } from "../utils/inviteCode.js";
 import PhotoPickerField from "../components/PhotoPickerField.jsx";
 
 function PasswordField({ value, onChange, placeholder, className, style }) {
@@ -142,12 +143,15 @@ function AuthScreen({ onSuccess }) {
     setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, form.email.trim(), form.senha);
+      const invitedBy = getInviteCode();
       const profile = {
         nome: form.nome.trim(), nascimento: form.nascimento, email: form.email.trim(), telefone: form.telefone.trim(),
         profissao: form.profissao.trim(), membro: form.membro, receberMensagens: form.receberMensagens,
         photo: form.photo || null, role: "member", createdAt: serverTimestamp(),
+        invitedBy: invitedBy && invitedBy !== cred.user.uid ? invitedBy : null,
       };
       await setDoc(doc(db, "users", cred.user.uid), profile);
+      clearInviteCode();
       setPendingUser({ uid: cred.user.uid, ...profile });
       setStep("filhos");
     } catch (e) {
