@@ -1,5 +1,9 @@
 {
   "appId": "br.org.nazareno.acasa",
   "appName": "Igreja do Nazareno A Casa",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://casa-app-liard.vercel.app",
+    "cleartext": false
+  }
 }
