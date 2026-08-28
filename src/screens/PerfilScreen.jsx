@@ -198,32 +198,6 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
       </div>
 
       <div className="px-6 mb-6">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10px] uppercase tracking-wide font-semibold">Suas publicações</p>
-          <span style={{ fontFamily: "IBM Plex Mono", color: "var(--c-faint)" }} className="text-[10px]">{myPosts.length}</span>
-        </div>
-        {myPosts.length === 0 ? (
-          <div className="rounded-2xl p-6 text-center" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
-            <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[12px]">Você ainda não publicou nada no Feed.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-1">
-            {myPosts.map(p => (
-              <div key={p.id} className="aspect-square rounded-lg overflow-hidden relative" style={{ background: p.image ? "#00000010" : colorFor(p.text || p.id) + "22" }}>
-                {p.image ? (
-                  <img src={p.image} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center p-2">
-                    <p style={{ fontFamily: "Fraunces", color: "var(--c-text)" }} className="text-[10px] leading-snug line-clamp-4 text-center">{p.text || "🎵"}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="px-6 mb-6">
         <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#7070701E" }}>
@@ -410,6 +384,32 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
         <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10.5px] mt-3 leading-relaxed px-1">
           ⓘ Sua profissão fica visível pra outros membros da igreja, caso alguém precise de um serviço que você oferece. A placa fica guardada no seu cadastro pra ajudar a identificar o dono do carro, caso seja preciso no estacionamento. Gerencie seus filhos em Área Infantil → Meus Filhos.
         </p>
+      </div>
+
+      <div className="px-6 mb-6">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[10px] uppercase tracking-wide font-semibold">Suas publicações</p>
+          <span style={{ fontFamily: "IBM Plex Mono", color: "var(--c-faint)" }} className="text-[10px]">{myPosts.length}</span>
+        </div>
+        {myPosts.length === 0 ? (
+          <div className="rounded-2xl p-6 text-center" style={{ background: "var(--c-surface)", boxShadow: "0 1px 3px var(--c-shadow)" }}>
+            <p style={{ fontFamily: "Inter", color: "var(--c-faint)" }} className="text-[12px]">Você ainda não publicou nada no Feed.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-1">
+            {myPosts.map(p => (
+              <div key={p.id} className="aspect-square rounded-lg overflow-hidden relative" style={{ background: p.image ? "#00000010" : colorFor(p.text || p.id) + "22" }}>
+                {p.image ? (
+                  <img src={p.image} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center p-2">
+                    <p style={{ fontFamily: "Fraunces", color: "var(--c-text)" }} className="text-[10px] leading-snug line-clamp-4 text-center">{p.text || "🎵"}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="px-6 mb-6">
