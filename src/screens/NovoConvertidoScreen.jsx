@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { BarChart3, Camera, ChevronRight, UserCheck, X } from "lucide-react";
+import { BarChart3, Camera, ChevronRight, Download, UserCheck, X } from "lucide-react";
 import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import * as XLSX from "xlsx";
 import { db } from "../firebase.js";
 import { UserContext } from "../context/contexts.js";
-import { colorFor, initials, fmtDateBR, collectAll, todayISO } from "../utils/helpers.js";
+import { colorFor, initials, fmtDateBR, collectAll, todayISO, isStaffRole } from "../utils/helpers.js";
 import { compressImage } from "../utils/imageCompress.js";
 import MemberPickerSheet from "../components/MemberPickerSheet.jsx";
 import Avatar from "../components/Avatar.jsx";
@@ -15,6 +16,11 @@ import CelebrationOverlay from "../components/CelebrationOverlay.jsx";
 // A aba "Cadastrados" cruza o nome de cada um com as árvores de GR/Fundamentos
 // (por nome, já que esses grupos não usam conta de app) pra mostrar se a
 // pessoa já entrou nalgum grupo de estudo.
+function fmtCreatedAt(ts) {
+  if (!ts?.toDate) return "—";
+  return ts.toDate().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
 function NovoConvertidoScreen({ onBack }) {
   const me = useContext(UserContext);
   const [tab, setTab] = useState("cadastrar"); // cadastrar | cadastrados | painel
@@ -128,6 +134,27 @@ function NovoConvertidoScreen({ onBack }) {
       console.error("NOVOCONVERTIDO_ADD_ERR", err.code, err.message);
     }
     setSaving(false);
+  };
+
+  const buildExportRows = () => {
+    const header = ["Nome", "Telefone", "Nascimento", "Data de conversão", "Culto", "Discipulador", "Grupo", "Registrado por", "Observações", "Cadastrado em"];
+    const rows = lista.map(c => {
+      const grupo = grupoDe(c.nome);
+      return [
+        c.nome || "", c.telefone || "", fmtDateBR(c.nascimento) || "", fmtDateBR(c.dataConversao) || "", c.culto || "",
+        c.discipuladorNome || "", grupo ? `${grupo.tipo} · ${grupo.nomeGrupo}` : "Nenhum ainda",
+        c.registradoPorNome || "", c.notes || "", fmtCreatedAt(c.createdAt),
+      ];
+    });
+    return [header, ...rows];
+  };
+
+  const exportExcel = () => {
+    const ws = XLSX.utils.aoa_to_sheet(buildExportRows());
+    ws["!cols"] = [{ wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 18 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, { wch: 30 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Novos Convertidos");
+    XLSX.writeFile(wb, `novos-convertidos-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   if (aberto) {
@@ -348,6 +375,14 @@ function NovoConvertidoScreen({ onBack }) {
             <p style={{ fontFamily: "Inter", color: "rgba(255,255,255,0.7)" }} className="text-[11px] mt-1">{lista.length === 1 ? "novo convertido no total" : "novos convertidos no total"}</p>
           </div>
         </div>
+
+        {isStaffRole(me.role) && (
+          <button onClick={exportExcel}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl mb-6 font-semibold text-[12.5px] active:scale-[0.98] transition-transform"
+            style={{ fontFamily: "Inter", background: "#FFFFFF", color: "#000000", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <Download size={14} /> Exportar Excel (só liderança)
+          </button>
+        )}
 
         <p style={{ fontFamily: "Inter", color: "#707070" }} className="text-[12px] font-semibold mb-3">Convertidos por mês</p>
         {porMes.length === 0 ? (

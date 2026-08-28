@@ -14,6 +14,7 @@ import {
   Pencil,
   Phone,
   ShieldCheck,
+  Sparkles,
   Sun,
   Tag,
   Type as TextIcon,
@@ -58,6 +59,10 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
   const [placaDraft, setPlacaDraft] = useState(user.placa);
   const [editingTelefone, setEditingTelefone] = useState(false);
   const [telefoneDraft, setTelefoneDraft] = useState(user.telefone);
+  const [editingDataConversao, setEditingDataConversao] = useState(false);
+  const [dataConversaoDraft, setDataConversaoDraft] = useState(user.dataConversao);
+  const [editingVersiculo, setEditingVersiculo] = useState(false);
+  const [versiculoDraft, setVersiculoDraft] = useState(user.versiculo);
 
   const saveName = () => {
     const trimmed = nameDraft.trim();
@@ -83,6 +88,33 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
   const saveTelefone = () => {
     user.setTelefone(telefoneDraft.trim());
     setEditingTelefone(false);
+  };
+
+  const saveDataConversao = () => {
+    user.setDataConversao(dataConversaoDraft);
+    setEditingDataConversao(false);
+  };
+
+  const saveVersiculo = () => {
+    user.setVersiculo(versiculoDraft.trim());
+    setEditingVersiculo(false);
+  };
+
+  const tempoConversao = (iso) => {
+    if (!iso) return null;
+    const start = new Date(iso + "T12:00:00");
+    if (isNaN(start.getTime())) return null;
+    const now = new Date();
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    if (now.getDate() < start.getDate()) months -= 1;
+    if (months < 0) { years -= 1; months += 12; }
+    if (years < 0) return null;
+    if (years === 0 && months === 0) return "menos de um mês";
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? "ano" : "anos"}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? "mês" : "meses"}`);
+    return parts.join(" e ");
   };
 
   const handlePhotoPick = (e) => {
@@ -231,6 +263,56 @@ function PerfilScreen({ onBack, onLogout, onOpenTile }) {
               ) : (
                 <button onClick={() => { setTelefoneDraft(user.telefone); setEditingTelefone(true); }} className="flex items-center gap-1.5">
                   <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">{user.telefone || "Não informado"}</p>
+                  <Pencil size={11} color="var(--c-faint)" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3" style={{ borderTop: "1px solid var(--c-divider)", paddingTop: 12 }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#8A6D3B1E" }}>
+              <Sparkles size={15} color="#8A6D3B" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Tempo de conversão</p>
+              {editingDataConversao ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input autoFocus type="date" value={dataConversaoDraft} onChange={e => setDataConversaoDraft(e.target.value)}
+                    className="flex-1 min-w-0 outline-none px-2.5 py-1.5 rounded-lg text-[13px]"
+                    style={{ fontFamily: "Inter", background: "var(--c-bg)", color: "var(--c-text)", border: "1px solid var(--c-border)" }} />
+                  <button onClick={saveDataConversao} className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--c-accent)" }}>
+                    <Check size={12} color="#FFFFFF" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setDataConversaoDraft(user.dataConversao); setEditingDataConversao(true); }} className="flex items-center gap-1.5">
+                  <p style={{ fontFamily: "Inter", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">
+                    {user.dataConversao ? (tempoConversao(user.dataConversao) || fmtDateBR(user.dataConversao)) : "Não informado"}
+                  </p>
+                  <Pencil size={11} color="var(--c-faint)" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3" style={{ borderTop: "1px solid var(--c-divider)", paddingTop: 12 }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#3B7D8A1E" }}>
+              <BookOpenCheck size={15} color="#3B7D8A" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontFamily: "Inter", color: "var(--c-muted)" }} className="text-[10.5px]">Versículo que te define</p>
+              {editingVersiculo ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input autoFocus value={versiculoDraft} onChange={e => setVersiculoDraft(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && saveVersiculo()}
+                    placeholder="Ex: Filipenses 4:13"
+                    className="flex-1 min-w-0 outline-none px-2.5 py-1.5 rounded-lg text-[13px]"
+                    style={{ fontFamily: "Inter", background: "var(--c-bg)", color: "var(--c-text)", border: "1px solid var(--c-border)" }} />
+                  <button onClick={saveVersiculo} className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--c-accent)" }}>
+                    <Check size={12} color="#FFFFFF" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setVersiculoDraft(user.versiculo); setEditingVersiculo(true); }} className="flex items-center gap-1.5">
+                  <p style={{ fontFamily: "Fraunces", fontStyle: "italic", color: "var(--c-text)", fontWeight: 600 }} className="text-[13px]">{user.versiculo || "Não informado"}</p>
                   <Pencil size={11} color="var(--c-faint)" />
                 </button>
               )}

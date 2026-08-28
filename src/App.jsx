@@ -595,6 +595,22 @@ function App() {
     }
   };
 
+  const updateUserDataConversao = (dataConversao) => {
+    setCurrentUser(prev => prev ? { ...prev, dataConversao } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { dataConversao, role: currentUser.role || "member" })
+        .catch(err => console.error("DATACONVERSAO_SAVE_ERR", err.code, err.message));
+    }
+  };
+
+  const updateUserVersiculo = (versiculo) => {
+    setCurrentUser(prev => prev ? { ...prev, versiculo } : prev);
+    if (currentUser?.uid) {
+      updateDoc(doc(db, "users", currentUser.uid), { versiculo, role: currentUser.role || "member" })
+        .catch(err => console.error("VERSICULO_SAVE_ERR", err.code, err.message));
+    }
+  };
+
   const updateNotificacoesAtivas = (ativas) => {
     setCurrentUser(prev => prev ? { ...prev, notificacoesAtivas: ativas } : prev);
     if (currentUser?.uid) {
@@ -656,7 +672,7 @@ function App() {
         ) : stage === "auth" ? (
           <AuthScreen onSuccess={(user) => { setCurrentUser(user); setStage("app"); }} />
         ) : (
-          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", createdAt: currentUser?.createdAt || null, setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
+          <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", createdAt: currentUser?.createdAt || null, dataConversao: currentUser?.dataConversao || "", versiculo: currentUser?.versiculo || "", setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca, setDataConversao: updateUserDataConversao, setVersiculo: updateUserVersiculo }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
           <ProfileNavContext.Provider value={{ openProfile, openMensagem, openOracao, openTestemunhos }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
