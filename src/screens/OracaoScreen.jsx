@@ -38,7 +38,7 @@ function OracaoScreen({ onBack }) {
         author: meName, authorUid: me.uid, text: text.trim(), isPublic, prayingBy: [], createdAt: serverTimestamp(),
       });
       if (isPublic && postToFeed) {
-        addPost({ author: meName, text: text.trim(), kind: "oracao" }).catch(err => console.error("PRAYER_FEED_POST_ERR", err.code, err.message));
+        addPost({ author: meName, authorUid: me.uid, text: text.trim(), kind: "oracao" }).catch(err => console.error("PRAYER_FEED_POST_ERR", err.code, err.message));
       }
       setConfirmation(isPublic ? "Seu pedido foi publicado no mural. 🙏" : "Pedido enviado só pra liderança da igreja, em sigilo.");
       setText("");

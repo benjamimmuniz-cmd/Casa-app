@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Eye, Home, Music, Send, Smile, Trash2, X } from "lucide-react";
+import { Eye, Music, Send, Smile, Trash2, X } from "lucide-react";
 import { colorFor, timeAgo } from "../utils/helpers.js";
 import { containsBlockedContent } from "../utils/contentFilter.js";
 import { UserContext, StoryContext, ProfileNavContext } from "../context/contexts.js";
@@ -20,7 +20,6 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [heartBurst, setHeartBurst] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState([]);
   const lastMediaTapRef = useRef(0);
   const pausedRef = useRef(false);
@@ -107,9 +106,9 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     }
   };
 
-  const floatReaction = (emoji) => {
+  const floatReaction = (emoji, offsetX = 0) => {
     const id = Date.now() + Math.random();
-    setFloatingReactions(prev => [...prev, { id, emoji }]);
+    setFloatingReactions(prev => [...prev, { id, emoji, offsetX }]);
     setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 1100);
   };
 
@@ -130,9 +129,17 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
 
   const triggerLike = () => {
     if (isOwnStory || !story.authorUid) return;
-    sendReaction("❤️");
-    setHeartBurst(true);
-    setTimeout(() => setHeartBurst(false), 700);
+    reactToStory(story, "❤️");
+    if (story.authorUid) {
+      sendChatMessage({
+        myUid: me.uid, myName: me.name, otherUid: story.authorUid, otherName: story.author, text: "❤️",
+        sharedPost: { author: story.author, image: story.image, text: story.text ? `Story: ${story.text}` : "Reagiu ao seu story" },
+      }).catch(err => console.error("STORY_REACTION_CHAT_ERR", err.code, err.message));
+    }
+    const offsets = [-50, -25, 0, 25, 50];
+    offsets.forEach((offsetX, i) => {
+      setTimeout(() => floatReaction("❤️", offsetX), i * 80);
+    });
   };
 
   const handleMediaTap = (navigate) => {
@@ -224,13 +231,8 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
             )}
           </div>
         ))}
-        {heartBurst && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <Home size={90} className="like-burst" color="#F2F2F2" fill="#F2F2F2" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }} />
-          </div>
-        )}
         {floatingReactions.map(r => (
-          <div key={r.id} className="reaction-float-up absolute pointer-events-none z-10" style={{ bottom: 24, left: "50%", marginLeft: -20, fontSize: 40, lineHeight: 1 }}>
+          <div key={r.id} className="reaction-float-up absolute pointer-events-none z-10" style={{ bottom: 24, left: "50%", marginLeft: r.offsetX - 20, fontSize: 40, lineHeight: 1 }}>
             {r.emoji}
           </div>
         ))}

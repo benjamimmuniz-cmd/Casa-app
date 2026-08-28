@@ -352,7 +352,7 @@ function FeedScreen({ onBack }) {
                     </div>
                   )}
                 </div>
-                <div className="absolute bottom-5 right-4 flex flex-col items-center gap-4">
+                <div className="absolute bottom-5 right-4 flex flex-col items-center gap-4" onClick={e => e.stopPropagation()}>
                   <button onClick={() => toggleLike(p.id)} className="flex flex-col items-center gap-1">
                     <Home size={24} color="#F2F2F2" fill={liked ? "#2B2B2B" : "none"} />
                     <span style={{ fontFamily: "Inter", color: "#F2F2F2" }} className="text-[11px]">{p.likes.length}</span>
@@ -404,7 +404,7 @@ function FeedScreen({ onBack }) {
                   )}
                   <span style={{ fontFamily: "Inter", color: "#F2F2F2" }} className="text-[13px] truncate">{p.musicName}</span>
                 </div>
-                <div className="flex items-center gap-6 pt-3" style={{ borderTop: "1px solid rgba(242,242,242,0.15)" }}>
+                <div className="flex items-center gap-6 pt-3" style={{ borderTop: "1px solid rgba(242,242,242,0.15)" }} onClick={e => e.stopPropagation()}>
                   <button onClick={() => toggleLike(p.id)} className="flex items-center gap-2">
                     <Home size={22} color="#F2F2F2" fill={liked ? "#F2F2F2" : "none"} />
                     <span style={{ fontFamily: "Inter", color: "#F2F2F2" }} className="text-[13.5px]">{p.likes.length}</span>
@@ -450,7 +450,7 @@ function FeedScreen({ onBack }) {
                 )}
               </div>
               <p style={{ fontFamily: "Fraunces", color: "var(--c-text)" }} className="text-[18px] leading-snug mb-5">{p.text}</p>
-              <div className="flex items-center gap-6 pt-3" style={{ borderTop: "1px solid var(--c-divider)" }}>
+              <div className="flex items-center gap-6 pt-3" style={{ borderTop: "1px solid var(--c-divider)" }} onClick={e => e.stopPropagation()}>
                 <button onClick={() => toggleLike(p.id)} className="flex items-center gap-2">
                   <Home size={22} color={liked ? "var(--c-accent-2)" : "var(--c-muted)"} fill={liked ? "var(--c-accent-2)" : "none"} />
                   <span style={{ fontFamily: "Inter", color: "var(--c-text-2)" }} className="text-[13.5px]">{p.likes.length}</span>
