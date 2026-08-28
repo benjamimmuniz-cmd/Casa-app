@@ -11,3 +11,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// So pra mostrar uma tela amigavel quando abrir sem internet (relevante no
+// app nativo, que carrega o site remotamente) — nao guarda o app em cache.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
