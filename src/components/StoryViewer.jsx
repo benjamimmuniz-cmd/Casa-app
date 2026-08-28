@@ -22,6 +22,8 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState([]);
   const lastMediaTapRef = useRef(0);
+  const holdTimerRef = useRef(null);
+  const holdTriggeredRef = useRef(false);
   const pausedRef = useRef(false);
   const pausedMsRef = useRef(0);
   const pauseStartRef = useRef(0);
@@ -147,11 +149,21 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   };
 
   const handleMediaTap = (navigate) => {
+    if (holdTriggeredRef.current) { holdTriggeredRef.current = false; return; }
     const now = Date.now();
     const isDoubleTap = now - lastMediaTapRef.current < 300;
     lastMediaTapRef.current = now;
     if (isDoubleTap) { triggerLike(); return; }
     navigate();
+  };
+
+  const startHold = () => {
+    holdTriggeredRef.current = false;
+    holdTimerRef.current = setTimeout(() => { holdTriggeredRef.current = true; pause(); }, 180);
+  };
+  const endHold = () => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    if (holdTriggeredRef.current) resume();
   };
 
   const openDeleteConfirm = () => { pause(); setConfirmDelete(true); };
@@ -286,8 +298,12 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
       )}
 
       <div className="absolute inset-0 flex" style={{ top: 70, bottom: isOwnStory ? 56 : (!story.authorUid ? 0 : 122) }}>
-        <button className="flex-1" onClick={() => handleMediaTap(goPrev)} style={{ background: "transparent" }} />
-        <button className="flex-1" onClick={() => handleMediaTap(goNext)} style={{ background: "transparent" }} />
+        <button className="flex-1" onClick={() => handleMediaTap(goPrev)}
+          onPointerDown={startHold} onPointerUp={endHold} onPointerLeave={endHold} onPointerCancel={endHold}
+          style={{ background: "transparent" }} />
+        <button className="flex-1" onClick={() => handleMediaTap(goNext)}
+          onPointerDown={startHold} onPointerUp={endHold} onPointerLeave={endHold} onPointerCancel={endHold}
+          style={{ background: "transparent" }} />
       </div>
 
       {confirmDelete && (

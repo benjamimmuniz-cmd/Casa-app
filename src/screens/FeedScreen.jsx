@@ -39,7 +39,7 @@ function FeedScreen({ onBack }) {
   const meUid = meUser.uid;
   const { posts: allPosts, addPost, toggleLike: ctxToggleLike, likePost: ctxLikePost, toggleSave: ctxToggleSave, addComment: ctxAddComment, deletePost } = useContext(FeedContext);
   const { connections } = useContext(ConnectionsContext);
-  const { openProfile, openMensagem, openOracao, openTestemunhos } = useContext(ProfileNavContext);
+  const { openProfile, openMensagem, openOracao, openTestemunhos, openNegocios } = useContext(ProfileNavContext);
   const posts = visiblePosts(allPosts, meUid, connections);
   const goToProfile = (e, authorUid) => {
     e.stopPropagation();
@@ -195,6 +195,7 @@ function FeedScreen({ onBack }) {
     if (post.kind === "mensagem" && post.mensagemId) { openMensagem(post.mensagemId); return; }
     if (post.kind === "oracao") { openOracao(); return; }
     if (post.kind === "testemunho") { openTestemunhos(); return; }
+    if (post.kind === "negocio") { openNegocios(post.negocioSellerUid); return; }
     const now = Date.now();
     const last = lastTapRef.current[post.id] || 0;
     lastTapRef.current[post.id] = now;

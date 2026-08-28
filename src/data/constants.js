@@ -8,6 +8,7 @@ import {
   Sparkles,
   MessageCircle,
   MessageSquare,
+  Briefcase,
   ShoppingBag,
   Tag,
   CalendarDays,
@@ -72,6 +73,7 @@ export const TILES = [
   { id: "escala", label: "Escala", icon: ClipboardList, color: "#3B6D5C" },
   { id: "transito", label: "Trânsito", icon: Car, color: "#3B6D8A" },
   { id: "diretorio", label: "Diretório", icon: Contact, color: "#4A6FA5" },
+  { id: "negocios", label: "Negócios e Divulgação", icon: Briefcase, color: "#3B7D8A" },
   { id: "evangelismo", label: "Evangelismo", icon: Compass, color: "#454545" },
   { id: "sounovo", label: "Sou Novo", icon: Handshake, color: "#5C6B45" },
   { id: "novoconvertido", label: "Novo Convertido", icon: UserCheck, color: "#4B7D5C" },
@@ -94,7 +96,7 @@ export const MENU_GROUPS = [
   { label: "Buscar", ids: ["busca"] },
   { label: "Fé & Estudo", ids: ["biblia", "gr", "fundamentos", "discipulado", "estudo"] },
   { label: "Casa Kids", ids: ["infantil", "meusfilhos", "checkin", "estacaoimpressao", "criancas"] },
-  { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "testemunhos", "amigos", "aniversariantes", "diretorio"] },
+  { label: "Comunidade", ids: ["ministerios", "chat", "oracao", "testemunhos", "amigos", "aniversariantes", "diretorio", "negocios"] },
   { label: "Ao Vivo", ids: ["transmissao", "shorts", "mensagens"] },
   { label: "Contribuir", ids: ["ofertas", "doacoes"] },
   { label: "Sobre a Casa", ids: ["localizacao", "transito"] },
@@ -108,7 +110,7 @@ export const TAB_LABELS = {
   biblia: "Bíblia", plano: "Plano de Leitura", estudo: "Estudos", infantil: "Área Infantil",
   discipulado: "Discipulado", ministerios: "Ministérios", store: "Casa Store", cantina: "Casa Cantina", feed: "Feed", chat: "Chat", calendario: "Calendário", enquetes: "Enquetes",
   evangelismo: "Evangelismo", sounovo: "Sou Novo", novoconvertido: "Novo Convertido", transmissao: "Transmissão", shorts: "Shorts", mensagens: "Mensagens",
-  ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração", testemunhos: "Testemunhos",
+  ofertas: "Generosidade e Dízimos", doacoes: "Doações", localizacao: "Localização", oracao: "Oração", testemunhos: "Testemunhos", negocios: "Negócios e Divulgação",
   gr: "GR", fundamentos: "Fundamentos", amigos: "Amigos", aniversariantes: "Aniversariantes",
   escala: "Escala de Voluntários",
   transito: "Trânsito",
@@ -144,6 +146,7 @@ export const TAB_DESCRIPTIONS = {
   localizacao: "Veja o endereço da igreja e abra a rota direto no seu app de mapas.",
   oracao: "Compartilhe um pedido de oração, em público pro mural da igreja ou só pra liderança.",
   testemunhos: "Compartilhe o que Deus tem feito na sua vida, pra encorajar outras pessoas da igreja.",
+  negocios: "Divulgue produtos ou serviços que você oferece, ou veja o que outros membros da igreja divulgaram.",
   gr: "Seus GRs (Grupos de Relacionamentos) — crie um GR, convide pessoas por link e acompanhe a rede de cada grupo.",
   fundamentos: "Turmas de Fundamentos da fé — cadastre alunos e acompanhe quem já passou pelo discipulado inicial.",
   amigos: "Conecte-se com outros membros da igreja — envie pedidos de amizade e aceite os que você receber.",
@@ -252,7 +255,7 @@ export const CANTINA_WHATSAPP = "5581996840938"; // número pra teste — trocar
 
 export const ME_FEED = "Benjamim";
 
-export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista", mensagem: "🎙️ Mensagem", oracao: "🙏 Oração", testemunho: "🙌 Testemunho" };
+export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista", mensagem: "🎙️ Mensagem", oracao: "🙏 Oração", testemunho: "🙌 Testemunho", negocio: "📣 Divulgação" };
 
 export const INITIAL_SHORTS = [];
 
