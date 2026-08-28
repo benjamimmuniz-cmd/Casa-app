@@ -2,26 +2,30 @@ import React, { useContext, useEffect, useState } from "react";
 import { HandHeart, Lock, Globe } from "lucide-react";
 import { collection, addDoc, doc, updateDoc, onSnapshot, orderBy, query, where, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { UserContext } from "../context/contexts.js";
+import { UserContext, FeedContext } from "../context/contexts.js";
 import { colorFor, initials, timeAgo } from "../utils/helpers.js";
 
 function OracaoScreen({ onBack }) {
   const me = useContext(UserContext);
   const meName = me.name || "Você";
+  const { addPost } = useContext(FeedContext);
   const [prayers, setPrayers] = useState([]);
   const [text, setText] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [postToFeed, setPostToFeed] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, "oracoes"), where("isPublic", "==", true), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "oracoes"), where("isPublic", "==", true));
     const unsub = onSnapshot(q, snap => {
-      setPrayers(snap.docs.map(d => {
+      const list = snap.docs.map(d => {
         const data = d.data();
         return { id: d.id, ...data, time: timeAgo(data.createdAt) };
-      }));
-    }, () => {});
+      });
+      list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      setPrayers(list);
+    }, err => console.error("PRAYER_LOAD_ERR", err.code, err.message));
     return () => unsub();
   }, []);
 
@@ -32,9 +36,13 @@ function OracaoScreen({ onBack }) {
       await addDoc(collection(db, "oracoes"), {
         author: meName, authorUid: me.uid, text: text.trim(), isPublic, prayingBy: [], createdAt: serverTimestamp(),
       });
+      if (isPublic && postToFeed) {
+        addPost({ author: meName, text: text.trim(), kind: "oracao" }).catch(err => console.error("PRAYER_FEED_POST_ERR", err.code, err.message));
+      }
       setConfirmation(isPublic ? "Seu pedido foi publicado no mural. 🙏" : "Pedido enviado só pra liderança da igreja, em sigilo.");
       setText("");
       setIsPublic(false);
+      setPostToFeed(false);
     } catch (err) {
       console.error("PRAYER_ADD_ERR", err.code, err.message);
       setConfirmation("Não consegui enviar agora. Tenta de novo.");
@@ -81,6 +89,14 @@ function OracaoScreen({ onBack }) {
             <Globe size={13} /> Publicar no mural
           </button>
         </div>
+
+        {isPublic && (
+          <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
+            <input type="checkbox" checked={postToFeed} onChange={e => setPostToFeed(e.target.checked)}
+              className="w-4 h-4 rounded" style={{ accentColor: "#000000" }} />
+            <span style={{ fontFamily: "Inter", color: "#4D4D4D" }} className="text-[12px]">Publicar também no Feed</span>
+          </label>
+        )}
 
         <button onClick={submit} disabled={!text.trim() || sending}
           className="w-full mt-3 py-3 rounded-full font-semibold text-[13.5px] active:scale-[0.98] transition-transform"

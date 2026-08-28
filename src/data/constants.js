@@ -250,7 +250,7 @@ export const CANTINA_WHATSAPP = "5581996840938"; // número pra teste — trocar
 
 export const ME_FEED = "Benjamim";
 
-export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista", mensagem: "🎙️ Mensagem" };
+export const KIND_LABELS = { cardapio: "🍽️ Cardápio", produto: "🛍️ Novidade", evento: "📅 Evento", enquete: "🗳️ Enquete", conquista: "🏅 Conquista", mensagem: "🎙️ Mensagem", oracao: "🙏 Oração" };
 
 export const INITIAL_SHORTS = [];
 

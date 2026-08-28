@@ -391,6 +391,7 @@ function App() {
   const openProfile = (uid) => { if (!uid) return; setViewingProfileUid(uid); setOpenTile("profile"); };
   const [viewingMensagemId, setViewingMensagemId] = useState(null);
   const openMensagem = (id) => { if (!id) return; setViewingMensagemId(id); setOpenTile("mensagens"); };
+  const openOracao = () => setOpenTile("oracao");
   const [viewingChatTarget, setViewingChatTarget] = useState(null);
   const openChatTarget = (target) => { if (!target) return; setViewingChatTarget(target); setOpenTile("chat"); };
 
@@ -638,7 +639,7 @@ function App() {
         ) : (
           <UserContext.Provider value={{ uid: currentUser?.uid || null, name: currentUser?.nome || "Visitante", email: currentUser?.email || "", profissao: currentUser?.profissao || "", telefone: currentUser?.telefone || "", nascimento: currentUser?.nascimento || "", photo: currentUser?.photo || null, bio: currentUser?.bio || "", role: currentUser?.role || "member", notificacoesAtivas: currentUser?.notificacoesAtivas !== false, possuiCarro: currentUser?.possuiCarro || false, placa: currentUser?.placa || "", createdAt: currentUser?.createdAt || null, setPhoto: updateUserPhoto, setName: updateUserName, setBio: updateUserBio, setProfissao: updateUserProfissao, setTelefone: updateUserTelefone, setNotificacoesAtivas: updateNotificacoesAtivas, setPossuiCarro: updateUserPossuiCarro, setPlaca: updateUserPlaca }}>
           <UsersDirectoryContext.Provider value={{ byUid: usersByUid, ensureUser: ensureUserLoaded }}>
-          <ProfileNavContext.Provider value={{ openProfile, openMensagem }}>
+          <ProfileNavContext.Provider value={{ openProfile, openMensagem, openOracao }}>
           <FeedContext.Provider value={{ posts: feedPosts, addPost: addFeedPost, toggleLike: toggleFeedLike, likePost: likeFeedPost, toggleSave: toggleFeedSave, addComment: addFeedComment, deletePost: deleteFeedPost }}>
           <StoryContext.Provider value={{ stories, viewedIds: viewedStoryIds, addStory, markViewed: markStoryViewed, reactToStory, deleteStory }}>
           <ShortsContext.Provider value={{ shorts, addShort, toggleLike: toggleShortLike, likeOnly: likeShortOnly, toggleSave: toggleShortSave, addComment: addShortComment, deleteShort }}>
