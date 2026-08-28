@@ -24,5 +24,5 @@ export const UsersDirectoryContext = createContext({ byUid: {}, ensureUser: () =
 
 // Navegação pro perfil de outra pessoa (uid -> abre a tela de perfil dela) — disponível
 // em qualquer tela que mostre nome/foto de alguém (Feed, Stories, Amigos, Chat).
-export const ProfileNavContext = createContext({ openProfile: () => {}, openMensagem: () => {}, openOracao: () => {} });
+export const ProfileNavContext = createContext({ openProfile: () => {}, openMensagem: () => {}, openOracao: () => {}, openTestemunhos: () => {} });
 

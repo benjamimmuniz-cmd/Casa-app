@@ -2,13 +2,14 @@ import React, { useContext, useEffect, useState } from "react";
 import { HandHeart, Lock, Globe } from "lucide-react";
 import { collection, addDoc, doc, updateDoc, onSnapshot, orderBy, query, where, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { UserContext, FeedContext } from "../context/contexts.js";
+import { UserContext, FeedContext, ProfileNavContext } from "../context/contexts.js";
 import { colorFor, initials, timeAgo } from "../utils/helpers.js";
 
 function OracaoScreen({ onBack }) {
   const me = useContext(UserContext);
   const meName = me.name || "Você";
   const { addPost } = useContext(FeedContext);
+  const { openTestemunhos } = useContext(ProfileNavContext);
   const [prayers, setPrayers] = useState([]);
   const [text, setText] = useState("");
   const [isPublic, setIsPublic] = useState(false);
@@ -132,11 +133,20 @@ function OracaoScreen({ onBack }) {
                 </div>
               </div>
               <p style={{ fontFamily: "Fraunces", color: "#000000" }} className="text-[14.5px] leading-snug mb-3">{p.text}</p>
-              <button onClick={() => togglePray(p)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold"
-                style={{ fontFamily: "Inter", background: praying ? "#8A4B6D" : "#F2F2F2", color: praying ? "#FFFFFF" : "#4D4D4D" }}>
-                🙏 {praying ? "Orando" : "Orar por isso"} {(p.prayingBy || []).length > 0 && `· ${p.prayingBy.length}`}
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => togglePray(p)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold"
+                  style={{ fontFamily: "Inter", background: praying ? "#8A4B6D" : "#F2F2F2", color: praying ? "#FFFFFF" : "#4D4D4D" }}>
+                  🙏 {praying ? "Orando" : "Orar por isso"} {(p.prayingBy || []).length > 0 && `· ${p.prayingBy.length}`}
+                </button>
+                {p.authorUid === me.uid && (
+                  <button onClick={openTestemunhos}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold"
+                    style={{ fontFamily: "Inter", background: "#F2F2F2", color: "#8A6D3B" }}>
+                    🙌 Virou testemunho?
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
