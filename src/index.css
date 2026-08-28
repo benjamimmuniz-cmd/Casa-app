@@ -74,3 +74,12 @@ input, textarea {
 .like-burst {
   animation: likeBurst 700ms ease-out;
 }
+
+@keyframes reactionFloatUp {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  15% { transform: translateY(-10px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(-160px) scale(1); opacity: 0; }
+}
+.reaction-float-up {
+  animation: reactionFloatUp 1100ms ease-out forwards;
+}

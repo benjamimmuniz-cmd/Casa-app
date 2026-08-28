@@ -21,6 +21,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const [showViewers, setShowViewers] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState([]);
   const lastMediaTapRef = useRef(0);
   const pausedRef = useRef(false);
   const pausedMsRef = useRef(0);
@@ -106,9 +107,16 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     }
   };
 
+  const floatReaction = (emoji) => {
+    const id = Date.now() + Math.random();
+    setFloatingReactions(prev => [...prev, { id, emoji }]);
+    setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 1100);
+  };
+
   const sendReaction = async (emoji) => {
     reactToStory(story, emoji);
     setShowReactionPicker(false);
+    floatReaction(emoji);
     if (!story.authorUid || isOwnStory) return;
     try {
       await sendChatMessage({
@@ -221,6 +229,11 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
             <Home size={90} className="like-burst" color="#F2F2F2" fill="#F2F2F2" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }} />
           </div>
         )}
+        {floatingReactions.map(r => (
+          <div key={r.id} className="reaction-float-up absolute pointer-events-none z-10" style={{ bottom: 24, left: "50%", marginLeft: -20, fontSize: 40, lineHeight: 1 }}>
+            {r.emoji}
+          </div>
+        ))}
       </div>
 
       {isOwnStory && story.authorUid && (
