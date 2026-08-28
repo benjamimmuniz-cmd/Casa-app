@@ -112,10 +112,17 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 1100);
   };
 
+  const burstReaction = (emoji) => {
+    const offsets = [-50, -25, 0, 25, 50];
+    offsets.forEach((offsetX, i) => {
+      setTimeout(() => floatReaction(emoji, offsetX), i * 80);
+    });
+  };
+
   const sendReaction = async (emoji) => {
     reactToStory(story, emoji);
     setShowReactionPicker(false);
-    floatReaction(emoji);
+    burstReaction(emoji);
     if (!story.authorUid || isOwnStory) return;
     try {
       await sendChatMessage({
@@ -136,10 +143,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
         sharedPost: { author: story.author, image: story.image, text: story.text ? `Story: ${story.text}` : "Reagiu ao seu story" },
       }).catch(err => console.error("STORY_REACTION_CHAT_ERR", err.code, err.message));
     }
-    const offsets = [-50, -25, 0, 25, 50];
-    offsets.forEach((offsetX, i) => {
-      setTimeout(() => floatReaction("❤️", offsetX), i * 80);
-    });
+    burstReaction("❤️");
   };
 
   const handleMediaTap = (navigate) => {
