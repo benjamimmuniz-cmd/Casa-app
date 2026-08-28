@@ -92,7 +92,8 @@ function MinisteriosScreen({ onBack }) {
 
   if (ministry) {
     return (
-      <div className="flex-1 overflow-y-auto relative" style={{ background: "#F2F2F2" }}>
+      <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "#F2F2F2" }}>
+        <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="px-6 pt-6 pb-2">
           <button onClick={() => setOpenId(null)} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Ministérios</button>
         </div>
@@ -241,6 +242,7 @@ function MinisteriosScreen({ onBack }) {
             })()}
           </div>
         )}
+        </div>
 
         <button onClick={() => minTab === "escala" ? setShowAddEscala(true) : setShowAddMember(true)}
           className="absolute bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-transform"
@@ -345,7 +347,8 @@ function MinisteriosScreen({ onBack }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto relative" style={{ background: "#F2F2F2" }}>
+    <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "#F2F2F2" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2 flex items-center justify-between">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Início</button>
         <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ fontFamily: "IBM Plex Mono", background: "#0000000F", color: "#616161" }}>
@@ -398,6 +401,7 @@ function MinisteriosScreen({ onBack }) {
             </div>
           );
         })}
+      </div>
       </div>
 
       <button onClick={() => setShowAdd(true)}

@@ -177,7 +177,8 @@ function MensagensScreen({ mensagemId, onBack }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto relative" style={{ background: "#F2F2F2" }}>
+    <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "#F2F2F2" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← Início</button>
       </div>
@@ -226,6 +227,7 @@ function MensagensScreen({ mensagemId, onBack }) {
             ))}
           </div>
         )}
+      </div>
       </div>
 
       <button onClick={() => setShowAdd(true)}

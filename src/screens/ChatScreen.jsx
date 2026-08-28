@@ -570,7 +570,8 @@ function ChatScreen({ onBack, initialChat }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto relative" style={{ background: "var(--c-bg)" }}>
+    <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "var(--c-bg)" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="px-6 pt-6 pb-2 flex items-center justify-between">
         <button onClick={onBack} className="text-[13px]" style={{ fontFamily: "Inter", color: "var(--c-muted)" }}>← Início</button>
       </div>
@@ -612,6 +613,7 @@ function ChatScreen({ onBack, initialChat }) {
             </div>
           </button>
         ))}
+      </div>
       </div>
 
       <button onClick={() => setShowChoice(true)}

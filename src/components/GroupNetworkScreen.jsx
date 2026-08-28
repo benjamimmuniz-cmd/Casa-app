@@ -72,7 +72,8 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
 
   if (group) {
     return (
-      <div className="flex-1 overflow-y-auto relative" style={{ background: "#F2F2F2" }}>
+      <div className="flex-1 relative flex flex-col min-h-0" style={{ background: "#F2F2F2" }}>
+        <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="px-6 pt-6 pb-2 flex items-center justify-between">
           <button onClick={() => { setOpenId(null); setTab("arvore"); }} className="text-[13px]" style={{ fontFamily: "Inter", color: "#616161" }}>← {title}</button>
           <button onClick={() => setConfirmDeleteGroup(true)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#B33B3B1A" }}>
@@ -308,6 +309,7 @@ function GroupNetworkScreen({ onBack, title, itemLabel, itemPlaceholder, linkPre
             </div>
           );
         })()}
+        </div>
 
         <button onClick={() => setShowAddMember(true)}
           className="absolute bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-transform"
