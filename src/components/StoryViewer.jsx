@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Eye, Music, Send, Trash2, X } from "lucide-react";
+import { Eye, Home, Music, Send, Smile, Trash2, X } from "lucide-react";
 import { colorFor, timeAgo } from "../utils/helpers.js";
 import { containsBlockedContent } from "../utils/contentFilter.js";
 import { UserContext, StoryContext, ProfileNavContext } from "../context/contexts.js";
@@ -19,6 +19,9 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
   const [sent, setSent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [heartBurst, setHeartBurst] = useState(false);
+  const lastMediaTapRef = useRef(0);
   const pausedRef = useRef(false);
   const pausedMsRef = useRef(0);
   const pauseStartRef = useRef(0);
@@ -48,6 +51,7 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     setReply("");
     setSent(false);
     setShowViewers(false);
+    setShowReactionPicker(false);
     pausedMsRef.current = 0;
     pausedRef.current = false;
     durationRef.current = DURATION;
@@ -102,7 +106,34 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
     }
   };
 
-  const sendReaction = (emoji) => reactToStory(story, emoji);
+  const sendReaction = async (emoji) => {
+    reactToStory(story, emoji);
+    setShowReactionPicker(false);
+    if (!story.authorUid || isOwnStory) return;
+    try {
+      await sendChatMessage({
+        myUid: me.uid, myName: me.name, otherUid: story.authorUid, otherName: story.author, text: emoji,
+        sharedPost: { author: story.author, image: story.image, text: story.text ? `Story: ${story.text}` : "Reagiu ao seu story" },
+      });
+    } catch (err) {
+      console.error("STORY_REACTION_CHAT_ERR", err.code, err.message);
+    }
+  };
+
+  const triggerLike = () => {
+    if (isOwnStory || !story.authorUid) return;
+    sendReaction("❤️");
+    setHeartBurst(true);
+    setTimeout(() => setHeartBurst(false), 700);
+  };
+
+  const handleMediaTap = (navigate) => {
+    const now = Date.now();
+    const isDoubleTap = now - lastMediaTapRef.current < 300;
+    lastMediaTapRef.current = now;
+    if (isDoubleTap) { triggerLike(); return; }
+    navigate();
+  };
 
   const openDeleteConfirm = () => { pause(); setConfirmDelete(true); };
   const closeDeleteConfirm = () => { resume(); setConfirmDelete(false); };
@@ -185,10 +216,15 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
             )}
           </div>
         ))}
+        {heartBurst && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <Home size={90} className="like-burst" color="#F2F2F2" fill="#F2F2F2" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }} />
+          </div>
+        )}
       </div>
 
       {isOwnStory && story.authorUid && (
-        <button onClick={openViewers} className="px-4 pb-6 pt-2 flex items-center gap-1.5 self-start"
+        <button onClick={openViewers} className="relative z-10 px-4 pb-6 pt-2 flex items-center gap-1.5 self-start"
           style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)" }}>
           <Eye size={15} color="#FFFFFF" />
           <span style={{ fontFamily: "Inter", color: "#FFFFFF" }} className="text-[12.5px]">
@@ -198,19 +234,25 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
       )}
 
       {!isOwnStory && story.authorUid && (
-        <div className="pt-2 pb-6" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)" }}>
-          <div className="px-4 pb-2.5 flex items-center gap-2 overflow-x-auto">
-            {REACTION_EMOJIS.map(emoji => (
-              <button key={emoji} onClick={() => sendReaction(emoji)}
-                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform"
-                style={{ background: myReaction === emoji ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.12)", fontSize: 18 }}>
-                {emoji}
-              </button>
-            ))}
-          </div>
+        <div className="relative z-10 pt-2 pb-6" style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)" }}>
+          {showReactionPicker && (
+            <div className="px-4 pb-2.5 flex items-center gap-2 overflow-x-auto">
+              {REACTION_EMOJIS.map(emoji => (
+                <button key={emoji} onClick={() => sendReaction(emoji)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform"
+                  style={{ background: myReaction === emoji ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.12)", fontSize: 18 }}>
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="px-4 flex items-center gap-2.5">
+            <button onClick={() => { pause(); setShowReactionPicker(v => !v); }}
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: showReactionPicker ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.12)" }}>
+              <Smile size={18} color="#FFFFFF" />
+            </button>
             <input value={reply} onChange={e => setReply(e.target.value)}
-              onFocus={pause} onBlur={resume}
+              onFocus={() => { pause(); setShowReactionPicker(false); }} onBlur={resume}
               onKeyDown={e => e.key === "Enter" && sendReply()}
               placeholder={sent ? "Enviado!" : `Responder pra ${story.author.split(" ")[0]}...`}
               className="flex-1 min-w-0 px-4 py-2.5 rounded-full outline-none text-[13px]"
@@ -225,8 +267,8 @@ function StoryViewer({ stories, startIndex, onClose, onFinishAll }) {
       )}
 
       <div className="absolute inset-0 flex" style={{ top: 70, bottom: isOwnStory ? 56 : (!story.authorUid ? 0 : 122) }}>
-        <button className="flex-1" onClick={goPrev} style={{ background: "transparent" }} />
-        <button className="flex-1" onClick={goNext} style={{ background: "transparent" }} />
+        <button className="flex-1" onClick={() => handleMediaTap(goPrev)} style={{ background: "transparent" }} />
+        <button className="flex-1" onClick={() => handleMediaTap(goNext)} style={{ background: "transparent" }} />
       </div>
 
       {confirmDelete && (
