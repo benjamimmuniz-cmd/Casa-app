@@ -43,7 +43,16 @@ function ShopScreen({ onBack, title, subtitle, products, addProduct, updateStock
   const [activeTab, setActiveTab] = useState("produtos");
   const [pedidos, setPedidos] = useState([]);
   const [openProductId, setOpenProductId] = useState(null);
-  const [showCart, setShowCart] = useState(false);
+  const showCartStorageKey = `casa-app:showCart:${title}`;
+  const [showCart, setShowCart] = useState(() => {
+    try { return localStorage.getItem(showCartStorageKey) === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try {
+      if (showCart) localStorage.setItem(showCartStorageKey, "1");
+      else localStorage.removeItem(showCartStorageKey);
+    } catch {}
+  }, [showCart]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null);

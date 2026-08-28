@@ -18,6 +18,7 @@ import { timeAgo, fmtDateBR } from "./utils/helpers.js";
 import { checkForNewVersion } from "./utils/versionCheck.js";
 import { markAttendance } from "./utils/attendanceActions.js";
 import { storeInviteCode } from "./utils/inviteCode.js";
+import { loadNav, saveNav } from "./utils/navPersist.js";
 import { FONTS, LIVE_STREAM_ACTIVE } from "./data/constants.js";
 import { sendConnectionRequest, respondConnectionRequest, cancelConnectionRequest } from "./utils/connectionActions.js";
 import StubScreen from "./components/StubScreen.jsx";
@@ -401,8 +402,9 @@ function App() {
   const updateCantinaProduct = (id, fields) => updateDoc(doc(db, "cantinaProducts", id), fields);
   const deleteCantinaProduct = (id) => deleteDoc(doc(db, "cantinaProducts", id));
 
-  const [tab, setTab] = useState("inicio");
-  const [openTile, setOpenTile] = useState(null);
+  const [tab, setTab] = useState(() => loadNav()?.tab || "inicio");
+  const [openTile, setOpenTile] = useState(() => loadNav()?.openTile || null);
+  useEffect(() => { saveNav(tab, openTile); }, [tab, openTile]);
   const [viewingProfileUid, setViewingProfileUid] = useState(null);
   const openProfile = (uid) => { if (!uid) return; setViewingProfileUid(uid); setOpenTile("profile"); };
   const [viewingMensagemId, setViewingMensagemId] = useState(null);
